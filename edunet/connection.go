@@ -195,7 +195,7 @@ func (c *Connection) GetTCPConnection() *net.TCPConn {
 }
 
 //获取当前连接ID
-func (c *Connection) GetConnID() uint32 {
+func (c *Connection) GetConnID() uuid.UUID {
 	return c.ConnID
 }
 

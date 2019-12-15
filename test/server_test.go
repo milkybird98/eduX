@@ -1,4 +1,4 @@
-package edunet
+package edutest
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 	"eduX/eduiface"
+	"eduX/edunet"
 )
 
 /*
@@ -17,14 +18,14 @@ func ClientTest() {
 	//3秒之后发起测试请求，给服务端开启服务的机会
 	time.Sleep(3 * time.Second)
 
-	conn, err := net.Dial("tcp", "127.0.0.1:7777")
+	conn, err := net.Dial("tcp", "127.0.0.1:23333")
 	if err != nil {
 		fmt.Println("client start err, exit!")
 		return
 	}
 
 	for {
-		_, err := conn.Write([]byte("eduX V0.2 test"))
+		_, err := conn.Write([]byte("eduX V0.1 test"))
 		if err != nil {
 			fmt.Println("write error err ", err)
 			return
@@ -62,7 +63,7 @@ func TestServer(t *testing.T) {
 
 //ping test 自定义路由
 type PingRouter struct {
-	BaseRouter
+	edunet.BaseRouter
 }
 
 

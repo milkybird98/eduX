@@ -1,6 +1,9 @@
 package eduiface
 
-import "net"
+import (
+	"net"
+	"github.com/satori/go.uuid"
+)
 
 //定义连接接口
 type IConnection interface {
@@ -12,7 +15,7 @@ type IConnection interface {
 	//从当前连接获取原始的socket TCPConn
 	GetTCPConnection() *net.TCPConn
 	//获取当前连接ID
-	GetConnID() uint32
+	GetConnID() uuid.UUID
 	//获取当前连接Session
 	GetSession() map[string]string
 	//获取远程客户端地址信息
