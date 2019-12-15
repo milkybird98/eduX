@@ -8,7 +8,6 @@ import (
 	"sync"
 	"eduX/utils"
 	"eduX/eduiface"
-	"github.com/satori/go.uuid"
 )
 
 type Connection struct {
@@ -17,7 +16,7 @@ type Connection struct {
 	//当前连接的socket TCP套接字
 	Conn *net.TCPConn
 	//当前连接的ID 也可以称作为SessionID，ID全局唯一
-	ConnID uuid.UUID
+	ConnID uint32
 	//当前连接的Session表，用于存储连接有关数据
 	Session map[string]string
 	//当前连接的关闭状态
@@ -38,7 +37,7 @@ type Connection struct {
 }
 
 //创建连接的方法
-func NewConntion(server eduiface.IServer, conn *net.TCPConn, sessionID uuid.UUID, msgHandler eduiface.IMsgHandle) *Connection {
+func NewConntion(server eduiface.IServer, conn *net.TCPConn, sessionID uint32, msgHandler eduiface.IMsgHandle) *Connection {
 	//初始化Conn属性
 	c := &Connection{
 		TcpServer:    server,
@@ -195,7 +194,7 @@ func (c *Connection) GetTCPConnection() *net.TCPConn {
 }
 
 //获取当前连接ID
-func (c *Connection) GetConnID() uuid.UUID {
+func (c *Connection) GetConnID() uint32 {
 	return c.ConnID
 }
 

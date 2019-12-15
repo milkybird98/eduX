@@ -5,7 +5,6 @@ import (
 	"net"
 	"eduX/utils"
 	"eduX/eduiface"
-	"github.com/satori/go.uuid"
 )
 
 //iServer 接口实现，定义一个Server服务类
@@ -76,6 +75,9 @@ func (s *Server) Start() {
 		//已经监听成功
 		fmt.Println("start eduX server  ", s.Name, " succ, now listenning...")
 
+		var uuid uint32 
+		uuid = 1
+
 		//3 启动server网络连接业务
 		for {
 			//3.1 阻塞等待客户端建立连接请求
@@ -92,7 +94,7 @@ func (s *Server) Start() {
 			}
 
 			//3.3 处理该新连接请求的 业务 方法， 此时应该有 handler 和 conn是绑定的
-			dealConn := NewConntion(s, conn, uuid.Must(uuid.NewV4()), s.msgHandler)
+			dealConn := NewConntion(s, conn, uuid, s.msgHandler)
 
 			//3.4 启动当前链接的处理业务
 			go dealConn.Start()
