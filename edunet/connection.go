@@ -17,8 +17,6 @@ type Connection struct {
 	Conn *net.TCPConn
 	//当前连接的ID 也可以称作为SessionID，ID全局唯一
 	ConnID uint32
-	//当前连接的Session表，用于存储连接有关数据
-	Session map[string]string
 	//当前连接的关闭状态
 	isClosed bool
 	//消息管理MsgId和对应处理方法的消息管理模块
@@ -27,13 +25,11 @@ type Connection struct {
 	ExitBuffChan chan bool
 	//无缓冲管道，用于读、写两个goroutine之间的消息通信
 	msgChan chan []byte
-	//有关冲管道，用于读、写两个goroutine之间的消息通信
-	msgBuffChan chan []byte
 
 	//链接属性
-	property     map[string]interface{}
+	session     map[string]interface{}
 	//保护链接属性修改的锁
-	propertyLock sync.RWMutex
+	sessionLock sync.RWMutex
 }
 
 //创建连接的方法
@@ -43,17 +39,15 @@ func NewConntion(server eduiface.IServer, conn *net.TCPConn, sessionID uint32, m
 		TcpServer:    server,
 		Conn:         conn,
 		ConnID:       sessionID,
-		Session:			make(map[string]string),
 		isClosed:     false,
 		MsgHandler:   msgHandler,
 		ExitBuffChan: make(chan bool, 1),
 		msgChan:      make(chan []byte),
-		msgBuffChan:  make(chan []byte, utils.GlobalObject.MaxMsgChanLen),
-		property:     make(map[string]interface{}),
+		session:      make(map[string]interface{}),
 	}
 
 	//初始化session
-	initSession(c.Session)
+	initSession(c.session)
 
 	//将新创建的Conn添加到链接管理中
 	c.TcpServer.GetConnMgr().Add(c)
@@ -63,7 +57,7 @@ func NewConntion(server eduiface.IServer, conn *net.TCPConn, sessionID uint32, m
 /*
 	初始化Session,设定默认值
 */
-func initSession(session map[string]string) {
+func initSession(session map[string]interface{}) {
 	session["islogined"] = "f"
 }
 
@@ -82,17 +76,6 @@ func (c *Connection) StartWriter() {
 			if _, err := c.Conn.Write(data); err != nil {
 				fmt.Println("Send Data error:, ", err, " Conn Writer exit")
 				return
-			}
-		case data, ok := <-c.msgBuffChan:
-			if ok {
-				//有数据要写给客户端
-				if _, err := c.Conn.Write(data); err != nil {
-					fmt.Println("Send Buff Data error:, ", err, " Conn Writer exit")
-					return
-				}
-			} else {
-				fmt.Println("msgBuffChan is Closed")
-				break
 			}
 		case <-c.ExitBuffChan:
 			return
@@ -185,7 +168,6 @@ func (c *Connection) Stop() {
 
 	//关闭该链接全部管道
 	close(c.ExitBuffChan)
-	close(c.msgBuffChan)
 }
 
 //从当前连接获取原始的socket TCPConn
@@ -196,11 +178,6 @@ func (c *Connection) GetTCPConnection() *net.TCPConn {
 //获取当前连接ID
 func (c *Connection) GetConnID() uint32 {
 	return c.ConnID
-}
-
-//获取当前连接Session
-func (c *Connection) GetSession() map[string]string{
-	return c.Session
 }
 
 //获取远程客户端地址信息
@@ -227,48 +204,30 @@ func (c *Connection) SendMsg(msgId uint32, data []byte) error {
 	return nil
 }
 
-func (c *Connection) SendBuffMsg(msgId uint32, data []byte) error {
-	if c.isClosed == true {
-		return errors.New("Connection closed when send buff msg")
-	}
-	//将data封包，并且发送
-	dp := NewDataPack()
-	msg, err := dp.Pack(NewMsgPackage(msgId, data))
-	if err != nil {
-		fmt.Println("Pack error msg id = ", msgId)
-		return errors.New("Pack error msg ")
-	}
-
-	//写回客户端
-	c.msgBuffChan <- msg
-
-	return nil
-}
-
 //设置链接属性
-func (c *Connection) SetProperty(key string, value interface{}) {
-	c.propertyLock.Lock()
-	defer c.propertyLock.Unlock()
+func (c *Connection) SetSession(key string, value interface{}) {
+	c.sessionLock.Lock()
+	defer c.sessionLock.Unlock()
 
-	c.property[key] = value
+	c.session[key] = value
 }
 
 //获取链接属性
-func (c *Connection) GetProperty(key string) (interface{}, error) {
-	c.propertyLock.RLock()
-	defer c.propertyLock.RUnlock()
+func (c *Connection) GetSession(key string) (interface{}, error) {
+	c.sessionLock.RLock()
+	defer c.sessionLock.RUnlock()
 
-	if value, ok := c.property[key]; ok  {
+	if value, ok := c.session[key]; ok  {
 		return value, nil
 	} else {
-		return nil, errors.New("no property found")
+		return nil, errors.New("no session found")
 	}
 }
 
 //移除链接属性
-func (c *Connection) RemoveProperty(key string) {
-	c.propertyLock.Lock()
-	defer c.propertyLock.Unlock()
+func (c *Connection) RemoveSession(key string) {
+	c.sessionLock.Lock()
+	defer c.sessionLock.Unlock()
 
-	delete(c.property, key)
+	delete(c.session, key)
 }
