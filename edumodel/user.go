@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-var collection *mongo.Collection
+var userCollection *mongo.Collection
 
 type User struct{
 	Name 	string
@@ -19,14 +19,14 @@ type User struct{
 	Gender		int
 }
 
-func checkCollection()  {
-	if collection == nil{
-		collection = GetCollection("user")
+func checkUserCollection()  {
+	if userCollection == nil{
+		userCollection = GetCollection("user")
 	}
 }
 
 func AddUser(newUser *User) bool {
-	checkCollection()
+	checkUserCollection()
 
 	if newUser == nil{
 		return false
@@ -35,7 +35,7 @@ func AddUser(newUser *User) bool {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	_,err := collection.InsertOne(ctx,newUser)
+	_,err := userCollection.InsertOne(ctx,newUser)
 	if err != nil {
 		fmt.Println("Add new user into database fail, error: ",err)
 		return false
@@ -45,7 +45,7 @@ func AddUser(newUser *User) bool {
 }
 
 func GetUserByUID(uid string) *User {
-	checkCollection()
+	checkUserCollection()
 
 	if uid == ""{
 		return nil
@@ -54,10 +54,10 @@ func GetUserByUID(uid string) *User {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	filter := bson.D{{"uid",uid}}
+	filter := bson.M{"uid":uid}
 
 	var result User
-	err := collection.FindOne(ctx,filter).Decode(&result)
+	err := userCollection.FindOne(ctx,filter).Decode(&result)
 	if err != nil{
 		fmt.Println(err)
 		return nil
@@ -67,7 +67,7 @@ func GetUserByUID(uid string) *User {
 }
 
 func GetUserByClass(className string) *[]*User {
-	checkCollection()
+	checkUserCollection()
 
 	if className == ""{
 		return nil
@@ -76,10 +76,10 @@ func GetUserByClass(className string) *[]*User {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	filter := bson.D{{"class",className}}
+	filter := bson.M{"class":className}
 
 	var result []*User
-	cur,err := collection.Find(ctx,filter)
+	cur,err := userCollection.Find(ctx,filter)
 	if err != nil{
 		return nil
 	}
@@ -97,7 +97,7 @@ func GetUserByClass(className string) *[]*User {
 }
 
 func UpdateUserByID(uid string,class string, name string, pwd string, gender int) bool {
-	checkCollection()
+	checkUserCollection()
 
 	if uid == ""{
 		return false
@@ -123,15 +123,15 @@ func UpdateUserByID(uid string,class string, name string, pwd string, gender int
 
 	filter := bson.D{{"uid",uid}}
 	update := bson.D{
-    {"$set", bson.D{
-				{"name", name},
-				{"pwd", pwd},
-				{"class",class},
-				{"gender", gender},
+    {"$set", bson.M{
+				"name": name,
+				"pwd": pwd,
+				"class": class,
+				"gender": gender,
     }},
 	}
 
-	_,err := collection.UpdateOne(ctx,filter,update)
+	_,err := userCollection.UpdateOne(ctx,filter,update)
 	if err != nil{
 		fmt.Println(err)
 		return false
@@ -141,7 +141,7 @@ func UpdateUserByID(uid string,class string, name string, pwd string, gender int
 }
 
 func DeleteUserByUID(uid string) bool {
-	checkCollection()
+	checkUserCollection()
 
 	if uid == ""{
 		return false
@@ -150,9 +150,9 @@ func DeleteUserByUID(uid string) bool {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	filter := bson.D{{"uid",uid}}
+	filter := bson.M{"uid":uid}
 
-	_,err := collection.DeleteOne(ctx,filter)
+	_,err := userCollection.DeleteOne(ctx,filter)
 	if err!=nil {
 		fmt.Println(err)
 		return false
