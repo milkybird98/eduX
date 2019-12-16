@@ -96,7 +96,7 @@ func (this *PingRouter) PostHandle(request eduiface.IRequest) {
 
 func TestServerV0_3(t *testing.T) {
 	//创建一个server句柄
-	s := NewServer()
+	s := edunet.NewServer()
 
 	s.AddRouter(0,&PingRouter{})
 

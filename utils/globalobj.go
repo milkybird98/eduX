@@ -34,6 +34,12 @@ type GlobalObj struct {
 		config file path
 	*/
 	ConfFilePath string
+
+	/*
+		DataBase
+	*/
+	DataBaseUrl			string
+	DataBaseName		string
 }
 
 /*
@@ -88,7 +94,9 @@ func init() {
 		ConfFilePath:  "conf/eduX.json",
 		WorkerPoolSize: 10,
 		MaxWorkerTaskLen: 1024,
-		MaxMsgChanLen:1024,
+		MaxMsgChanLen:	1024,
+		DataBaseUrl:		"mongodb://localhost:27017",
+		DataBaseName:		"eduPlatform",
 	}
 
 	//从配置文件中重新加载一些用户配置的参数
