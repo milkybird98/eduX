@@ -58,7 +58,7 @@ func NewConntion(server eduiface.IServer, conn *net.TCPConn, sessionID uint32, m
 	初始化Session,设定默认值
 */
 func initSession(session map[string]interface{}) {
-	session["islogined"] = "f"
+	session["isLogined"] = false
 }
 
 
