@@ -3,6 +3,7 @@ package edumodel
 import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"context"
 	"fmt"
 	"time"
@@ -11,12 +12,13 @@ import (
 var userCollection *mongo.Collection
 
 type User struct{
-	Name 	string
-	UID  	string
-	Pwd		string
-	Plcae string
-	Class string
-	Gender		int
+	_id					primitive.ObjectID 	`bson:"_id"`
+	Name 				string
+	UID  				string
+	Pwd					string
+	Plcae 			string
+	Class 			string
+	Gender			int
 }
 
 func checkUserCollection()  {
