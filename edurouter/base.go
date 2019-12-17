@@ -1,5 +1,7 @@
 package edurouter
 
+var checksumFlag bool
+
 type ReqMsg struct{
 	uid				string
 	data  		[]byte
