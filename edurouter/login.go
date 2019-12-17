@@ -10,12 +10,6 @@ import (
 	"eduX/edumodel"
 )
 
-var passwordData string 
-var passwordCorrect bool
-var userPlaceFlag string
-var checksumFlag bool
-var pwdCorrectFlag bool
-
 type LoginRouter struct {
 	edunet.BaseRouter
 }
@@ -24,43 +18,52 @@ type LoginData struct{
 	pwd				[]byte
 }
 
+var passwordData string 
+var passwordCorrect bool
+var pwdCorrectFlag bool
+
 func (this *LoginRouter) PreHandle(request eduiface.IRequest) {
-	var jsonMsg ReqMsg
-	var jsonData LoginData
-	originMsg := request.GetData()
+	var reqMsgInJson ReqMsg
+	var reqDataInJson LoginData
+	reqMsgOrigin := request.GetData()
+
 	checksumFlag = false
 	pwdCorrectFlag = false
 
-	err := json.Unmarshal(originMsg,&jsonMsg)
+	err := json.Unmarshal(reqMsgOrigin,&reqMsgInJson)
 	if err!=nil{
 		fmt.Println(err)
 		return
 	}
 
 	md5Ctx := md5.New()
-	md5Ctx.Write([]byte(jsonMsg.uid))
-  md5Ctx.Write(jsonMsg.data)
-	
+	md5Ctx.Write([]byte(reqMsgInJson.uid))
+  md5Ctx.Write(reqMsgInJson.data)
 
-	if utils.SliceEqual(jsonMsg.checksum,md5Ctx.Sum(nil)){
+	if utils.SliceEqual(reqMsgInJson.checksum,md5Ctx.Sum(nil)){
 		checksumFlag = true
 	}else{
 		return
 	}
 	
-	userData := edumodel.GetUserByUID(jsonMsg.uid)
+	userData := edumodel.GetUserByUID(reqMsgInJson.uid)
 
-	err = json.Unmarshal(jsonMsg.data,&jsonData)
+	err = json.Unmarshal(reqMsgInJson.data,&reqDataInJson)
 	if err!=nil{
 		fmt.Println(err)
 		return
 	}
 
-	if userData!=nil && utils.SliceEqual(jsonData.pwd,[]byte(userData.Pwd)){
+	if userData!=nil && utils.SliceEqual(reqDataInJson.pwd,[]byte(userData.Pwd)){
 		pwdCorrectFlag = true
-		userPlaceFlag = userData.Plcae
 	}
 
+	c := request.GetConnection()
+
+	c.SetSession("isLogined",true)
+	c.SetSession("UID",userData.UID)
+	c.SetSession("place",userData.Plcae)
+	c.SetSession("class",userData.Class)
 }
 
 func (this *LoginRouter) Handle(request eduiface.IRequest) {
@@ -77,20 +80,14 @@ func (this *LoginRouter) Handle(request eduiface.IRequest) {
 	md5Ctx.Write(replyMsg.data)
 	replyMsg.checksum = md5Ctx.Sum(nil)
 
-	c := request.GetConnection()
 	jsonMsg,err :=json.Marshal(replyMsg)
 	if err!= nil{
 		fmt.Println(err)
 		return
 	}
 
+	c := request.GetConnection()
 	c.SendMsg(request.GetMsgID(),jsonMsg)
-}
 
-func (this *LoginRouter) PostHandle(request eduiface.IRequest){ 
-	if pwdCorrectFlag {
-		c := request.GetConnection()
-		c.SetSession("isLogined",true)
-		c.SetSession("place",userPlaceFlag)
-	}
+	c.SetSession("isLogined",true)
 }
