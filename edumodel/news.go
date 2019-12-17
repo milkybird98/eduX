@@ -38,7 +38,7 @@ func AddNews(newNews *News) (bool) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	_,err := userCollection.InsertOne(ctx,newNews)
+	_,err := newsCollection.InsertOne(ctx,newNews)
 	if err != nil {
 		fmt.Println("Add new News into database fail, error: ",err)
 		return false
