@@ -25,28 +25,21 @@ func checkFileCollection()  {
 	}
 }
 
-func AddFile(fileName string,size uint64,updaterUID string) (string,bool) {
+func AddFile(newFile *File) (string,bool) {
 	checkFileCollection()
 
 	uuid := uuid.Must(uuid.NewUUID())
 
-	if fileName == "" || size == 0 || updaterUID=="" {
+	if newFile==nil {
 		return "",false
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	updateTime := time.Now()
-	file := &File{
-		fileName,
-		uuid,
-		size,
-		updaterUID,
-		updateTime,
-	}
+	newFile.UUID = uuid
 
-	_,err := fileCollection.InsertOne(ctx,file)
+	_,err := fileCollection.InsertOne(ctx,newFile)
 	if err != nil {
 		fmt.Println(err)
 		return "",false
