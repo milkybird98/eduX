@@ -17,11 +17,13 @@ type PingData struct{
 	ping				string
 }
 
-func (this *PingRouter) Handle(request eduiface.IRequest) {
+var conncheck_replyStatus string
+
+func (this *PingRouter) PreHandle(request eduiface.IRequest) {
 	var reqMsgInJson ReqMsg
 	var reqDataInJson PingData
-	var replyMsg ResMsg
 
+	conncheck_replyStatus=""
 	reqMsgOrigin := request.GetData()
 
 	checksumFlag = false
@@ -29,8 +31,8 @@ func (this *PingRouter) Handle(request eduiface.IRequest) {
 	err := json.Unmarshal(reqMsgOrigin,&reqMsgInJson)
 	if err!=nil{
 		fmt.Println(err)
-		checksumFlag = false
-		replyMsg.status="json_format_error"
+		conncheck_replyStatus="json_format_error"
+		return
 	}
 
 	md5Ctx := md5.New()
@@ -40,24 +42,39 @@ func (this *PingRouter) Handle(request eduiface.IRequest) {
 	if utils.SliceEqual(reqMsgInJson.checksum,md5Ctx.Sum(nil)){
 		checksumFlag = true
 	}else{
-		checksumFlag = false
-		replyMsg.status="check_sum_error"
+		conncheck_replyStatus="check_sum_error"
+		return
 	}
 
-	if checksumFlag {
-		err = json.Unmarshal(reqMsgInJson.data,&reqDataInJson)
-		if err!=nil{
-			fmt.Println(err)
-			checksumFlag = false
-			replyMsg.status="json_format_error"
-		}
+	err = json.Unmarshal(reqMsgInJson.data,&reqDataInJson)
+	if err!=nil{
+		fmt.Println(err)
+		conncheck_replyStatus="json_format_error"
+		return
 	}
 
-	if checksumFlag{
-		if reqDataInJson.ping == "ping"{
-			replyMsg.status="pong"
-		}
+	c := request.GetConnection()
+	value,err := c.GetSession("isLogined")
+	if err!= nil {
+		conncheck_replyStatus="session_error"
+		return
 	}
+
+	if value == false{
+		conncheck_replyStatus="not_login"
+		return
+	}
+
+	if reqDataInJson.ping == "ping"{
+		conncheck_replyStatus="pong"
+	}
+}
+
+
+func (this *PingRouter) Handle(request eduiface.IRequest) {
+	var replyMsg ResMsg
+
+	replyMsg.status = conncheck_replyStatus
 
 	md5Ctx = md5.New()
 	md5Ctx.Write([]byte(replyMsg.status))
