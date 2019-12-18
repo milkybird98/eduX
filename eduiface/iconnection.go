@@ -8,6 +8,8 @@ import (
 type IConnection interface {
 	//启动连接，让当前连接开始工作
 	Start()
+	//启动连接，让当前连接开始工作
+	StartFileTransmit()
 	//停止连接，结束当前连接状态M
 	Stop()
 

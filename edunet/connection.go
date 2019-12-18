@@ -1,13 +1,15 @@
 package edunet
 
 import (
+	"bufio"
+	"eduX/eduiface"
+	"eduX/utils"
 	"errors"
 	"fmt"
 	"io"
 	"net"
+	"os"
 	"sync"
-	"eduX/utils"
-	"eduX/eduiface"
 )
 
 type Connection struct {
@@ -27,7 +29,7 @@ type Connection struct {
 	msgChan chan []byte
 
 	//链接属性
-	session     map[string]interface{}
+	session map[string]interface{}
 	//保护链接属性修改的锁
 	sessionLock sync.RWMutex
 }
@@ -46,9 +48,6 @@ func NewConntion(server eduiface.IServer, conn *net.TCPConn, sessionID uint32, m
 		session:      make(map[string]interface{}),
 	}
 
-	//初始化session
-	initSession(c.session)
-
 	//将新创建的Conn添加到链接管理中
 	c.TcpServer.GetConnMgr().Add(c)
 	return c
@@ -61,6 +60,84 @@ func initSession(session map[string]interface{}) {
 	session["isLogined"] = false
 }
 
+/*
+	文件传输Goroutine,和客户端进行文件传输
+*/
+func (c *Connection) StartTransmiter() {
+	fmt.Println("[Writer Goroutine is running]")
+	defer fmt.Println(c.RemoteAddr().String(), "[conn Writer exit!]")
+	defer c.Stop()
+
+	serectSlice := make([]byte, 16)
+	if _, err := io.ReadFull(c.GetTCPConnection(), serectSlice); err != nil {
+		fmt.Println("read serect error ", err)
+		return
+	}
+
+	result, err := utils.GetCache(string(serectSlice))
+	if err != nil {
+		fmt.Println("file not in transmit list ", serectSlice, " client IP addr ", c.RemoteAddr())
+		return
+	}
+
+	fileTag, ok := result.(utils.FileTransmitTag)
+	if ok != true {
+		fmt.Println("cache data format error")
+		return
+	}
+
+	clientIP := c.RemoteAddr()
+	if clientIP != fileTag.ClientAddress {
+		fmt.Println("request ip not match, want ", fileTag, " but ", clientIP)
+		return
+	}
+
+	data := "ready"
+	if _, err := c.Conn.Write([]byte(data)); err != nil {
+		fmt.Println("Send Data error: ", err)
+		return
+	}
+
+	if fileTag.ServerToC {
+		path := "./file/" + string(serectSlice)
+
+		if res, err := utils.PathExists(path); res != true {
+			fmt.Println("Wanted file not exist,error: ", err)
+			return
+		}
+
+		file, err := os.Open(path)
+		if err != nil {
+			fmt.Println("Open file error: ", err)
+			return
+		}
+		defer file.Close()
+
+		io.Copy(c.GetTCPConnection(), file)
+		return
+	}
+
+	if fileTag.ClientToS {
+		path := "./file/" + string(serectSlice)
+
+		_, err := os.Stat(path)
+		if res, _ := utils.PathExists(path); res == true {
+			fmt.Println("Same serect file already exist: ", string(serectSlice))
+			return
+		}
+
+		file, err := os.Create(path)
+		if err != nil {
+			fmt.Println("Create file error:, ", err)
+			return
+		}
+		defer file.Close()
+
+		netReader := bufio.NewReader(c.GetTCPConnection())
+		netReader.WriteTo(file)
+		return
+	}
+}
 
 /*
 	写消息Goroutine， 用户将数据发送给客户端
@@ -137,7 +214,15 @@ func (c *Connection) StartReader() {
 }
 
 //启动连接，让当前连接开始工作
+func (c *Connection) StartFileTransmit() {
+	//开始准备和客户端进行文件传输
+	go c.StartTransmiter()
+}
+
+//启动连接，让当前连接开始工作
 func (c *Connection) Start() {
+	//初始化session
+	initSession(c.session)
 	//1 开启用户从客户端读取数据流程的Goroutine
 	go c.StartReader()
 	//2 开启用于写回客户端数据流程的Goroutine
@@ -217,7 +302,7 @@ func (c *Connection) GetSession(key string) (interface{}, error) {
 	c.sessionLock.RLock()
 	defer c.sessionLock.RUnlock()
 
-	if value, ok := c.session[key]; ok  {
+	if value, ok := c.session[key]; ok {
 		return value, nil
 	} else {
 		return nil, errors.New("no session found")
