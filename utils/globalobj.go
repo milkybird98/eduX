@@ -1,10 +1,10 @@
 package utils
 
 import (
+	"eduX/eduiface"
 	"encoding/json"
 	"io/ioutil"
 	"os"
-	"eduX/eduiface"
 )
 
 /*
@@ -16,9 +16,9 @@ type GlobalObj struct {
 		Server
 	*/
 	TcpServer eduiface.IServer //当前eduX的全局Server对象
-	Host      string         //当前服务器主机IP
-	TcpPort   int            //当前服务器主机监听端口号
-	Name      string         //当前服务器名称
+	Host      string           //当前服务器主机IP
+	TcpPort   int              //当前服务器主机监听端口号
+	Name      string           //当前服务器名称
 
 	/*
 		eduX
@@ -28,7 +28,7 @@ type GlobalObj struct {
 	MaxConn          int    //当前服务器主机允许的最大链接个数
 	WorkerPoolSize   uint32 //业务工作Worker池的数量
 	MaxWorkerTaskLen uint32 //业务工作Worker对应负责的任务队列最大任务存储数量
-	MaxMsgChanLen	 uint32 //SendBuffMsg发送消息的缓冲最大长度
+	MaxMsgChanLen    uint32 //SendBuffMsg发送消息的缓冲最大长度
 
 	/*
 		config file path
@@ -38,8 +38,13 @@ type GlobalObj struct {
 	/*
 		DataBase
 	*/
-	DataBaseUrl			string
-	DataBaseName		string
+	DataBaseUrl  string
+	DataBaseName string
+
+	/*
+		Cache
+	*/
+	FileTransCacheSize int
 }
 
 /*
@@ -85,19 +90,22 @@ func (g *GlobalObj) Reload() {
 func init() {
 	//初始化GlobalObject变量，设置一些默认值
 	GlobalObject = &GlobalObj{
-		Name:          "eduXServerApp",
-		Version:       "V0.1",
-		TcpPort:       23333,
-		Host:          "0.0.0.0",
-		MaxConn:       12000,
-		MaxPacketSize: 4096,
-		ConfFilePath:  "conf/eduX.json",
-		WorkerPoolSize: 10,
-		MaxWorkerTaskLen: 1024,
-		MaxMsgChanLen:	1024,
-		DataBaseUrl:		"mongodb://localhost:27017",
-		DataBaseName:		"eduPlatform",
+		Name:               "eduXServerApp",
+		Version:            "V0.1",
+		TcpPort:            23333,
+		Host:               "0.0.0.0",
+		MaxConn:            12000,
+		MaxPacketSize:      4096,
+		ConfFilePath:       "conf/eduX.json",
+		WorkerPoolSize:     10,
+		MaxWorkerTaskLen:   1024,
+		MaxMsgChanLen:      1024,
+		DataBaseUrl:        "mongodb://localhost:27017",
+		DataBaseName:       "eduPlatform",
+		FileTransCacheSize: 1024,
 	}
+
+	initCache()
 
 	//从配置文件中重新加载一些用户配置的参数
 	GlobalObject.Reload()
