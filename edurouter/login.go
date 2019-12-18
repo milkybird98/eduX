@@ -23,32 +23,32 @@ var passwordCorrect bool
 var pwdCorrectFlag bool
 
 func (this *LoginRouter) PreHandle(request eduiface.IRequest) {
-	var reqMsgInJson ReqMsg
+	var reqMsgInJSON ReqMsg
 	var reqDataInJson LoginData
 	reqMsgOrigin := request.GetData()
 
 	checksumFlag = false
 	pwdCorrectFlag = false
 
-	err := json.Unmarshal(reqMsgOrigin,&reqMsgInJson)
+	err := json.Unmarshal(reqMsgOrigin,&reqMsgInJSON)
 	if err!=nil{
 		fmt.Println(err)
 		return
 	}
 
 	md5Ctx := md5.New()
-	md5Ctx.Write([]byte(reqMsgInJson.uid))
-  md5Ctx.Write(reqMsgInJson.data)
+	md5Ctx.Write([]byte(reqMsgInJSON.uid))
+  md5Ctx.Write(reqMsgInJSON.data)
 
-	if utils.SliceEqual(reqMsgInJson.checksum,md5Ctx.Sum(nil)){
+	if utils.SliceEqual(reqMsgInJSON.checksum,md5Ctx.Sum(nil)){
 		checksumFlag = true
 	}else{
 		return
 	}
 	
-	userData := edumodel.GetUserByUID(reqMsgInJson.uid)
+	userData := edumodel.GetUserByUID(reqMsgInJSON.uid)
 
-	err = json.Unmarshal(reqMsgInJson.data,&reqDataInJson)
+	err = json.Unmarshal(reqMsgInJSON.data,&reqDataInJson)
 	if err!=nil{
 		fmt.Println(err)
 		return

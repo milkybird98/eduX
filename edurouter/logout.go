@@ -20,7 +20,7 @@ type LogoutData struct {
 }
 
 func (this *LogoutRouter) Handle(request eduiface.IRequest) {
-	var reqMsgInJson ReqMsg
+	var reqMsgInJSON ReqMsg
 	var reqDataInJson LogoutData
 	var replyMsg ResMsg
 
@@ -28,7 +28,7 @@ func (this *LogoutRouter) Handle(request eduiface.IRequest) {
 	logoutFlag = false
 	checksumFlag = false
 
-	err := json.Unmarshal(reqMsgOrigin,&reqMsgInJson)
+	err := json.Unmarshal(reqMsgOrigin,&reqMsgInJSON)
 	if err!=nil{
 		fmt.Println(err)
 		checksumFlag = false
@@ -36,10 +36,10 @@ func (this *LogoutRouter) Handle(request eduiface.IRequest) {
 	}
 
 	md5Ctx := md5.New()
-	md5Ctx.Write([]byte(reqMsgInJson.uid))
-  md5Ctx.Write(reqMsgInJson.data)
+	md5Ctx.Write([]byte(reqMsgInJSON.uid))
+  md5Ctx.Write(reqMsgInJSON.data)
 
-	if utils.SliceEqual(reqMsgInJson.checksum,md5Ctx.Sum(nil)){
+	if utils.SliceEqual(reqMsgInJSON.checksum,md5Ctx.Sum(nil)){
 		checksumFlag = true
 	}else{
 		checksumFlag = false
@@ -47,7 +47,7 @@ func (this *LogoutRouter) Handle(request eduiface.IRequest) {
 	}
 
 	if checksumFlag {
-		err = json.Unmarshal(reqMsgInJson.data,&reqDataInJson)
+		err = json.Unmarshal(reqMsgInJSON.data,&reqDataInJson)
 		if err!=nil{
 			fmt.Println(err)
 			checksumFlag = false
@@ -70,7 +70,7 @@ func (this *LogoutRouter) Handle(request eduiface.IRequest) {
 	}
 
 	if checksumFlag{
-		if reqDataInJson.uid == reqMsgInJson.uid{
+		if reqDataInJson.uid == reqMsgInJSON.uid{
 			replyMsg.status="logout_success"
 			logoutFlag = true
 		}
