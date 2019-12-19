@@ -50,7 +50,7 @@ func (this *ClassJoinInGetRouter) PreHandle(request eduiface.IRequest) {
 		return
 	}
 
-	class := edumodel.GetClassByUID(reqMsgInJSON.uid, placeString)
+	class := edumodel.GetClassByUID(reqMsgInJSON.UID, placeString)
 
 	classjoininget_replyData.ClassName = class.ClassName
 	classjoininget_replyData.StudentList = class.StudentList
