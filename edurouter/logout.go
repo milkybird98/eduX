@@ -1,99 +1,63 @@
 package edurouter
 
 import (
-	"fmt"
-	"eduX/utils"
-	"crypto/md5"
-	"encoding/json"
 	"eduX/eduiface"
 	"eduX/edunet"
+	"fmt"
 )
-
-var logoutFlag bool
 
 type LogoutRouter struct {
 	edunet.BaseRouter
 }
 
-type LogoutData struct {
-	uid				string
-}
+var logout_replyStatus string
+var logoutFlag bool
 
-func (this *LogoutRouter) Handle(request eduiface.IRequest) {
-	var reqMsgInJSON ReqMsg
-	var reqDataInJson LogoutData
-	var replyMsg ResMsg
-
-	reqMsgOrigin := request.GetData()
+func (this *LogoutRouter) PreHandle(request eduiface.IRequest) {
 	logoutFlag = false
-	checksumFlag = false
 
-	err := json.Unmarshal(reqMsgOrigin,&reqMsgInJSON)
-	if err!=nil{
-		fmt.Println(err)
-		checksumFlag = false
-		replyMsg.status="json_format_error"
-	}
-
-	md5Ctx := md5.New()
-	md5Ctx.Write([]byte(reqMsgInJSON.uid))
-  md5Ctx.Write(reqMsgInJSON.data)
-
-	if utils.SliceEqual(reqMsgInJSON.checksum,md5Ctx.Sum(nil)){
-		checksumFlag = true
-	}else{
-		checksumFlag = false
-		replyMsg.status="check_sum_error"
-	}
-
-	if checksumFlag {
-		err = json.Unmarshal(reqMsgInJSON.data,&reqDataInJson)
-		if err!=nil{
-			fmt.Println(err)
-			checksumFlag = false
-			replyMsg.status="json_format_error"
-		}
-	}
-
-	c := request.GetConnection()
-	value,err := c.GetSession("isLogined")
-	if err!= nil {
-		checksumFlag = false
-		replyMsg.status="session_error"
-	}
-
-	if checksumFlag {
-		if value == false{
-			checksumFlag = false
-			replyMsg.status="not_login"
-		}
-	}
-
-	if checksumFlag{
-		if reqDataInJson.uid == reqMsgInJSON.uid{
-			replyMsg.status="logout_success"
-			logoutFlag = true
-		}
-	}
-
-	md5Ctx = md5.New()
-	md5Ctx.Write([]byte(replyMsg.status))
-	md5Ctx.Write(replyMsg.data)
-	replyMsg.checksum = md5Ctx.Sum(nil)
-
-	jsonMsg,err :=json.Marshal(replyMsg)
-	if err!= nil{
-		fmt.Println(err)
+	reqMsgInJSON, logout_replyStatus, ok := CheckMsgFormat(request)
+	if ok != true {
+		fmt.Println("LogoutRouter: ", logout_replyStatus)
 		return
 	}
 
-	c.SendMsg(request.GetMsgID(),jsonMsg)
+	logout_replyStatus, ok = CheckConnectionLogin(request)
+	if ok != true {
+		return
+	}
+
+	sessionUID,err := request.GetConnection().GetSession("UID")
+	if err!=nil{
+		logout_replyStatus = "session_error"
+		return
+	}
+
+	if sessionUID == reqMsgInJSON.UID{
+		logout_replyStatus = "success"
+		logoutFlag = true
+	}else{
+		logout_replyStatus = "logout_fail"
+	}
+	
 }
 
-func (this *LogoutRouter) PostHandle(request eduiface.IRequest){ 
+func (this *LogoutRouter) Handle(request eduiface.IRequest) {
+	fmt.Println("LogoutRouter: ", logout_replyStatus)
+	jsonMsg, err := CombineReplyMsg(logout_replyStatus, nil)
+	if err != nil {
+		fmt.Println("LogoutRouter: ", err)
+		return
+	}
+
+	c := request.GetConnection()
+	c.SendMsg(request.GetMsgID(), jsonMsg)
+}
+
+func (this *LogoutRouter) PostHandle(request eduiface.IRequest) {
 	if logoutFlag {
 		c := request.GetConnection()
-		c.SetSession("isLogined",false)
+		c.SetSession("isLogined", false)
 		c.Stop()
 	}
 }
