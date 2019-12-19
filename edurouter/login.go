@@ -2,92 +2,67 @@ package edurouter
 
 import (
 	"fmt"
-	"eduX/utils"
-	"crypto/md5"
-	"encoding/json"
+
 	"eduX/eduiface"
-	"eduX/edunet"
 	"eduX/edumodel"
+	"eduX/edunet"
+
+	"github.com/tidwall/gjson"
 )
 
 type LoginRouter struct {
 	edunet.BaseRouter
 }
 
-type LoginData struct{
-	pwd				[]byte
+type LoginData struct {
+	Pwd string `json:"pwd"`
 }
 
-var passwordData string 
-var passwordCorrect bool
-var pwdCorrectFlag bool
+var login_replyStatus string
 
 func (this *LoginRouter) PreHandle(request eduiface.IRequest) {
-	var reqMsgInJSON ReqMsg
-	var reqDataInJson LoginData
-	reqMsgOrigin := request.GetData()
-
-	checksumFlag = false
-	pwdCorrectFlag = false
-
-	err := json.Unmarshal(reqMsgOrigin,&reqMsgInJSON)
-	if err!=nil{
-		fmt.Println(err)
+	reqMsgInJSON, login_replyStatus, ok := CheckMsgFormat(request)
+	if ok != true {
+		fmt.Println("LoginRouter: ", login_replyStatus)
 		return
 	}
 
-	md5Ctx := md5.New()
-	md5Ctx.Write([]byte(reqMsgInJSON.uid))
-  md5Ctx.Write(reqMsgInJSON.data)
-
-	if utils.SliceEqual(reqMsgInJSON.checksum,md5Ctx.Sum(nil)){
-		checksumFlag = true
-	}else{
-		return
-	}
-	
-	userData := edumodel.GetUserByUID(reqMsgInJSON.uid)
-
-	err = json.Unmarshal(reqMsgInJSON.data,&reqDataInJson)
-	if err!=nil{
-		fmt.Println(err)
+	userData := edumodel.GetUserByUID(reqMsgInJSON.UID)
+	if userData == nil {
+		login_replyStatus = "login_fail"
 		return
 	}
 
-	if userData!=nil && utils.SliceEqual(reqDataInJson.pwd,[]byte(userData.Pwd)){
-		pwdCorrectFlag = true
+	loginData := gjson.GetBytes(reqMsgInJSON.Data, "pwd")
+	if !loginData.Exists() {
+		login_replyStatus = "data_format_error"
+		return
 	}
 
-	c := request.GetConnection()
+	reqPwd := loginData.String()
 
-	c.SetSession("isLogined",true)
-	c.SetSession("UID",userData.UID)
-	c.SetSession("place",userData.Plcae)
-	c.SetSession("class",userData.Class)
+	if reqPwd == userData.Pwd {
+		login_replyStatus = "success"
+		c := request.GetConnection()
+
+		c.SetSession("isLogined", true)
+		c.SetSession("UID", userData.UID)
+		c.SetSession("place", userData.Plcae)
+		c.SetSession("class", userData.Class)
+	} else {
+		login_replyStatus = "fail"
+	}
+
 }
 
 func (this *LoginRouter) Handle(request eduiface.IRequest) {
-	var replyMsg ResMsg
-	if checksumFlag == false{
-		replyMsg.status="check_sum_error"
-	}else if pwdCorrectFlag{
-		replyMsg.status="login_success"
-	}else{
-		replyMsg.status="login_fail"
-	}
-	md5Ctx := md5.New()
-	md5Ctx.Write([]byte(replyMsg.status))
-	md5Ctx.Write(replyMsg.data)
-	replyMsg.checksum = md5Ctx.Sum(nil)
-
-	jsonMsg,err :=json.Marshal(replyMsg)
-	if err!= nil{
-		fmt.Println(err)
+	fmt.Println("LoginRouter: ", login_replyStatus)
+	jsonMsg, err := CombineReplyMsg(login_replyStatus, nil)
+	if err != nil {
+		fmt.Println("LoginRouter: ", err)
 		return
 	}
 
 	c := request.GetConnection()
-	c.SendMsg(request.GetMsgID(),jsonMsg)
-
-	c.SetSession("isLogined",true)
+	c.SendMsg(request.GetMsgID(), jsonMsg)
 }
