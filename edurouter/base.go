@@ -5,20 +5,23 @@ import (
 	"eduX/eduiface"
 	"eduX/utils"
 	"encoding/json"
+	"encoding/base64"
+
+	"github.com/tidwall/gjson"
 )
 
 var checksumFlag bool
 
 type ReqMsg struct {
-	uid      string
-	data     []byte
-	checksum []byte
+	UID      string `json:"uid"`
+	Data     []byte	`json:"data"`
+	CheckSum string	`json:"checksum"`
 }
 
 type ResMsg struct {
-	status   string
-	data     []byte
-	checksum []byte
+	Status   string	`json:"status"`
+	Data     []byte	`json:"data"`
+	Checksum string	`json:"checksum"`
 }
 
 func CheckMsgFormat(request eduiface.IRequest) (*ReqMsg, string, bool) {
@@ -27,16 +30,31 @@ func CheckMsgFormat(request eduiface.IRequest) (*ReqMsg, string, bool) {
 
 	checksumFlag = false
 
-	err := json.Unmarshal(reqMsgOrigin, &reqMsgInJSON)
-	if err != nil {
+	if !gjson.Valid(string(reqMsgOrigin)) {
 		return nil, "json_format_error", false
 	}
 
-	md5Ctx := md5.New()
-	md5Ctx.Write([]byte(reqMsgInJSON.uid))
-	md5Ctx.Write(reqMsgInJSON.data)
+	parseResult := gjson.ParseBytes(reqMsgOrigin)
 
-	if utils.SliceEqual(reqMsgInJSON.checksum, md5Ctx.Sum(nil)) != true {
+
+	reqMsgInJSON.UID = parseResult.Get("uid").String()
+	dataInMsg := parseResult.Get("data")
+	if dataInMsg.Exists() {
+		var err error
+		reqMsgInJSON.Data,err = base64.StdEncoding.DecodeString(dataInMsg.String())
+		if err!=nil{
+			return nil, "data_base64_format_error", false
+		}
+	}else{
+		reqMsgInJSON.Data = nil
+	}
+	reqMsgInJSON.CheckSum = gjson.GetBytes(reqMsgOrigin, "checksum").String()
+
+	md5Ctx := md5.New()
+	md5Ctx.Write([]byte(reqMsgInJSON.UID))
+	md5Ctx.Write([]byte(reqMsgInJSON.Data))
+
+	if utils.SliceEqual([]byte(reqMsgInJSON.CheckSum), md5Ctx.Sum(nil)) != true {
 		return nil, "check_sum_error", false
 	}
 	return &reqMsgInJSON, "", true
@@ -60,22 +78,22 @@ func CombineReplyMsg(status string, dataInJSON interface{}) ([]byte, error) {
 	var replyMsg ResMsg
 	var err error
 
-	replyMsg.status = status
+	replyMsg.Status = status
 
 	if dataInJSON == nil {
-		replyMsg.data = nil
+		replyMsg.Data = nil
 	} else {
 		data, err := json.Marshal(dataInJSON)
 		if err != nil {
 			return nil, err
 		}
-		replyMsg.data = data
+		replyMsg.Data = data
 	}
 
 	md5Ctx := md5.New()
-	md5Ctx.Write([]byte(replyMsg.status))
-	md5Ctx.Write(replyMsg.data)
-	replyMsg.checksum = md5Ctx.Sum(nil)
+	md5Ctx.Write([]byte(replyMsg.Status))
+	md5Ctx.Write(replyMsg.Data)
+	replyMsg.Checksum = string(md5Ctx.Sum(nil))
 
 	jsonMsg, err := json.Marshal(replyMsg)
 	if err != nil {
