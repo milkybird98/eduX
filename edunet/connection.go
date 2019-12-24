@@ -68,7 +68,7 @@ func (c *Connection) StartTransmiter() {
 	defer fmt.Println(c.RemoteAddr().String(), "[conn Writer exit!]")
 	defer c.Stop()
 
-	serectSlice := make([]byte, 16)
+	serectSlice := make([]byte, 24)
 	if _, err := io.ReadFull(c.GetTCPConnection(), serectSlice); err != nil {
 		fmt.Println("read serect error ", err)
 		return
