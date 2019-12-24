@@ -6,14 +6,12 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 var userCollection *mongo.Collection
 
 type User struct {
-	_id    primitive.ObjectID `bson:"_id,omitempty"`
 	Name   string
 	UID    string
 	Pwd    string
