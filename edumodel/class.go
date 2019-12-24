@@ -13,9 +13,9 @@ import (
 var classCollection *mongo.Collection
 
 type Class struct {
-	ClassName   string
-	TeacherList []string
-	StudentList []string
+	ClassName   string 		`bson:"classname"`
+	TeacherList []string	`bson:"teacherlist"`
+	StudentList []string	`bson:"studentlist"`
 }
 
 func checkClassCollection() {
@@ -43,7 +43,7 @@ func AddClass(newClass *Class) bool {
 	return true
 }
 
-func GetClassByOrder(skip int, limit int) *[]*Class {
+func GetClassByOrder(skip int, limit int) *[]Class {
 	checkClassCollection()
 	if skip < 0 || limit <= 0 {
 		return nil
@@ -55,7 +55,7 @@ func GetClassByOrder(skip int, limit int) *[]*Class {
 	filter := bson.M{"": ""}
 	option := options.Find().SetSkip(int64(skip)).SetLimit(int64(limit))
 
-	var result []*Class
+	var result []Class
 	cur, err := classCollection.Find(ctx, filter, option)
 	if err != nil {
 		return nil
@@ -66,7 +66,7 @@ func GetClassByOrder(skip int, limit int) *[]*Class {
 		if err := cur.Decode(&class); err != nil {
 			return nil
 		}
-		result = append(result, &class)
+		result = append(result, class)
 	}
 
 	return &result
@@ -120,6 +120,37 @@ func GetClassByUID(uid string, place string) *Class {
 	}
 
 	return &result
+}
+
+func CheckUserInClass(className string, uid string, place string) bool {
+	checkClassCollection()
+
+	if uid == "" || place == "" || className == "" {
+		return false
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	var filter interface{}
+
+	if place == "teacher" {
+		filter = bson.M{"classname": className, "teacherlist": uid}
+	} else if place == "student" {
+		filter = bson.M{"classname": className, "studentlist": uid}
+	}
+
+	count, err := classCollection.CountDocuments(ctx, filter)
+	if err != nil {
+		fmt.Println(err)
+		return false
+	}
+
+	if count == 0 {
+		return false
+	} else {
+		return true
+	}
 }
 
 func UpdateClassStudentByUID(className string, studentList []string) bool {
