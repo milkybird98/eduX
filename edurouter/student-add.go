@@ -20,23 +20,24 @@ type StudentAddData struct {
 	ClassName string `json:"class"`
 }
 
-var studentadd_replyStatus string
+var studentaddReplyStatus string
 
-func (this *StudentAddRouter) PreHandle(request eduiface.IRequest) {
+func (router *StudentAddRouter) PreHandle(request eduiface.IRequest) {
+	var reqMsgInJSON *ReqMsg
+	var ok bool
 	var reqDataInJSON StudentAddData
-	reqMsgInJSON, studentadd_replyStatus, ok := CheckMsgFormat(request)
+	reqMsgInJSON, studentaddReplyStatus, ok = CheckMsgFormat(request)
 	if ok != true {
-		fmt.Println("StudentAddRouter: ", studentadd_replyStatus)
 		return
 	}
 
-	studentadd_replyStatus, ok = CheckConnectionLogin(request)
+	studentaddReplyStatus, ok = CheckConnectionLogin(request, reqMsgInJSON.UID)
 	if ok != true {
 		return
 	}
 
 	if !gjson.Valid(string(reqMsgInJSON.Data)) {
-		studentadd_replyStatus = "data_format_error"
+		studentaddReplyStatus = "data_format_error"
 		return
 	}
 
@@ -49,12 +50,12 @@ func (this *StudentAddRouter) PreHandle(request eduiface.IRequest) {
 	c := request.GetConnection()
 	sessionPlace, err := c.GetSession("place")
 	if err != nil {
-		studentadd_replyStatus = "seesion_error"
+		studentaddReplyStatus = "seesion_error"
 		return
 	}
 
 	if sessionPlace != "manager" {
-		studentadd_replyStatus = "permission_error"
+		studentaddReplyStatus = "permission_error"
 	}
 
 	//数据库操作
@@ -69,18 +70,16 @@ func (this *StudentAddRouter) PreHandle(request eduiface.IRequest) {
 
 	res := edumodel.AddUser(&newUser)
 	if res {
-		studentadd_replyStatus = "add_success"
-		return
-	}else{
-		studentadd_replyStatus = "add_fail"
-		return
+		studentaddReplyStatus = "success"
+	} else {
+		studentaddReplyStatus = "model_fail"
 	}
 
 }
 
-func (this *StudentAddRouter) Handle(request eduiface.IRequest) {
-	fmt.Println("StudentAddRouter: ", studentadd_replyStatus)
-	jsonMsg, err := CombineReplyMsg(studentadd_replyStatus, nil)
+func (router *StudentAddRouter) Handle(request eduiface.IRequest) {
+	fmt.Println("StudentAddRouter: ", studentaddReplyStatus)
+	jsonMsg, err := CombineReplyMsg(studentaddReplyStatus, nil)
 	if err != nil {
 		fmt.Println("StudentAddRouter: ", err)
 		return
