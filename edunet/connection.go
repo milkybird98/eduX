@@ -74,15 +74,9 @@ func (c *Connection) StartTransmiter() {
 		return
 	}
 
-	result, err := utils.GetCache(string(serectSlice))
+	fileTag, err := utils.GetFileTranCache(string(serectSlice))
 	if err != nil {
 		fmt.Println("file not in transmit list ", serectSlice, " client IP addr ", c.RemoteAddr())
-		return
-	}
-
-	fileTag, ok := result.(utils.FileTransmitTag)
-	if ok != true {
-		fmt.Println("cache data format error")
 		return
 	}
 
