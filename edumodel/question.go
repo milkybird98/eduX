@@ -24,6 +24,7 @@ type Question struct {
 	AnswerTime time.Time `bson:"answertime,omitempty"`
 	IsSolved   bool
 	Answer     string `bson:"answer,omitempty"`
+	IsDeleted  bool   `bson:",omitempty"`
 }
 
 func checkQuesCollection() {
@@ -97,10 +98,12 @@ func GetQuestionBySenderUID(skip int, limit int, detectSolved bool, isSolved boo
 		filter = bson.M{
 			"issolved":  isSolved,
 			"senderuid": uid,
+			"isdeleted": false,
 		}
 	} else {
 		filter = bson.M{
 			"senderuid": uid,
+			"isdeleted": false,
 		}
 	}
 
@@ -136,6 +139,7 @@ func GetQuestionByQueserUID(skip int, limit int, isSolved bool, uid string) *[]Q
 	filter := bson.M{
 		"issolved":  isSolved,
 		"queseruid": uid,
+		"isdeleted": false,
 	}
 	option := options.Find().SetSort(bson.M{"sendtime": 1}).SetSkip(int64(skip)).SetLimit(int64(limit))
 
@@ -172,10 +176,12 @@ func GetQuestionByClassname(skip int, limit int, detectSolved bool, isSolved boo
 		filter = bson.M{
 			"issolved":  isSolved,
 			"classname": className,
+			"isdeleted": false,
 		}
 	} else {
 		filter = bson.M{
 			"classname": className,
+			"isdeleted": false,
 		}
 	}
 
@@ -215,7 +221,7 @@ func GetQuestionByInnerID(idInString string) *Question {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	filter := bson.M{"_id": id}
+	filter := bson.M{"_id": id, "isdeleted": false}
 
 	var question Question
 	err = quesCollection.FindOne(ctx, filter).Decode(&question)
@@ -244,7 +250,7 @@ func AnserQuestionByInnerID(idInString string, UID string, answer string) bool {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	filter := bson.M{"_id": id}
+	filter := bson.M{"_id": id, "isdeleted": false}
 	update := bson.M{"$set": bson.M{"answeruid": UID, "issolved": true, "answer": answer, "answertime": time.Now()}}
 
 	_, err = quesCollection.UpdateOne(ctx, filter, update)
@@ -256,8 +262,14 @@ func AnserQuestionByInnerID(idInString string, UID string, answer string) bool {
 	return true
 }
 
-func DeleteQuestionByInnerID(id primitive.ObjectID) bool {
+func DeleteQuestionByInnerID(idInString string) bool {
 	checkQuesCollection()
+
+	id, err := primitive.ObjectIDFromHex(idInString)
+	if err != nil {
+		fmt.Println(err)
+		return false
+	}
 
 	if id.IsZero() {
 		return false
@@ -266,9 +278,10 @@ func DeleteQuestionByInnerID(id primitive.ObjectID) bool {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	filter := bson.M{"_id": id}
+	filter := bson.M{"_id": id, "isdeleted": false}
+	update := bson.M{"$set": bson.M{"isdeleted": true}}
 
-	_, err := quesCollection.DeleteOne(ctx, filter)
+	_, err = quesCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
 		fmt.Println(err)
 		return false
