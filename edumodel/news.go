@@ -14,8 +14,8 @@ import (
 var newsCollection *mongo.Collection
 
 type News struct {
-	_id        primitive.ObjectID `bson:"_id,omitempty"`
-	IsAnnoce   bool
+	ID         primitive.ObjectID `bson:"_id,omitempty"`
+	IsAnnounce bool
 	Title      string
 	Text       string
 	SenderUID  string
@@ -48,7 +48,36 @@ func AddNews(newNews *News) bool {
 	return true
 }
 
-func GetNewsByTimeOrder(skip int, limit int, isAnnoce bool) *[]*News {
+func GetNewsByInnerID(idInString string) *News {
+	checkNewsCollection()
+
+	if idInString == "" {
+		return nil
+	}
+
+	id, err := primitive.ObjectIDFromHex(idInString)
+
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	filter := bson.M{"_id": id, "isdeleted": false}
+
+	var news News
+	err = newsCollection.FindOne(ctx, filter).Decode(&news)
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+
+	return &news
+}
+
+func GetNewsByTimeOrder(skip int, limit int, isAnnounce bool) *[]News {
 	checkNewsCollection()
 
 	if skip < 0 || limit <= 0 {
@@ -58,10 +87,10 @@ func GetNewsByTimeOrder(skip int, limit int, isAnnoce bool) *[]*News {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	filter := bson.M{"isannoce": isAnnoce}
+	filter := bson.M{"isannounce": isAnnounce}
 	option := options.Find().SetSort(bson.M{"sendtime": 1}).SetSkip(int64(skip)).SetLimit(int64(limit))
 
-	var result []*News
+	var result []News
 	cur, err := newsCollection.Find(ctx, filter, option)
 	if err != nil {
 		return nil
@@ -72,13 +101,13 @@ func GetNewsByTimeOrder(skip int, limit int, isAnnoce bool) *[]*News {
 		if err := cur.Decode(&news); err != nil {
 			return nil
 		}
-		result = append(result, &news)
+		result = append(result, news)
 	}
 
 	return &result
 }
 
-func GetNewsBySenderUID(skip int, limit int, isAnnoce bool, uid string) *[]*News {
+func GetNewsBySenderUID(skip int, limit int, isAnnounce bool, uid string) *[]News {
 	checkNewsCollection()
 
 	if skip < 0 || limit <= 0 {
@@ -89,12 +118,12 @@ func GetNewsBySenderUID(skip int, limit int, isAnnoce bool, uid string) *[]*News
 	defer cancel()
 
 	filter := bson.M{
-		"isannoce":  isAnnoce,
-		"senderuid": uid,
+		"isannounce": isAnnounce,
+		"senderuid":  uid,
 	}
 	option := options.Find().SetSort(bson.M{"sendtime": 1}).SetSkip(int64(skip)).SetLimit(int64(limit))
 
-	var result []*News
+	var result []News
 	cur, err := newsCollection.Find(ctx, filter, option)
 	if err != nil {
 		return nil
@@ -105,13 +134,13 @@ func GetNewsBySenderUID(skip int, limit int, isAnnoce bool, uid string) *[]*News
 		if err := cur.Decode(&news); err != nil {
 			return nil
 		}
-		result = append(result, &news)
+		result = append(result, news)
 	}
 
 	return &result
 }
 
-func GetNewsByAudientUID(skip int, limit int, isAnnoce bool, uid string) *[]*News {
+func GetNewsByAudientUID(skip int, limit int, isAnnounce bool, uid string) *[]News {
 	checkNewsCollection()
 
 	if skip < 0 || limit <= 0 {
@@ -122,12 +151,12 @@ func GetNewsByAudientUID(skip int, limit int, isAnnoce bool, uid string) *[]*New
 	defer cancel()
 
 	filter := bson.M{
-		"isannoce":   isAnnoce,
+		"isannounce": isAnnounce,
 		"audientuid": uid,
 	}
 	option := options.Find().SetSort(bson.M{"sendtime": 1}).SetSkip(int64(skip)).SetLimit(int64(limit))
 
-	var result []*News
+	var result []News
 	cur, err := newsCollection.Find(ctx, filter, option)
 	if err != nil {
 		return nil
@@ -138,14 +167,20 @@ func GetNewsByAudientUID(skip int, limit int, isAnnoce bool, uid string) *[]*New
 		if err := cur.Decode(&news); err != nil {
 			return nil
 		}
-		result = append(result, &news)
+		result = append(result, news)
 	}
 
 	return &result
 }
 
-func DeleteNewsByInnerID(id primitive.ObjectID) bool {
+func DeleteNewsByInnerID(idInString string) bool {
 	checkNewsCollection()
+
+	id, err := primitive.ObjectIDFromHex(idInString)
+	if err != nil {
+		fmt.Println(err)
+		return false
+	}
 
 	if id.IsZero() {
 		return false
@@ -156,7 +191,7 @@ func DeleteNewsByInnerID(id primitive.ObjectID) bool {
 
 	filter := bson.M{"_id": id}
 
-	_, err := newsCollection.DeleteOne(ctx, filter)
+	_, err = newsCollection.DeleteOne(ctx, filter)
 	if err != nil {
 		fmt.Println(err)
 		return false
