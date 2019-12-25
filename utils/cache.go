@@ -1,15 +1,14 @@
 package utils
 
 import (
+	"eduX/eduiface"
 	"net"
 	"time"
 
 	"github.com/bluele/gcache"
 )
 
-/*
-	文件传输队列元素结构体
-*/
+// FileTransmitTag 是cache中存储文件传输数据的格式
 type FileTransmitTag struct {
 	FileName      string
 	Size          uint64
@@ -18,20 +17,45 @@ type FileTransmitTag struct {
 	ClientToS     bool
 }
 
-//文件传输队列
+// FileTransmitCache 是文件传输队列缓存
 var FileTransmitCache gcache.Cache
 
-func initCache() {
-	FileTransmitCache = gcache.New(GlobalObject.FileTransCacheSize).
+func initFileTranCache() {
+	FileTransmitCache = gcache.New(int(GlobalObject.FileTransCacheSize)).
 		LRU().
 		Build()
 }
 
-func SetCacheExpire(key string, value interface{}, expireTime int) {
-	FileTransmitCache.SetWithExpire(key, value, time.Second * time.Duration(expireTime))
+// SetFileTranCacheExpire 用于设定
+func SetFileTranCacheExpire(key string, value FileTransmitTag, expireTime int) {
+	FileTransmitCache.SetWithExpire(key, value, time.Second*time.Duration(expireTime))
 }
 
-func GetCache(key string) (interface{}, error) {
+func GetFileTranCache(key string) (*FileTransmitTag, error) {
 	value, err := FileTransmitCache.Get(key)
-	return value, err
+	if err != nil {
+		return nil, err
+	}
+
+	file, ok := value.(FileTransmitTag)
+	if !ok {
+		return nil, err
+	}
+
+	return &file, nil
+}
+
+type UserOnlineTag struct {
+	LastSeenTime  time.Time
+	ClientAddress net.Addr
+	UID           string
+	Connection    eduiface.IConnection
+}
+
+var UserOnlineCache gcache.Cache
+
+func initUserOnlineCache() {
+	UserOnlineCache = gcache.New(int(GlobalObject.UserOnlineCacheSize)).
+		LRU().
+		Build()
 }
