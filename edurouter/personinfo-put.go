@@ -20,26 +20,27 @@ type PersonInfoPutData struct {
 	Gender    int    `json:"gender"`
 }
 
-var personput_replyStatus string
+var personputReplyStatus string
 
-func (this *PersonInfoPutRouter) PreHandle(request eduiface.IRequest) {
-	var reqDataInJSON PersonInfoPutData
-	reqMsgInJSON, personput_replyStatus, ok := CheckMsgFormat(request)
+func (router *PersonInfoPutRouter) PreHandle(request eduiface.IRequest) {
+	var reqMsgInJSON *ReqMsg
+	var ok bool
+	reqMsgInJSON, personputReplyStatus, ok = CheckMsgFormat(request)
 	if ok != true {
-		fmt.Println("PersonInfoPutRouter: ", personput_replyStatus)
 		return
 	}
 
-	classjoininget_replyStatus, ok = CheckConnectionLogin(request)
+	classjoiningetReplyStatus, ok = CheckConnectionLogin(request, reqMsgInJSON.UID)
 	if ok != true {
 		return
 	}
 
 	if !gjson.Valid(string(reqMsgInJSON.Data)) {
-		classjoininget_replyStatus = "data_format_error"
+		classjoiningetReplyStatus = "data_format_error"
 		return
 	}
 
+	var reqDataInJSON PersonInfoPutData
 	newPersonInfoData := gjson.ParseBytes(reqMsgInJSON.Data)
 	reqDataInJSON.UID = newPersonInfoData.Get("uid").String()
 	reqDataInJSON.Name = newPersonInfoData.Get("name").String()
@@ -50,34 +51,34 @@ func (this *PersonInfoPutRouter) PreHandle(request eduiface.IRequest) {
 	c := request.GetConnection()
 	sessionUID, err := c.GetSession("UID")
 	if err != nil {
-		personget_replyStatus = "session_error"
+		persongetReplyStatus = "session_error"
 		return
 	}
 
 	userData := edumodel.GetUserByUID(reqDataInJSON.UID)
 	if userData == nil {
-		personget_replyStatus = "user_not_found"
+		persongetReplyStatus = "user_not_found"
 		return
 	}
 
 	if sessionUID != reqDataInJSON.UID {
 		sessionPlcae, err := c.GetSession("plcae")
 		if err != nil {
-			personget_replyStatus = "session_error"
+			persongetReplyStatus = "session_error"
 			return
 		}
 
 		if sessionPlcae == "student" {
-			personget_replyStatus = "permission_error"
+			persongetReplyStatus = "permission_error"
 			return
 		} else if sessionPlcae == "teacher" {
 			sessionClass, err := c.GetSession("Class")
 			if err != nil {
-				personget_replyStatus = "session_error"
+				persongetReplyStatus = "session_error"
 				return
 			}
 			if userData.Class != sessionClass {
-				personget_replyStatus = "permission_error"
+				persongetReplyStatus = "permission_error"
 				return
 			}
 		}
@@ -86,17 +87,15 @@ func (this *PersonInfoPutRouter) PreHandle(request eduiface.IRequest) {
 	//修改个人信息
 	res := edumodel.UpdateUserByID(reqMsgInJSON.UID, reqDataInJSON.ClassName, reqDataInJSON.Name, "", reqDataInJSON.Gender)
 	if res {
-		personput_replyStatus = "update_success"
-		return
+		personputReplyStatus = "update_success"
 	} else {
-		personput_replyStatus = "update_fail"
-		return
+		personputReplyStatus = "update_fail"
 	}
 }
 
-func (this *PersonInfoPutRouter) Handle(request eduiface.IRequest) {
-	fmt.Println("PersonInfoPutRouter: ", personput_replyStatus)
-	jsonMsg, err := CombineReplyMsg(personput_replyStatus, nil)
+func (router *PersonInfoPutRouter) Handle(request eduiface.IRequest) {
+	fmt.Println("PersonInfoPutRouter: ", personputReplyStatus)
+	jsonMsg, err := CombineReplyMsg(personputReplyStatus, nil)
 	if err != nil {
 		fmt.Println("PersonInfoPutRouter: ", err)
 		return
