@@ -18,31 +18,32 @@ type LoginData struct {
 	Pwd string `json:"pwd"`
 }
 
-var login_replyStatus string
+var loginReplyStatus string
 
-func (this *LoginRouter) PreHandle(request eduiface.IRequest) {
-	reqMsgInJSON, login_replyStatus, ok := CheckMsgFormat(request)
+func (router *LoginRouter) PreHandle(request eduiface.IRequest) {
+	var reqMsgInJSON *ReqMsg
+	var ok bool
+	reqMsgInJSON, loginReplyStatus, ok = CheckMsgFormat(request)
 	if ok != true {
-		fmt.Println("LoginRouter: ", login_replyStatus)
 		return
 	}
 
 	userData := edumodel.GetUserByUID(reqMsgInJSON.UID)
 	if userData == nil {
-		login_replyStatus = "login_fail"
+		loginReplyStatus = "login_fail"
 		return
 	}
 
 	loginData := gjson.GetBytes(reqMsgInJSON.Data, "pwd")
 	if !loginData.Exists() {
-		login_replyStatus = "data_format_error"
+		loginReplyStatus = "data_format_error"
 		return
 	}
 
 	reqPwd := loginData.String()
 
 	if reqPwd == userData.Pwd {
-		login_replyStatus = "success"
+		loginReplyStatus = "success"
 		c := request.GetConnection()
 
 		c.SetSession("isLogined", true)
@@ -50,14 +51,13 @@ func (this *LoginRouter) PreHandle(request eduiface.IRequest) {
 		c.SetSession("place", userData.Plcae)
 		c.SetSession("class", userData.Class)
 	} else {
-		login_replyStatus = "fail"
+		loginReplyStatus = "fail"
 	}
-
 }
 
-func (this *LoginRouter) Handle(request eduiface.IRequest) {
-	fmt.Println("LoginRouter: ", login_replyStatus)
-	jsonMsg, err := CombineReplyMsg(login_replyStatus, nil)
+func (router *LoginRouter) Handle(request eduiface.IRequest) {
+	fmt.Println("LoginRouter: ", loginReplyStatus)
+	jsonMsg, err := CombineReplyMsg(loginReplyStatus, nil)
 	if err != nil {
 		fmt.Println("LoginRouter: ", err)
 		return

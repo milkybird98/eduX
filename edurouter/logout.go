@@ -10,41 +10,38 @@ type LogoutRouter struct {
 	edunet.BaseRouter
 }
 
-var logout_replyStatus string
-var logoutFlag bool
+var logoutReplyStatus string
 
-func (this *LogoutRouter) PreHandle(request eduiface.IRequest) {
-	logoutFlag = false
-
-	reqMsgInJSON, logout_replyStatus, ok := CheckMsgFormat(request)
-	if ok != true {
-		fmt.Println("LogoutRouter: ", logout_replyStatus)
-		return
-	}
-
-	logout_replyStatus, ok = CheckConnectionLogin(request)
+func (router *LogoutRouter) PreHandle(request eduiface.IRequest) {
+	var reqMsgInJSON *ReqMsg
+	var ok bool
+	reqMsgInJSON, logoutReplyStatus, ok = CheckMsgFormat(request)
 	if ok != true {
 		return
 	}
 
-	sessionUID,err := request.GetConnection().GetSession("UID")
-	if err!=nil{
-		logout_replyStatus = "session_error"
+	logoutReplyStatus, ok = CheckConnectionLogin(request, reqMsgInJSON.UID)
+	if ok != true {
 		return
 	}
 
-	if sessionUID == reqMsgInJSON.UID{
-		logout_replyStatus = "success"
-		logoutFlag = true
-	}else{
-		logout_replyStatus = "logout_fail"
+	sessionUID, err := request.GetConnection().GetSession("UID")
+	if err != nil {
+		logoutReplyStatus = "session_error"
+		return
 	}
-	
+
+	if sessionUID == reqMsgInJSON.UID {
+		logoutReplyStatus = "success"
+	} else {
+		logoutReplyStatus = "logout_fail"
+	}
+
 }
 
-func (this *LogoutRouter) Handle(request eduiface.IRequest) {
-	fmt.Println("LogoutRouter: ", logout_replyStatus)
-	jsonMsg, err := CombineReplyMsg(logout_replyStatus, nil)
+func (router *LogoutRouter) Handle(request eduiface.IRequest) {
+	fmt.Println("LogoutRouter: ", logoutReplyStatus)
+	jsonMsg, err := CombineReplyMsg(logoutReplyStatus, nil)
 	if err != nil {
 		fmt.Println("LogoutRouter: ", err)
 		return
@@ -54,8 +51,8 @@ func (this *LogoutRouter) Handle(request eduiface.IRequest) {
 	c.SendMsg(request.GetMsgID(), jsonMsg)
 }
 
-func (this *LogoutRouter) PostHandle(request eduiface.IRequest) {
-	if logoutFlag {
+func (router *LogoutRouter) PostHandle(request eduiface.IRequest) {
+	if logoutReplyStatus == "success" {
 		c := request.GetConnection()
 		c.SetSession("isLogined", false)
 		c.Stop()
