@@ -13,38 +13,38 @@ type PingRouter struct {
 	edunet.BaseRouter
 }
 
-var conncheck_replyStatus string
+var conncheckReplyStatus string
 
-func (this *PingRouter) PreHandle(request eduiface.IRequest) {
-	reqMsgInJSON, conncheck_replyStatus, ok := CheckMsgFormat(request)
+func (router *PingRouter) PreHandle(request eduiface.IRequest) {
+	reqMsgInJSON, conncheckReplyStatus, ok := CheckMsgFormat(request)
 	if ok != true {
-		fmt.Println("PingRouter: ", conncheck_replyStatus)
+		fmt.Println("PingRouter: ", conncheckReplyStatus)
 		return
 	}
 
-	conncheck_replyStatus, ok = CheckConnectionLogin(request)
+	conncheckReplyStatus, ok = CheckConnectionLogin(request, reqMsgInJSON.UID)
 	if ok != true {
 		return
 	}
 
 	pingData := gjson.GetBytes(reqMsgInJSON.Data, "ping")
 	if !pingData.Exists() {
-		conncheck_replyStatus = "data_format_error"
+		conncheckReplyStatus = "data_format_error"
 		return
 	}
 
 	reqPing := pingData.String()
 
 	if reqPing == "ping" {
-		conncheck_replyStatus = "pong"
+		conncheckReplyStatus = "pong"
 	} else {
-		conncheck_replyStatus = "data_format_error"
+		conncheckReplyStatus = "data_format_error"
 	}
 }
 
-func (this *PingRouter) Handle(request eduiface.IRequest) {
-	fmt.Println("PingRouter: ", conncheck_replyStatus)
-	jsonMsg, err := CombineReplyMsg(conncheck_replyStatus, nil)
+func (router *PingRouter) Handle(request eduiface.IRequest) {
+	fmt.Println("PingRouter: ", conncheckReplyStatus)
+	jsonMsg, err := CombineReplyMsg(conncheckReplyStatus, nil)
 	if err != nil {
 		fmt.Println("PingRouter: ", err)
 		return
