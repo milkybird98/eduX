@@ -6,6 +6,7 @@ import (
 	"eduX/utils"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 
 	"github.com/tidwall/gjson"
 )
@@ -16,14 +17,14 @@ var checksumFlag bool
 type ReqMsg struct {
 	UID      string `json:"uid"`
 	Data     []byte `json:"data"`
-	CheckSum string `json:"checksum"`
+	CheckSum []byte `json:"checksum"`
 }
 
 //ResMsg 发送数据结构体
 type ResMsg struct {
 	Status   string `json:"status"`
 	Data     []byte `json:"data"`
-	Checksum string `json:"checksum"`
+	CheckSum []byte `json:"checksum"`
 }
 
 //CheckMsgFormat 检查接收数据格式是否正确
@@ -40,21 +41,41 @@ func CheckMsgFormat(request eduiface.IRequest) (*ReqMsg, string, bool) {
 	parseResult := gjson.ParseBytes(reqMsgOrigin)
 
 	reqMsgInJSON.UID = parseResult.Get("uid").String()
-	dataInMsg := parseResult.Get("data")
-	if dataInMsg.Exists() {
+	if reqMsgInJSON.UID == "" {
+		return nil, "uid_cannot_be_empty", false
+	}
+
+	reqMsgDataData := parseResult.Get("data")
+
+	if reqMsgDataData.Exists() {
 		var err error
-		reqMsgInJSON.Data, err = base64.StdEncoding.DecodeString(dataInMsg.String())
+		reqMsgInJSON.Data, err = base64.StdEncoding.DecodeString(reqMsgDataData.String())
 		if err != nil {
 			return nil, "data_base64_format_error", false
 		}
 	} else {
 		reqMsgInJSON.Data = nil
 	}
-	reqMsgInJSON.CheckSum = gjson.GetBytes(reqMsgOrigin, "checksum").String()
+
+	regMsgCheckSumData := gjson.GetBytes(reqMsgOrigin, "checksum").String()
+	if len(regMsgCheckSumData) == 0 {
+		return nil, "checksum_cannot_be_empty", false
+	}
+
+	var err error
+	reqMsgInJSON.CheckSum, err = base64.StdEncoding.DecodeString(regMsgCheckSumData)
+	if err != nil {
+		return nil, "data_base64_format_error", false
+	}
 
 	md5Ctx := md5.New()
+	fmt.Println(reqMsgInJSON.UID)
 	md5Ctx.Write([]byte(reqMsgInJSON.UID))
+	fmt.Println(string(reqMsgInJSON.Data))
 	md5Ctx.Write([]byte(reqMsgInJSON.Data))
+
+	fmt.Println([]byte(md5Ctx.Sum(nil)))
+	fmt.Println([]byte(reqMsgInJSON.CheckSum))
 
 	if utils.SliceEqual([]byte(reqMsgInJSON.CheckSum), md5Ctx.Sum(nil)) != true {
 		return nil, "check_sum_error", false
@@ -65,6 +86,7 @@ func CheckMsgFormat(request eduiface.IRequest) (*ReqMsg, string, bool) {
 //CheckConnectionLogin 检查当前用户是否已登陆
 func CheckConnectionLogin(request eduiface.IRequest, UID string) (string, bool) {
 	c := request.GetConnection()
+	fmt.Println("1")
 	sessionUID, err := c.GetSession("UID")
 	if err != nil {
 		return "session_error", false
@@ -73,6 +95,7 @@ func CheckConnectionLogin(request eduiface.IRequest, UID string) (string, bool) 
 	if sessionUID != UID {
 		return "uid_not_match", false
 	}
+	fmt.Println("2")
 
 	value, err := c.GetSession("isLogined")
 	if err != nil {
@@ -100,15 +123,48 @@ func CombineReplyMsg(status string, dataInJSON interface{}) ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		replyMsg.Data = data
+		replyMsg.Data = make([]byte, 256)
+		base64.StdEncoding.Encode(replyMsg.Data, data)
 	}
 
 	md5Ctx := md5.New()
 	md5Ctx.Write([]byte(replyMsg.Status))
 	md5Ctx.Write(replyMsg.Data)
-	replyMsg.Checksum = string(md5Ctx.Sum(nil))
+	replyMsg.CheckSum = md5Ctx.Sum(nil)
 
 	jsonMsg, err := json.Marshal(replyMsg)
+	if err != nil {
+		return nil, err
+	}
+
+	return jsonMsg, nil
+}
+
+func CombineSendMsg(UID string, dataInJSON interface{}) ([]byte, error) {
+	var sendMsg ReqMsg
+	var err error
+
+	sendMsg.UID = UID
+
+	if dataInJSON == nil {
+		sendMsg.Data = nil
+	} else {
+		data, err := json.Marshal(dataInJSON)
+		if err != nil {
+			return nil, err
+		}
+
+		sendMsg.Data = data
+		//	sendMsg.Data = make([]byte, 256)
+		//	base64.StdEncoding.Encode(sendMsg.Data, data)
+	}
+
+	md5Ctx := md5.New()
+	md5Ctx.Write([]byte(sendMsg.UID))
+	md5Ctx.Write(sendMsg.Data)
+	sendMsg.CheckSum = md5Ctx.Sum(nil)
+
+	jsonMsg, err := json.Marshal(sendMsg)
 	if err != nil {
 		return nil, err
 	}
