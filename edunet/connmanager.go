@@ -1,10 +1,10 @@
 package edunet
 
 import (
+	"eduX/eduiface"
 	"errors"
 	"fmt"
 	"sync"
-	"eduX/eduiface"
 )
 
 /*
@@ -12,15 +12,15 @@ import (
 */
 type ConnManager struct {
 	connections map[uint32]eduiface.IConnection //管理的连接信息
-	connLock    sync.RWMutex                  //读写连接的读写锁
+	connLock    sync.RWMutex                    //读写连接的读写锁
 }
 
 /*
 	创建一个链接管理
- */
+*/
 func NewConnManager() *ConnManager {
 	return &ConnManager{
-		connections:make(map[uint32] eduiface.IConnection),
+		connections: make(map[uint32]eduiface.IConnection),
 	}
 }
 
@@ -45,7 +45,7 @@ func (connMgr *ConnManager) Remove(conn eduiface.IConnection) {
 	//删除连接信息
 	delete(connMgr.connections, conn.GetConnID())
 
-	fmt.Println("connection Remove ConnID=",conn.GetConnID(), " successfully: conn num = ", connMgr.Len())
+	fmt.Println("connection Remove ConnID=", conn.GetConnID(), " successfully: conn num = ", connMgr.Len())
 }
 
 //利用ConnID获取链接
@@ -77,9 +77,8 @@ func (connMgr *ConnManager) ClearConn() {
 		//停止
 		conn.Stop()
 		//删除
-		delete(connMgr.connections,connID)
+		delete(connMgr.connections, connID)
 	}
-
 
 	fmt.Println("Clear All Connections successfully: conn num = ", connMgr.Len())
 }
