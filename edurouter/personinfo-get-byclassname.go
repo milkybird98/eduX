@@ -54,18 +54,19 @@ func (router *PersonInfoGetByClassRouter) PreHandle(request eduiface.IRequest) {
 	reqClassName := reqClassNameData.String()
 
 	c := request.GetConnection()
-	sessionPlace, err := c.GetSession("Place")
+	sessionPlace, err := c.GetSession("place")
 	if err != nil {
-		persongetbyclassReplyStatus = "session_error"
+		persongetbyclassReplyStatus = "59session_error"
 		return
 	}
+
 	if sessionPlace == "student" {
 		persongetbyclassReplyStatus = "permission_error"
 		return
 	} else if sessionPlace == "teacher" {
-		sessionClass, err := c.GetSession("Class")
+		sessionClass, err := c.GetSession("class")
 		if err != nil {
-			persongetbyclassReplyStatus = "session_error"
+			persongetbyclassReplyStatus = "69session_error"
 			return
 		}
 		if reqClassName != sessionClass {
@@ -79,22 +80,30 @@ func (router *PersonInfoGetByClassRouter) PreHandle(request eduiface.IRequest) {
 		persongetbyclassReplyStatus = "data_not_found"
 		return
 	}
-
 	persongetbyclassReplyStatus = "success"
 
-	for index, personData := range *userManyData {
-		persongetbyclassReplyData.UserList[index] =
+	for _, personData := range *userManyData {
+		persongetbyclassReplyData.UserList = append(
+			persongetbyclassReplyData.UserList,
 			PersonInfoGetReplyData{
 				personData.UID,
 				personData.Name,
 				personData.Class,
-				personData.Gender}
+				personData.Gender})
 	}
 }
 
 func (router *PersonInfoGetByClassRouter) Handle(request eduiface.IRequest) {
 	fmt.Println("PersonInfoGetByClassRouter: ", persongetbyclassReplyStatus)
-	jsonMsg, err := CombineReplyMsg(persongetbyclassReplyStatus, persongetbyclassReplyData)
+	var jsonMsg []byte
+	var err error
+
+	if persongetbyclassReplyStatus == "success" {
+		jsonMsg, err = CombineReplyMsg(persongetbyclassReplyStatus, persongetbyclassReplyData)
+
+	} else {
+		jsonMsg, err = CombineReplyMsg(persongetbyclassReplyStatus, nil)
+	}
 	if err != nil {
 		fmt.Println(err)
 		return
