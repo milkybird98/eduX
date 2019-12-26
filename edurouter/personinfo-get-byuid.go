@@ -4,7 +4,6 @@ import (
 	"eduX/eduiface"
 	"eduX/edumodel"
 	"eduX/edunet"
-	"encoding/json"
 	"fmt"
 
 	"github.com/tidwall/gjson"
@@ -54,27 +53,29 @@ func (router *PersonInfoGetRouter) PreHandle(request eduiface.IRequest) {
 
 	sessionUID, err := c.GetSession("UID")
 	if err != nil {
-		persongetReplyStatus = "session_error"
+		persongetReplyStatus = "57session_error"
 		return
 	}
+
+	userData = edumodel.GetUserByUID(personUID)
+	if userData == nil {
+		persongetReplyStatus = "user_not_found"
+		return
+	}
+
 	if sessionUID != personUID {
-		sessionPlace, err := c.GetSession("plcae")
+		sessionPlace, err := c.GetSession("place")
 		if err != nil {
-			persongetReplyStatus = "session_error"
+			persongetReplyStatus = "64session_error"
 			return
 		}
 		if sessionPlace == "student" {
 			persongetReplyStatus = "permission_error"
 			return
 		} else if sessionPlace == "teacher" {
-			sessionClass, err := c.GetSession("Class")
+			sessionClass, err := c.GetSession("class")
 			if err != nil {
-				persongetReplyStatus = "session_error"
-				return
-			}
-			userData = edumodel.GetUserByUID(personUID)
-			if userData == nil {
-				persongetReplyStatus = "user_not_found"
+				persongetReplyStatus = "73session_error"
 				return
 			}
 			if userData.Class != sessionClass {
@@ -84,23 +85,26 @@ func (router *PersonInfoGetRouter) PreHandle(request eduiface.IRequest) {
 		}
 	}
 
-	persongetReplyStatus = "success"
+	fmt.Println(userData.Class)
 
 	persongetReplyData.ClassName = userData.Class
 	persongetReplyData.Gender = userData.Gender
 	persongetReplyData.Name = userData.Name
 	persongetReplyData.UID = userData.UID
+
+	persongetReplyStatus = "success"
 }
 
 func (router *PersonInfoGetRouter) Handle(request eduiface.IRequest) {
 	fmt.Println("PersonInfoGetRouter: ", persongetReplyStatus)
-	data, err := json.Marshal(persongetReplyData)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	var jsonMsg []byte
+	var err error
+	if persongetReplyStatus == "success" {
+		jsonMsg, err = CombineReplyMsg(persongetReplyStatus, persongetReplyData)
+	} else {
+		jsonMsg, err = CombineReplyMsg(persongetReplyStatus, nil)
 
-	jsonMsg, err := CombineReplyMsg(persongetReplyStatus, data)
+	}
 	if err != nil {
 		fmt.Println(err)
 		return
