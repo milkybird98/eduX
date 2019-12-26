@@ -62,16 +62,16 @@ func (router *PersonInfoPutRouter) PreHandle(request eduiface.IRequest) {
 	}
 
 	if sessionUID != reqDataInJSON.UID {
-		sessionPlcae, err := c.GetSession("plcae")
+		sessionPlace, err := c.GetSession("plcae")
 		if err != nil {
 			persongetReplyStatus = "session_error"
 			return
 		}
 
-		if sessionPlcae == "student" {
+		if sessionPlace == "student" {
 			persongetReplyStatus = "permission_error"
 			return
-		} else if sessionPlcae == "teacher" {
+		} else if sessionPlace == "teacher" {
 			sessionClass, err := c.GetSession("Class")
 			if err != nil {
 				persongetReplyStatus = "session_error"
