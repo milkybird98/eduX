@@ -10,52 +10,53 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-type StudentAddRouter struct {
+type PersonAddRouter struct {
 	edunet.BaseRouter
 }
 
-type StudentAddData struct {
-	UID       string `json:"uid"`
-	Name      string `json:"name"`
-	ClassName string `json:"class"`
+type PersonAddData struct {
+	UID   string `json:"uid"`
+	Name  string `json:"name"`
+	Place string `json:"place"`
 }
 
-var studentaddReplyStatus string
+var personAddReplyStatus string
 
-func (router *StudentAddRouter) PreHandle(request eduiface.IRequest) {
+func (router *PersonAddRouter) PreHandle(request eduiface.IRequest) {
 	var reqMsgInJSON *ReqMsg
 	var ok bool
-	var reqDataInJSON StudentAddData
-	reqMsgInJSON, studentaddReplyStatus, ok = CheckMsgFormat(request)
+	var reqDataInJSON PersonAddData
+	reqMsgInJSON, personAddReplyStatus, ok = CheckMsgFormat(request)
 	if ok != true {
 		return
 	}
 
-	studentaddReplyStatus, ok = CheckConnectionLogin(request, reqMsgInJSON.UID)
+	personAddReplyStatus, ok = CheckConnectionLogin(request, reqMsgInJSON.UID)
 	if ok != true {
 		return
 	}
 
 	if !gjson.Valid(string(reqMsgInJSON.Data)) {
-		studentaddReplyStatus = "data_format_error"
+		personAddReplyStatus = "data_format_error"
 		return
 	}
 
 	newStudentData := gjson.ParseBytes(reqMsgInJSON.Data)
 	reqDataInJSON.UID = newStudentData.Get("uid").String()
 	reqDataInJSON.Name = newStudentData.Get("name").String()
-	reqDataInJSON.ClassName = newStudentData.Get("class").String()
+	reqDataInJSON.Place = newStudentData.Get("place").String()
 
 	//权限检查
 	c := request.GetConnection()
 	sessionPlace, err := c.GetSession("place")
 	if err != nil {
-		studentaddReplyStatus = "seesion_error"
+		personAddReplyStatus = "seesion_error"
 		return
 	}
 
 	if sessionPlace != "manager" {
-		studentaddReplyStatus = "permission_error"
+		personAddReplyStatus = "permission_error"
+		return
 	}
 
 	//数据库操作
@@ -64,24 +65,24 @@ func (router *StudentAddRouter) PreHandle(request eduiface.IRequest) {
 	newUser.UID = reqDataInJSON.UID
 	newUser.Name = reqDataInJSON.Name
 	newUser.Pwd = base64.StdEncoding.EncodeToString([]byte(newUser.UID))
-	newUser.Plcae = "student"
-	newUser.Class = reqDataInJSON.ClassName
+	newUser.Place = reqDataInJSON.Place
+	newUser.Class = ""
 	newUser.Gender = 0
 
 	res := edumodel.AddUser(&newUser)
 	if res {
-		studentaddReplyStatus = "success"
+		personAddReplyStatus = "success"
 	} else {
-		studentaddReplyStatus = "model_fail"
+		personAddReplyStatus = "model_fail"
 	}
 
 }
 
-func (router *StudentAddRouter) Handle(request eduiface.IRequest) {
-	fmt.Println("StudentAddRouter: ", studentaddReplyStatus)
-	jsonMsg, err := CombineReplyMsg(studentaddReplyStatus, nil)
+func (router *PersonAddRouter) Handle(request eduiface.IRequest) {
+	fmt.Println("PersonAddRouter: ", personAddReplyStatus)
+	jsonMsg, err := CombineReplyMsg(personAddReplyStatus, nil)
 	if err != nil {
-		fmt.Println("StudentAddRouter: ", err)
+		fmt.Println("PersonAddRouter: ", err)
 		return
 	}
 
