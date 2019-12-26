@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 var fileCollection *mongo.Collection
@@ -27,28 +28,57 @@ func checkFileCollection() {
 	}
 }
 
-func AddFile(newFile *File) (string, bool) {
+func AddFile(newFile *File) bool {
 	checkFileCollection()
 
 	if newFile == nil {
-		return "", false
+		return false
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	newFile.ID = primitive.NewObjectID()
-
 	_, err := fileCollection.InsertOne(ctx, newFile)
 	if err != nil {
 		fmt.Println(err)
-		return "", false
+		return false
 	}
 
-	return newFile.ID.Hex(), true
+	return true
 }
 
-func GetFileByClassName(ClassName string) *File {
+func GetFileBySenderUID(skip int, limit int, SenderUID string) *[]File {
+	checkFileCollection()
+
+	if SenderUID == "" {
+		return nil
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	filter := bson.M{"classname": SenderUID}
+	option := options.Find().SetSort(bson.M{"updatetime": 1}).SetSkip(int64(skip)).SetLimit(int64(limit))
+
+	var result []File
+	cur, err := fileCollection.Find(ctx, filter, option)
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+
+	for cur.Next(ctx) {
+		var file File
+		if err := cur.Decode(&file); err != nil {
+			return nil
+		}
+		result = append(result, file)
+	}
+
+	return &result
+}
+
+func GetFileByClassName(skip int, limit int, ClassName string) *[]File {
 	checkFileCollection()
 
 	if ClassName == "" {
@@ -59,12 +89,21 @@ func GetFileByClassName(ClassName string) *File {
 	defer cancel()
 
 	filter := bson.M{"classname": ClassName}
+	option := options.Find().SetSort(bson.M{"updatetime": 1}).SetSkip(int64(skip)).SetLimit(int64(limit))
 
-	var result File
-	err := fileCollection.FindOne(ctx, filter).Decode(&result)
+	var result []File
+	cur, err := fileCollection.Find(ctx, filter, option)
 	if err != nil {
 		fmt.Println(err)
 		return nil
+	}
+
+	for cur.Next(ctx) {
+		var file File
+		if err := cur.Decode(&file); err != nil {
+			return nil
+		}
+		result = append(result, file)
 	}
 
 	return &result
