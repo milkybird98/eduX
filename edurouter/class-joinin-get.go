@@ -17,48 +17,59 @@ type ClassJoinInGetReplyData struct {
 	StudentList []string
 }
 
-var classjoininget_replyStatus string
-var classjoininget_replyData ClassJoinInGetReplyData
+var classjoiningetReplyStatus string
+var classjoiningetReplyData ClassJoinInGetReplyData
 
-func (this *ClassJoinInGetRouter) PreHandle(request eduiface.IRequest) {
-	classjoininget_replyData = ClassJoinInGetReplyData{}
+func (router *ClassJoinInGetRouter) PreHandle(request eduiface.IRequest) {
+	classjoiningetReplyData = ClassJoinInGetReplyData{}
 
-	reqMsgInJSON, classjoininget_replyStatus, ok := CheckMsgFormat(request)
+	reqMsgInJSON, classjoiningetReplyStatus, ok := CheckMsgFormat(request)
 	if ok != true {
-		fmt.Println("ClassJoinInGetRouter: ", classjoininget_replyStatus)
+		fmt.Println("ClassJoinInGetRouter: ", classjoiningetReplyStatus)
 		return
 	}
 
-	classjoininget_replyStatus, ok = CheckConnectionLogin(request)
+	classjoiningetReplyStatus, ok = CheckConnectionLogin(request, reqMsgInJSON.UID)
 	if ok != true {
-		fmt.Println("ClassJoinInGetRouter: ", classjoininget_replyStatus)
+		fmt.Println("ClassJoinInGetRouter: ", classjoiningetReplyStatus)
 		return
 	}
 
 	c := request.GetConnection()
 	place, err := c.GetSession("plcae")
 	if err != nil {
-		classjoininget_replyStatus = "session_error"
-		fmt.Println("ClassJoinInGetRouter: ", classjoininget_replyStatus)
+		classjoiningetReplyStatus = "session_error"
+		fmt.Println("ClassJoinInGetRouter: ", classjoiningetReplyStatus)
 		return
 	}
 
 	placeString, ok := place.(string)
 	if ok != true {
-		classjoininget_replyStatus = "session_error"
-		fmt.Println("ClassJoinInGetRouter: ", classjoininget_replyStatus)
+		classjoiningetReplyStatus = "session_error"
+		fmt.Println("ClassJoinInGetRouter: ", classjoiningetReplyStatus)
 		return
 	}
 
 	class := edumodel.GetClassByUID(reqMsgInJSON.UID, placeString)
 
-	classjoininget_replyData.ClassName = class.ClassName
-	classjoininget_replyData.StudentList = class.StudentList
-	classjoininget_replyData.TeacherList = class.TeacherList
+	if class == nil {
+		classjoiningetReplyStatus = "not_join_class"
+	} else {
+		classjoiningetReplyStatus = "success"
+		classjoiningetReplyData.ClassName = class.ClassName
+		classjoiningetReplyData.StudentList = class.StudentList
+		classjoiningetReplyData.TeacherList = class.TeacherList
+	}
 }
 
-func (this *ClassJoinInGetRouter) Handle(request eduiface.IRequest) {
-	jsonMsg, err := CombineReplyMsg(classjoininget_replyStatus, classjoininget_replyData)
+func (router *ClassJoinInGetRouter) Handle(request eduiface.IRequest) {
+	var jsonMsg []byte
+	var err error
+	if classjoiningetReplyStatus == "success" {
+		jsonMsg, err = CombineReplyMsg(classjoiningetReplyStatus, classjoiningetReplyData)
+	} else {
+		jsonMsg, err = CombineReplyMsg(classjoiningetReplyStatus, nil)
+	}
 	if err != nil {
 		fmt.Println(err)
 		return
