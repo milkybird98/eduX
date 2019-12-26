@@ -1,21 +1,94 @@
 package edutest
 
-import(
+import (
 	"eduX/edumodel"
+	"encoding/json"
 	"fmt"
 	"testing"
+	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func TestClassModel(t *testing.T){
+func TestQuestionModel(t *testing.T) {
 	fmt.Println("start connect mongo")
 	edumodel.ConnectMongo()
 
 	fmt.Println("start choose database")
 	edumodel.ConnectDatabase(nil)
 
-	teacherList := []string{"T1001","T1002"}
-	studentList := []string{"U1001","U1002"}
+	teacherList := []string{"T1001", "T1002"}
+	studentList := []string{"U1001", "U1002"}
 
+	_ = edumodel.Class{
+		"ts1001",
+		teacherList,
+		studentList,
+	}
+
+	fmt.Println("add question")
+	var newQuestion edumodel.Question
+	newQuestion.Title = "测试 Question"
+	newQuestion.Text = "this is a < 测试问题》"
+	newQuestion.SenderUID = "U1001"
+	newQuestion.ClassName = "ts1001"
+	newQuestion.SendTime = time.Now()
+	newQuestion.IsSolved = false
+	newQuestion.IsDeleted = false
+
+	ok := edumodel.AddQuestion(&newQuestion)
+	if ok {
+		fmt.Println("pass")
+	} else {
+		t.FailNow()
+	}
+
+	fmt.Println("get question by classname")
+	questions := edumodel.GetQuestionByClassName(0, 5, false, false, "ts1001")
+	if questions == nil {
+		t.FailNow()
+	}
+	fmt.Println(*questions)
+
+	ss := (*questions)[0].ID.Hex()
+	fmt.Println(ss)
+	id, _ := primitive.ObjectIDFromHex(ss)
+	fmt.Println(id)
+	js, _ := json.Marshal((*questions)[0])
+	fmt.Println(string(js))
+
+	fmt.Println("get questions by sender UID")
+	questions = edumodel.GetQuestionBySenderUID(0, 10, false, false, "U1001")
+	if questions == nil {
+		t.FailNow()
+	}
+	fmt.Println((*questions)[0])
+	fmt.Println("pass")
+
+	fmt.Println("Answer question by inner ID")
+	ok = edumodel.AnserQuestionByInnerID(((*questions)[0].ID.Hex()), "T1002", "这是a test answer, 它混合中 英 文")
+	if !ok {
+		t.FailNow()
+	}
+	fmt.Println("pass")
+
+	fmt.Println("Delete answer by innerID")
+	ok = edumodel.DeleteQuestionByInnerID((*questions)[0].ID.Hex())
+	if !ok {
+		t.FailNow()
+	}
+	fmt.Println("pass")
+}
+
+func TestClassModel(t *testing.T) {
+	fmt.Println("start connect mongo")
+	edumodel.ConnectMongo()
+
+	fmt.Println("start choose database")
+	edumodel.ConnectDatabase(nil)
+
+	teacherList := []string{"T1001", "T1002"}
+	studentList := []string{"U1001", "U1002"}
 
 	fmt.Println("add class")
 	class := &edumodel.Class{
@@ -29,7 +102,7 @@ func TestClassModel(t *testing.T){
 
 	fmt.Println("get class by name")
 	aclass := edumodel.GetClassByName("ts1001")
-	if aclass != nil{
+	if aclass != nil {
 		fmt.Println(aclass)
 		fmt.Println("success")
 	}
@@ -37,8 +110,8 @@ func TestClassModel(t *testing.T){
 	aclass = nil
 
 	fmt.Println("get class by teacher uid")
-	aclass = edumodel.GetClassByUID("T1001","teacher")
-	if aclass != nil{
+	aclass = edumodel.GetClassByUID("T1001", "teacher")
+	if aclass != nil {
 		fmt.Println(aclass)
 		fmt.Println("success")
 	}
@@ -46,42 +119,40 @@ func TestClassModel(t *testing.T){
 	aclass = nil
 
 	fmt.Println("get class by student uid")
-	aclass = edumodel.GetClassByUID("U1001","student")
-	if aclass != nil{
+	aclass = edumodel.GetClassByUID("U1001", "student")
+	if aclass != nil {
 		fmt.Println(aclass)
 		fmt.Println("success")
 	}
 
 	fmt.Println("add new student")
-	if edumodel.UpdateClassStudentByUID("ts1001",[]string{"U1001","U1003"}){
+	if edumodel.UpdateClassStudentByUID("ts1001", []string{"U1001", "U1003"}) {
 		fmt.Println("success")
 	}
 
 	fmt.Println("add new teacher")
-	if edumodel.UpdateClassTeacherByUID("ts1001",[]string{"T1001","T1003"}){
+	if edumodel.UpdateClassTeacherByUID("ts1001", []string{"T1001", "T1003"}) {
 		fmt.Println("success")
 	}
 
-	
 	fmt.Println("delete student")
-	if edumodel.DeleteClassStudentByUID("ts1001",[]string{"U1002"}){
+	if edumodel.DeleteClassStudentByUID("ts1001", []string{"U1002"}) {
 		fmt.Println("success")
 	}
 
 	fmt.Println("delete teacher")
-	if edumodel.DeleteClassTeacherByUID("ts1001",[]string{"T1002"}){
+	if edumodel.DeleteClassTeacherByUID("ts1001", []string{"T1002"}) {
 		fmt.Println("success")
 	}
 
-	
 	fmt.Println("delete class")
-	if edumodel.DeleteClassByName("ts1001"){
+	if edumodel.DeleteClassByName("ts1001") {
 		fmt.Println("success")
 	}
-	
+
 }
 
-func TestUserModel(t *testing.T){
+func TestUserModel(t *testing.T) {
 	fmt.Println("start connect mongo")
 	edumodel.ConnectMongo()
 
@@ -98,13 +169,13 @@ func TestUserModel(t *testing.T){
 		1,
 	}
 	edumodel.AddUser(user)
-	
+
 	fmt.Println("get user by id")
 	user = edumodel.GetUserByUID("U1000")
 	fmt.Println(user)
 
 	fmt.Println("update user by id")
-	edumodel.UpdateUserByID("U1000","ts1002","","",0)
+	edumodel.UpdateUserByID("U1000", "ts1002", "", "", 0)
 	user = edumodel.GetUserByUID("U1000")
 	fmt.Println(user)
 
