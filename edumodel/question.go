@@ -24,7 +24,7 @@ type Question struct {
 	AnswerTime time.Time `bson:"answertime,omitempty"`
 	IsSolved   bool
 	Answer     string `bson:"answer,omitempty"`
-	IsDeleted  bool   `bson:",omitempty"`
+	IsDeleted  bool   `bson:"isdeleted"`
 }
 
 func checkQuesCollection() {
@@ -160,7 +160,7 @@ func GetQuestionByQueserUID(skip int, limit int, isSolved bool, uid string) *[]Q
 	return &result
 }
 
-func GetQuestionByClassname(skip int, limit int, detectSolved bool, isSolved bool, className string) *[]Question {
+func GetQuestionByClassName(skip int, limit int, detectSolved bool, isSolved bool, className string) *[]Question {
 	checkQuesCollection()
 
 	if skip < 0 || limit <= 0 {
