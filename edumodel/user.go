@@ -15,7 +15,7 @@ type User struct {
 	Name   string
 	UID    string
 	Pwd    string
-	Plcae  string
+	Place  string
 	Class  string
 	Gender int
 }

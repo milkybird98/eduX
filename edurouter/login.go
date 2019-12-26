@@ -48,7 +48,7 @@ func (router *LoginRouter) PreHandle(request eduiface.IRequest) {
 
 		c.SetSession("isLogined", true)
 		c.SetSession("UID", userData.UID)
-		c.SetSession("place", userData.Plcae)
+		c.SetSession("place", userData.Place)
 		c.SetSession("class", userData.Class)
 	} else {
 		loginReplyStatus = "fail"

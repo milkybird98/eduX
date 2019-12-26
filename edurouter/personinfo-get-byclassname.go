@@ -54,15 +54,15 @@ func (router *PersonInfoGetByClassRouter) PreHandle(request eduiface.IRequest) {
 	reqClassName := reqClassNameData.String()
 
 	c := request.GetConnection()
-	sessionPlcae, err := c.GetSession("Plcae")
+	sessionPlace, err := c.GetSession("Place")
 	if err != nil {
 		persongetbyclassReplyStatus = "session_error"
 		return
 	}
-	if sessionPlcae == "student" {
+	if sessionPlace == "student" {
 		persongetbyclassReplyStatus = "permission_error"
 		return
-	} else if sessionPlcae == "teacher" {
+	} else if sessionPlace == "teacher" {
 		sessionClass, err := c.GetSession("Class")
 		if err != nil {
 			persongetbyclassReplyStatus = "session_error"

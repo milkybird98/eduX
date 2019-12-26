@@ -45,13 +45,13 @@ func (router *ClassStudentDelRouter) PreHandle(request eduiface.IRequest) {
 
 	//权限检查
 	c := request.GetConnection()
-	sessionPlcae, err := c.GetSession("place")
+	sessionPlace, err := c.GetSession("place")
 	if err != nil {
 		classstudentdelReplyStatus = "session_error"
 		return
 	}
 
-	placeString, ok := sessionPlcae.(string)
+	placeString, ok := sessionPlace.(string)
 	if ok != true {
 		classstudentdelReplyStatus = "session_error"
 		return
