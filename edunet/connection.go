@@ -1,8 +1,8 @@
 package edunet
 
 import (
-	"bufio"
 	"eduX/eduiface"
+	"eduX/edumodel"
 	"eduX/utils"
 	"errors"
 	"fmt"
@@ -10,6 +10,8 @@ import (
 	"net"
 	"os"
 	"sync"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type Connection struct {
@@ -93,7 +95,7 @@ func (c *Connection) StartTransmiter() {
 	}
 
 	if fileTag.ServerToC {
-		path := "./file/" + string(serectSlice)
+		path := "./file/" + string(fileTag.ID)
 
 		if res, err := utils.PathExists(path); res != true {
 			fmt.Println("Wanted file not exist,error: ", err)
@@ -107,16 +109,52 @@ func (c *Connection) StartTransmiter() {
 		}
 		defer file.Close()
 
-		io.Copy(c.GetTCPConnection(), file)
+		size, err := io.Copy(c.GetTCPConnection(), file)
+		if err != nil {
+			fmt.Println("File transmite error: ", err)
+			err := os.Remove(path)
+			if err != nil {
+				fmt.Println("Remove file error: ", err)
+			} else {
+				fmt.Println("Remove file suceess")
+			}
+			return
+		}
+
+		if size != fileTag.Size {
+			fmt.Println("File size not match: ", err)
+			err := os.Remove(path)
+			if err != nil {
+				fmt.Println("Remove file error: ", err)
+			} else {
+				fmt.Println("Remove file suceess")
+			}
+			return
+		}
+
+		var newFile edumodel.File
+		newFile.ClassName = fileTag.ClassName
+		newFile.FileName = fileTag.FileName
+		newFile.ID, err = primitive.ObjectIDFromHex(fileTag.ID)
+		if err != nil {
+		}
+		newFile.Size = uint64(fileTag.Size)
+		newFile.UpdateTime = fileTag.UpdateTime
+		newFile.UpdaterUID = fileTag.UpdaterUID
+
+		ok := edumodel.AddFile(&newFile)
+		if !ok {
+		}
+
 		return
 	}
 
 	if fileTag.ClientToS {
-		path := "./file/" + string(serectSlice)
+		path := "./file/" + string(fileTag.ID)
 
 		_, err := os.Stat(path)
 		if res, _ := utils.PathExists(path); res == true {
-			fmt.Println("Same serect file already exist: ", string(serectSlice))
+			fmt.Println("Same serect file already exist: ", string(fileTag.ID))
 			return
 		}
 
@@ -127,8 +165,29 @@ func (c *Connection) StartTransmiter() {
 		}
 		defer file.Close()
 
-		netReader := bufio.NewReader(c.GetTCPConnection())
-		netReader.WriteTo(file)
+		size, err := io.Copy(file, c.GetTCPConnection())
+		if err != nil {
+			fmt.Println("File transmite error: ", err)
+			err := os.Remove(path)
+			if err != nil {
+				fmt.Println("Remove file error: ", err)
+			} else {
+				fmt.Println("Remove file suceess")
+			}
+			return
+		}
+
+		if size != fileTag.Size {
+			fmt.Println("File size not match: ", err)
+			err := os.Remove(path)
+			if err != nil {
+				fmt.Println("Remove file error: ", err)
+			} else {
+				fmt.Println("Remove file suceess")
+			}
+			return
+		}
+
 		return
 	}
 }
