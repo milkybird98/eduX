@@ -69,13 +69,13 @@ func CheckMsgFormat(request eduiface.IRequest) (*ReqMsg, string, bool) {
 	}
 
 	md5Ctx := md5.New()
-	fmt.Println(reqMsgInJSON.UID)
+	//fmt.Println(reqMsgInJSON.UID)
 	md5Ctx.Write([]byte(reqMsgInJSON.UID))
-	fmt.Println(string(reqMsgInJSON.Data))
+	//fmt.Println(string(reqMsgInJSON.Data))
 	md5Ctx.Write([]byte(reqMsgInJSON.Data))
 
-	fmt.Println([]byte(md5Ctx.Sum(nil)))
-	fmt.Println([]byte(reqMsgInJSON.CheckSum))
+	//fmt.Println([]byte(md5Ctx.Sum(nil)))
+	//fmt.Println([]byte(reqMsgInJSON.CheckSum))
 
 	if utils.SliceEqual([]byte(reqMsgInJSON.CheckSum), md5Ctx.Sum(nil)) != true {
 		return nil, "check_sum_error", false
@@ -86,7 +86,6 @@ func CheckMsgFormat(request eduiface.IRequest) (*ReqMsg, string, bool) {
 //CheckConnectionLogin 检查当前用户是否已登陆
 func CheckConnectionLogin(request eduiface.IRequest, UID string) (string, bool) {
 	c := request.GetConnection()
-	fmt.Println("1")
 	sessionUID, err := c.GetSession("UID")
 	if err != nil {
 		return "session_error", false
@@ -95,7 +94,6 @@ func CheckConnectionLogin(request eduiface.IRequest, UID string) (string, bool) 
 	if sessionUID != UID {
 		return "uid_not_match", false
 	}
-	fmt.Println("2")
 
 	value, err := c.GetSession("isLogined")
 	if err != nil {
@@ -123,8 +121,9 @@ func CombineReplyMsg(status string, dataInJSON interface{}) ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		replyMsg.Data = make([]byte, 256)
-		base64.StdEncoding.Encode(replyMsg.Data, data)
+		replyMsg.Data = data
+		//replyMsg.Data = make([]byte, 256)
+		//base64.StdEncoding.Encode(replyMsg.Data, data)
 	}
 
 	md5Ctx := md5.New()
@@ -137,6 +136,7 @@ func CombineReplyMsg(status string, dataInJSON interface{}) ([]byte, error) {
 		return nil, err
 	}
 
+	fmt.Println(string(jsonMsg))
 	return jsonMsg, nil
 }
 
@@ -169,5 +169,6 @@ func CombineSendMsg(UID string, dataInJSON interface{}) ([]byte, error) {
 		return nil, err
 	}
 
+	fmt.Println(string(jsonMsg))
 	return jsonMsg, nil
 }
