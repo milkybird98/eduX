@@ -55,6 +55,22 @@ func NewConntion(server eduiface.IServer, conn *net.TCPConn, sessionID uint32, m
 	return c
 }
 
+func NewFileConntion(server eduiface.IServer, conn *net.TCPConn, sessionID uint32) *Connection {
+	//初始化Conn属性
+	c := &Connection{
+		TcpServer:    server,
+		Conn:         conn,
+		ConnID:       sessionID,
+		isClosed:     false,
+		ExitBuffChan: make(chan bool, 1),
+		msgChan:      make(chan []byte),
+		session:      make(map[string]interface{}),
+	}
+
+	c.TcpServer.GetConnMgr().Add(c)
+	return c
+}
+
 /*
 	初始化Session,设定默认值
 */
@@ -67,7 +83,7 @@ func initSession(session map[string]interface{}) {
 */
 func (c *Connection) StartTransmiter() {
 	fmt.Println("[Writer Goroutine is running]")
-	defer fmt.Println(c.RemoteAddr().String(), "[conn Writer exit!]")
+	defer fmt.Println(c.RemoteAddr().String(), "[conn File Transmiter exit!]")
 	defer c.Stop()
 
 	serectSlice := make([]byte, 24)
@@ -122,7 +138,7 @@ func (c *Connection) StartTransmiter() {
 		}
 
 		if size != fileTag.Size {
-			fmt.Println("File size not match: ", err)
+			fmt.Println("File size not match, want: ", fileTag.Size, " fact: ", size)
 			err := os.Remove(path)
 			if err != nil {
 				fmt.Println("Remove file error: ", err)
@@ -168,24 +184,11 @@ func (c *Connection) StartTransmiter() {
 		size, err := io.Copy(file, c.GetTCPConnection())
 		if err != nil {
 			fmt.Println("File transmite error: ", err)
-			err := os.Remove(path)
-			if err != nil {
-				fmt.Println("Remove file error: ", err)
-			} else {
-				fmt.Println("Remove file suceess")
-			}
 			return
 		}
 
 		if size != fileTag.Size {
-			fmt.Println("File size not match: ", err)
-			err := os.Remove(path)
-			if err != nil {
-				fmt.Println("Remove file error: ", err)
-			} else {
-				fmt.Println("Remove file suceess")
-			}
-			return
+			fmt.Println("File size not match, want: ", fileTag.Size, " fact: ", size)
 		}
 
 		return
