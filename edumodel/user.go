@@ -141,6 +141,58 @@ func UpdateUserByID(uid string, class string, name string, pwd string, gender in
 	return true
 }
 
+func AddUserToClassByUID(uidList []string, ClassName string) bool {
+	checkUserCollection()
+
+	if uidList == nil || len(uidList) <= 0 {
+		return false
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	filter := bson.M{"uid": uidList, "class": ""}
+	update := bson.D{
+		{"$set", bson.M{
+			"class": ClassName,
+		}},
+	}
+
+	_, err := userCollection.UpdateMany(ctx, filter, update)
+	if err != nil {
+		fmt.Println(err)
+		return false
+	}
+
+	return true
+}
+
+func DeleteUserFromClassByUID(uidList []string, ClassName string) bool {
+	checkUserCollection()
+
+	if uidList == nil || len(uidList) <= 0 {
+		return false
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	filter := bson.M{"uid": uidList, "class": ClassName}
+	update := bson.D{
+		{"$set", bson.M{
+			"class": "",
+		}},
+	}
+
+	_, err := userCollection.UpdateMany(ctx, filter, update)
+	if err != nil {
+		fmt.Println(err)
+		return false
+	}
+
+	return true
+}
+
 func DeleteUserByUID(uid string) bool {
 	checkUserCollection()
 
