@@ -152,7 +152,7 @@ func GetNewsByAudientUID(skip int, limit int, isAnnounce bool, uid string) *[]Ne
 
 	filter := bson.M{
 		"isannounce": isAnnounce,
-		"audientuid": uid,
+		"audientuid": []string{"all", uid},
 	}
 	option := options.Find().SetSort(bson.M{"sendtime": 1}).SetSkip(int64(skip)).SetLimit(int64(limit))
 
