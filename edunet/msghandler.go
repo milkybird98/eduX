@@ -1,39 +1,49 @@
 package edunet
 
 import (
+	"eduX/eduiface"
+	"eduX/utils"
 	"fmt"
 	"strconv"
-	"eduX/utils"
-	"eduX/eduiface"
 )
 
 type MsgHandle struct {
-	Apis           map[uint32]eduiface.IRouter  //存放每个MsgId 所对应的处理方法的map属性
-	WorkerPoolSize uint32                     //业务工作Worker池的数量
-	TaskQueue      []chan eduiface.IRequest     //Worker负责取任务的消息队列
+	Apis           map[uint32]eduiface.IRouter //存放每个MsgId 所对应的处理方法的map属性
+	WorkerPoolSize uint32                      //业务工作Worker池的数量
+	TaskQueue      []chan eduiface.IRequest    //Worker负责取任务的消息队列
+	WorkerIndex    uint32
 }
 
 func NewMsgHandle() *MsgHandle {
 	return &MsgHandle{
-		Apis: make(map[uint32]eduiface.IRouter),
-		WorkerPoolSize:utils.GlobalObject.WorkerPoolSize,
+		Apis:           make(map[uint32]eduiface.IRouter),
+		WorkerPoolSize: utils.GlobalObject.WorkerPoolSize,
 		//一个worker对应一个queue
-		TaskQueue:make([]chan eduiface.IRequest, utils.GlobalObject.WorkerPoolSize),
+		TaskQueue:   make([]chan eduiface.IRequest, utils.GlobalObject.WorkerPoolSize),
+		WorkerIndex: 0,
 	}
 }
 
+func (mh *MsgHandle) NextIndex() uint32 {
+	if mh.WorkerIndex >= (mh.WorkerPoolSize - 1) {
+		mh.WorkerIndex = 0
+	} else {
+		mh.WorkerIndex++
+	}
+	return mh.WorkerIndex
+}
+
 //将消息交给TaskQueue,由worker进行处理
-func (mh *MsgHandle)SendMsgToTaskQueue(request eduiface.IRequest) {
+func (mh *MsgHandle) SendMsgToTaskQueue(request eduiface.IRequest) {
 	//根据ConnID来分配当前的连接应该由哪个worker负责处理
 	//轮询的平均分配法则
 
 	//得到需要处理此条连接的workerID
-	workerID := request.GetConnection().GetConnID() % mh.WorkerPoolSize
-	fmt.Println("Add ConnID=", request.GetConnection().GetConnID()," request msgID=", request.GetMsgID(), "to workerID=", workerID)
+	workerID := mh.NextIndex()
+	fmt.Println("Add ConnID=", request.GetConnection().GetConnID(), " request msgID=", request.GetMsgID(), "to workerID=", workerID)
 	//将请求消息发送给任务队列
 	mh.TaskQueue[workerID] <- request
 }
-
 
 //马上以非阻塞方式处理消息
 func (mh *MsgHandle) DoMsgHandler(request eduiface.IRequest) {
@@ -66,9 +76,9 @@ func (mh *MsgHandle) StartOneWorker(workerID int, taskQueue chan eduiface.IReque
 	//不断的等待队列中的消息
 	for {
 		select {
-			//有消息则取出队列的Request，并执行绑定的业务方法
-			case request := <-taskQueue:
-				mh.DoMsgHandler(request)
+		//有消息则取出队列的Request，并执行绑定的业务方法
+		case request := <-taskQueue:
+			mh.DoMsgHandler(request)
 		}
 	}
 }
@@ -76,7 +86,7 @@ func (mh *MsgHandle) StartOneWorker(workerID int, taskQueue chan eduiface.IReque
 //启动worker工作池
 func (mh *MsgHandle) StartWorkerPool() {
 	//遍历需要启动worker的数量，依此启动
-	for i:= 0; i < int(mh.WorkerPoolSize); i++ {
+	for i := 0; i < int(mh.WorkerPoolSize); i++ {
 		//一个worker被启动
 		//给当前worker对应的任务队列开辟空间
 		mh.TaskQueue[i] = make(chan eduiface.IRequest, utils.GlobalObject.MaxWorkerTaskLen)
