@@ -41,7 +41,7 @@ func AddFile(newFile *File) bool {
 
 	_, err := fileCollection.InsertOne(ctx, newFile)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("[MODEL]", err)
 		return false
 	}
 
@@ -64,13 +64,14 @@ func GetFileByTags(skip int, limit int, Tag []string, ClassName string) *[]File 
 	var result []File
 	cur, err := fileCollection.Find(ctx, filter, option)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("[MODEL]", err)
 		return nil
 	}
 
 	for cur.Next(ctx) {
 		var file File
 		if err := cur.Decode(&file); err != nil {
+			fmt.Println("[MODEL]", err)
 			return nil
 		}
 		result = append(result, file)
@@ -95,13 +96,14 @@ func GetFileBySenderUID(skip int, limit int, SenderUID string) *[]File {
 	var result []File
 	cur, err := fileCollection.Find(ctx, filter, option)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("[MODEL]", err)
 		return nil
 	}
 
 	for cur.Next(ctx) {
 		var file File
 		if err := cur.Decode(&file); err != nil {
+			fmt.Println("[MODEL]", err)
 			return nil
 		}
 		result = append(result, file)
@@ -126,13 +128,14 @@ func GetFileByClassName(skip int, limit int, ClassName string) *[]File {
 	var result []File
 	cur, err := fileCollection.Find(ctx, filter, option)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("[MODEL]", err)
 		return nil
 	}
 
 	for cur.Next(ctx) {
 		var file File
 		if err := cur.Decode(&file); err != nil {
+			fmt.Println("[MODEL]", err)
 			return nil
 		}
 		result = append(result, file)
@@ -146,7 +149,7 @@ func GetFileByUUID(uuidInString string) *File {
 
 	id, err := primitive.ObjectIDFromHex(uuidInString)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("[MODEL]", err)
 		return nil
 	}
 
@@ -158,7 +161,7 @@ func GetFileByUUID(uuidInString string) *File {
 	var result File
 	err = fileCollection.FindOne(ctx, filter).Decode(&result)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("[MODEL]", err)
 		return nil
 	}
 
@@ -170,7 +173,7 @@ func DeleteFileByUUID(uuidInString string) bool {
 
 	id, err := primitive.ObjectIDFromHex(uuidInString)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("[MODEL]", err)
 		return false
 	}
 
@@ -181,7 +184,7 @@ func DeleteFileByUUID(uuidInString string) bool {
 
 	_, err = fileCollection.DeleteOne(ctx, filter)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("[MODEL]", err)
 		return false
 	}
 

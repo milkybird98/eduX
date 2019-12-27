@@ -5,6 +5,7 @@ import (
 	"eduX/edumodel"
 	"eduX/edunet"
 	"fmt"
+	"time"
 
 	"github.com/tidwall/gjson"
 )
@@ -137,7 +138,7 @@ func (router *ClassStudentAddRouter) PreHandle(request eduiface.IRequest) {
 
 // Handle 返回处理结果
 func (router *ClassStudentAddRouter) Handle(request eduiface.IRequest) {
-	fmt.Println("ClassStudentAddRouter: ", classstudentaddReplyStatus)
+	fmt.Println("[ROUTER] Time: ",time.Now(), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", ClassStudentAddRouter: ", classstudentaddReplyStatus)
 	jsonMsg, err := CombineReplyMsg(classstudentaddReplyStatus, nil)
 	if err != nil {
 		fmt.Println("ClassStudentAddRouter: ", err)

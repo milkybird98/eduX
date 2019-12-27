@@ -5,6 +5,7 @@ import (
 	"eduX/edunet"
 
 	"fmt"
+	"time"
 
 	"github.com/tidwall/gjson"
 )
@@ -43,7 +44,7 @@ func (router *PingRouter) PreHandle(request eduiface.IRequest) {
 }
 
 func (router *PingRouter) Handle(request eduiface.IRequest) {
-	fmt.Println("PingRouter: ", conncheckReplyStatus)
+	fmt.Println("[ROUTER] Time: ",time.Now(), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", PingRouter: ", conncheckReplyStatus)
 	jsonMsg, err := CombineReplyMsg(conncheckReplyStatus, nil)
 	if err != nil {
 		fmt.Println("PingRouter: ", err)

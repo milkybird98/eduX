@@ -82,6 +82,8 @@ func ClientTestSA(t *testing.T) {
 			return
 		}
 
+		replyMsg.SetData(buf[8:cnt])
+
 		fmt.Printf("server call back msgID = %d, msgLength = %d, originLength = %d\n", replyMsg.GetMsgId(), replyMsg.GetDataLen(), cnt)
 
 		replyData := gjson.ParseBytes(replyMsg.GetData())
@@ -128,6 +130,7 @@ func ClientTestSA(t *testing.T) {
 			fmt.Println(err)
 			return
 		}
+		replyMsg.SetData(buf[8:cnt])
 
 		fmt.Printf("server call back msgID = %d, msgLength = %d, originLength = %d\n", replyMsg.GetMsgId(), replyMsg.GetDataLen(), cnt)
 

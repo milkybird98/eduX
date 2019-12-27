@@ -41,7 +41,7 @@ func AddNews(newNews *News) bool {
 
 	_, err := newsCollection.InsertOne(ctx, newNews)
 	if err != nil {
-		fmt.Println("Add new News into database fail, error: ", err)
+		fmt.Println("[MODEL] Add new News into database fail, error: ", err)
 		return false
 	}
 
@@ -58,7 +58,7 @@ func GetNewsByInnerID(idInString string) *News {
 	id, err := primitive.ObjectIDFromHex(idInString)
 
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("[MODEL]", err)
 		return nil
 	}
 
@@ -70,7 +70,7 @@ func GetNewsByInnerID(idInString string) *News {
 	var news News
 	err = newsCollection.FindOne(ctx, filter).Decode(&news)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("[MODEL]", err)
 		return nil
 	}
 
@@ -93,12 +93,14 @@ func GetNewsByTimeOrder(skip int, limit int, isAnnounce bool) *[]News {
 	var result []News
 	cur, err := newsCollection.Find(ctx, filter, option)
 	if err != nil {
+		fmt.Println("[MODEL]", err)
 		return nil
 	}
 
 	for cur.Next(ctx) {
 		var news News
 		if err := cur.Decode(&news); err != nil {
+			fmt.Println("[MODEL]", err)
 			return nil
 		}
 		result = append(result, news)
@@ -126,12 +128,14 @@ func GetNewsBySenderUID(skip int, limit int, isAnnounce bool, uid string) *[]New
 	var result []News
 	cur, err := newsCollection.Find(ctx, filter, option)
 	if err != nil {
+		fmt.Println("[MODEL]", err)
 		return nil
 	}
 
 	for cur.Next(ctx) {
 		var news News
 		if err := cur.Decode(&news); err != nil {
+			fmt.Println("[MODEL]", err)
 			return nil
 		}
 		result = append(result, news)
@@ -159,12 +163,14 @@ func GetNewsByAudientUID(skip int, limit int, isAnnounce bool, uid string) *[]Ne
 	var result []News
 	cur, err := newsCollection.Find(ctx, filter, option)
 	if err != nil {
+		fmt.Println("[MODEL]", err)
 		return nil
 	}
 
 	for cur.Next(ctx) {
 		var news News
 		if err := cur.Decode(&news); err != nil {
+			fmt.Println("[MODEL]", err)
 			return nil
 		}
 		result = append(result, news)
@@ -178,7 +184,7 @@ func DeleteNewsByInnerID(idInString string) bool {
 
 	id, err := primitive.ObjectIDFromHex(idInString)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("[MODEL]", err)
 		return false
 	}
 
@@ -193,7 +199,7 @@ func DeleteNewsByInnerID(idInString string) bool {
 
 	_, err = newsCollection.DeleteOne(ctx, filter)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("[MODEL]", err)
 		return false
 	}
 

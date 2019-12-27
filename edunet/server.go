@@ -49,7 +49,7 @@ func NewServer() eduiface.IServer {
 //开启网络服务
 func (s *Server) Start() {
 	fmt.Printf("[START] Server name: %s,listenner at IP: %s, Port %d is starting\n", s.Name, s.IP, s.Port)
-	fmt.Printf("[eduX] Version: %s, MaxConn: %d, MaxPacketSize: %d\n",
+	fmt.Printf("[SERVER] Version: %s, MaxConn: %d, MaxPacketSize: %d\n",
 		utils.GlobalObject.Version,
 		utils.GlobalObject.MaxConn,
 		utils.GlobalObject.MaxPacketSize)
@@ -62,19 +62,19 @@ func (s *Server) Start() {
 		//1 获取一个TCP的Addr
 		addr, err := net.ResolveTCPAddr(s.IPVersion, fmt.Sprintf("%s:%d", s.IP, s.Port))
 		if err != nil {
-			fmt.Println("resolve tcp addr err: ", err)
+			fmt.Println("[SERVER] resolve tcp addr err: ", err)
 			return
 		}
 
 		//2 监听服务器地址
 		listenner, err := net.ListenTCP(s.IPVersion, addr)
 		if err != nil {
-			fmt.Println("listen", s.IPVersion, "err", err)
+			fmt.Println("[SERVER] listen", s.IPVersion, "err", err)
 			return
 		}
 
 		//已经监听成功
-		fmt.Println("start eduX server  ", s.Name, " succ, now listenning...")
+		fmt.Println("[SERVER] start eduX server  ", s.Name, " succ, now listenning...")
 
 		var uuid uint32
 		uuid = 1
@@ -84,12 +84,13 @@ func (s *Server) Start() {
 			//3.1 阻塞等待客户端建立连接请求
 			conn, err := listenner.AcceptTCP()
 			if err != nil {
-				fmt.Println("Accept err ", err)
+				fmt.Println("[SERVER][ERROR] Accept err ", err)
 				continue
 			}
 
 			//3.2 设置服务器最大连接控制,如果超过最大连接，那么则关闭此新的连接
 			if s.ConnMgr.Len() >= utils.GlobalObject.MaxConn {
+				fmt.Println("[SERVER][WARNING] Over max connection number.")
 				conn.Close()
 				continue
 			}
@@ -107,7 +108,7 @@ func (s *Server) Start() {
 
 func (s *Server) StartFile() {
 	fmt.Printf("[START] File Transmiter Server name: %s,listenner at IP: %s, Port %d is starting\n", s.Name, s.IP, s.Port)
-	fmt.Printf("[eduX] Version: %s, MaxConn: %d, MaxPacketSize: %d\n",
+	fmt.Printf("[SERVER-FILE] Version: %s, MaxConn: %d, MaxPacketSize: %d\n",
 		utils.GlobalObject.Version,
 		utils.GlobalObject.MaxConn,
 		utils.GlobalObject.MaxPacketSize)
@@ -117,19 +118,19 @@ func (s *Server) StartFile() {
 		//1 获取一个TCP的Addr
 		addr, err := net.ResolveTCPAddr(s.IPVersion, fmt.Sprintf("%s:%d", s.IP, s.Port))
 		if err != nil {
-			fmt.Println("resolve tcp addr err: ", err)
+			fmt.Println("[SERVER-FILE] resolve tcp addr err: ", err)
 			return
 		}
 
 		//2 监听服务器地址
 		listenner, err := net.ListenTCP(s.IPVersion, addr)
 		if err != nil {
-			fmt.Println("listen", s.IPVersion, "err", err)
+			fmt.Println("[SERVER-FILE] listen", s.IPVersion, "err", err)
 			return
 		}
 
 		//已经监听成功
-		fmt.Println("start eduX server  ", s.Name, " succ, now listenning...")
+		fmt.Println("[SERVER-FILE] start eduX server  ", s.Name, " succ, now listenning...")
 
 		var uuid uint32
 		uuid = 1
@@ -139,7 +140,7 @@ func (s *Server) StartFile() {
 			//3.1 阻塞等待客户端建立连接请求
 			conn, err := listenner.AcceptTCP()
 			if err != nil {
-				fmt.Println("Accept err ", err)
+				fmt.Println("[SERVER-FILE][ERROR] Accept err ", err)
 				continue
 			}
 

@@ -45,7 +45,7 @@ func AddQuestion(newQuestion *Question) bool {
 
 	_, err := quesCollection.InsertOne(ctx, newQuestion)
 	if err != nil {
-		fmt.Println("Add new Question into database fail, error: ", err)
+		fmt.Println("[MODEL] Add new Question into database fail, error: ", err)
 		return false
 	}
 
@@ -68,12 +68,14 @@ func GetQuestionByTimeOrder(skip int, limit int, isSolved bool) *[]Question {
 	var result []Question
 	cur, err := quesCollection.Find(ctx, filter, option)
 	if err != nil {
+		fmt.Println("[MODEL]", err)
 		return nil
 	}
 
 	for cur.Next(ctx) {
 		var question Question
 		if err := cur.Decode(&question); err != nil {
+			fmt.Println("[MODEL]", err)
 			return nil
 		}
 		result = append(result, question)
@@ -112,12 +114,14 @@ func GetQuestionBySenderUID(skip int, limit int, detectSolved bool, isSolved boo
 	var result []Question
 	cur, err := quesCollection.Find(ctx, filter, option)
 	if err != nil {
+		fmt.Println("[MODEL]", err)
 		return nil
 	}
 
 	for cur.Next(ctx) {
 		var question Question
 		if err := cur.Decode(&question); err != nil {
+			fmt.Println("[MODEL]", err)
 			return nil
 		}
 		result = append(result, question)
@@ -146,12 +150,14 @@ func GetQuestionByQueserUID(skip int, limit int, isSolved bool, uid string) *[]Q
 	var result []Question
 	cur, err := quesCollection.Find(ctx, filter, option)
 	if err != nil {
+		fmt.Println("[MODEL]", err)
 		return nil
 	}
 
 	for cur.Next(ctx) {
 		var question Question
 		if err := cur.Decode(&question); err != nil {
+			fmt.Println("[MODEL]", err)
 			return nil
 		}
 		result = append(result, question)
@@ -190,12 +196,14 @@ func GetQuestionByClassName(skip int, limit int, detectSolved bool, isSolved boo
 	var result []Question
 	cur, err := quesCollection.Find(ctx, filter, option)
 	if err != nil {
+		fmt.Println("[MODEL]", err)
 		return nil
 	}
 
 	for cur.Next(ctx) {
 		var question Question
 		if err := cur.Decode(&question); err != nil {
+			fmt.Println("[MODEL]", err)
 			return nil
 		}
 		result = append(result, question)
@@ -214,7 +222,7 @@ func GetQuestionByInnerID(idInString string) *Question {
 	id, err := primitive.ObjectIDFromHex(idInString)
 
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("[MODEL]", err)
 		return nil
 	}
 
@@ -226,7 +234,7 @@ func GetQuestionByInnerID(idInString string) *Question {
 	var question Question
 	err = quesCollection.FindOne(ctx, filter).Decode(&question)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("[MODEL]", err)
 		return nil
 	}
 
@@ -243,7 +251,7 @@ func AnserQuestionByInnerID(idInString string, UID string, answer string) bool {
 	id, err := primitive.ObjectIDFromHex(idInString)
 
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("[MODEL]", err)
 		return false
 	}
 
@@ -255,7 +263,7 @@ func AnserQuestionByInnerID(idInString string, UID string, answer string) bool {
 
 	_, err = quesCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("[MODEL]", err)
 		return false
 	}
 
@@ -267,7 +275,7 @@ func DeleteQuestionByInnerID(idInString string) bool {
 
 	id, err := primitive.ObjectIDFromHex(idInString)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("[MODEL]", err)
 		return false
 	}
 
@@ -283,7 +291,7 @@ func DeleteQuestionByInnerID(idInString string) bool {
 
 	_, err = quesCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("[MODEL]", err)
 		return false
 	}
 

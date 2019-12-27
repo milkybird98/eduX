@@ -5,6 +5,7 @@ import (
 	"eduX/edumodel"
 	"eduX/edunet"
 	"fmt"
+	"time"
 )
 
 type ClassJoinInGetRouter struct {
@@ -64,9 +65,9 @@ func (router *ClassJoinInGetRouter) PreHandle(request eduiface.IRequest) {
 }
 
 func (router *ClassJoinInGetRouter) Handle(request eduiface.IRequest) {
+	fmt.Println("[ROUTER] Time: ", time.Now(), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ",ClassJoinInGetRouter: ", classjoiningetReplyStatus)
 	var jsonMsg []byte
 	var err error
-	fmt.Println("ClassJoinInGetRouter: ", classjoiningetReplyStatus)
 	if classjoiningetReplyStatus == "success" {
 		jsonMsg, err = CombineReplyMsg(classjoiningetReplyStatus, classjoiningetReplyData)
 	} else {

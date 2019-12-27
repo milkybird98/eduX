@@ -46,7 +46,7 @@ func AddUser(newUser *User) bool {
 
 	_, err := userCollection.InsertOne(ctx, newUser)
 	if err != nil {
-		fmt.Println("Add new user into database fail, error: ", err)
+		fmt.Println("[MODEL] Add new user into database fail, error: ", err)
 		return false
 	}
 
@@ -68,7 +68,7 @@ func GetUserByUID(uid string) *User {
 	var result User
 	err := userCollection.FindOne(ctx, filter).Decode(&result)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("[MODEL]", err)
 		return nil
 	}
 
@@ -90,6 +90,7 @@ func GetUserByClass(className string) *[]*User {
 	var result []*User
 	cur, err := userCollection.Find(ctx, filter)
 	if err != nil {
+		fmt.Println("[MODEL]", err)
 		return nil
 	}
 	defer cur.Close(ctx)
@@ -97,6 +98,7 @@ func GetUserByClass(className string) *[]*User {
 	for cur.Next(ctx) {
 		var user User
 		if err := cur.Decode(&user); err != nil {
+			fmt.Println("[MODEL]", err)
 			return nil
 		}
 		result = append(result, &user)
@@ -171,7 +173,7 @@ func UpdateUserByID(newUserData *User) bool {
 
 	_, err := userCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("[MODEL]", err)
 		return false
 	}
 
@@ -197,7 +199,7 @@ func AddUserToClassByUID(uidList []string, ClassName string) bool {
 
 	_, err := userCollection.UpdateMany(ctx, filter, update)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("[MODEL]", err)
 		return false
 	}
 
@@ -223,7 +225,7 @@ func DeleteUserFromClassByUID(uidList []string, ClassName string) bool {
 
 	_, err := userCollection.UpdateMany(ctx, filter, update)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("[MODEL]", err)
 		return false
 	}
 
@@ -244,7 +246,7 @@ func DeleteUserByUID(uid string) bool {
 
 	_, err := userCollection.DeleteOne(ctx, filter)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("[MODEL]", err)
 		return false
 	}
 

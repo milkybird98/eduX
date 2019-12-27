@@ -153,7 +153,7 @@ func (router *NewsAddRouter) PreHandle(request eduiface.IRequest) {
 
 // Handle 返回处理结果
 func (router *NewsAddRouter) Handle(request eduiface.IRequest) {
-	fmt.Println("NewsAddRouter: ", newsaddReplyStatus)
+	fmt.Println("[ROUTER] Time: ",time.Now(), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", NewsAddRouter: ", newsaddReplyStatus)
 	jsonMsg, err := CombineReplyMsg(newsaddReplyStatus, nil)
 	if err != nil {
 		fmt.Println("NewsAddRouter: ", err)

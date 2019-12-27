@@ -4,6 +4,7 @@ import (
 	"eduX/eduiface"
 	"eduX/edunet"
 	"fmt"
+	"time"
 )
 
 type LogoutRouter struct {
@@ -40,7 +41,7 @@ func (router *LogoutRouter) PreHandle(request eduiface.IRequest) {
 }
 
 func (router *LogoutRouter) Handle(request eduiface.IRequest) {
-	fmt.Println("LogoutRouter: ", logoutReplyStatus)
+	fmt.Println("[ROUTER] Time: ", time.Now(), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", LogoutRouter: ", logoutReplyStatus)
 	jsonMsg, err := CombineReplyMsg(logoutReplyStatus, nil)
 	if err != nil {
 		fmt.Println("LogoutRouter: ", err)

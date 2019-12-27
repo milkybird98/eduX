@@ -5,6 +5,7 @@ import (
 	"eduX/edumodel"
 	"eduX/edunet"
 	"fmt"
+	"time"
 
 	"github.com/tidwall/gjson"
 )
@@ -109,7 +110,7 @@ func (router *NewsGetByAudientUIDRouter) PreHandle(request eduiface.IRequest) {
 }
 
 func (router *NewsGetByAudientUIDRouter) Handle(request eduiface.IRequest) {
-	fmt.Println("NewsGetByAudientUIDRouter: ", newgetbyaudientuidReplyStatus)
+	fmt.Println("[ROUTER] Time: ",time.Now(), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", NewsGetByAudientUIDRouter: ", newgetbyaudientuidReplyStatus)
 
 	var jsonMsg []byte
 	var err error

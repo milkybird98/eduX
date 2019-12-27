@@ -33,7 +33,7 @@ func (connMgr *ConnManager) Add(conn eduiface.IConnection) {
 	//将conn连接添加到ConnMananger中
 	connMgr.connections[conn.GetConnID()] = conn
 
-	fmt.Println("connection add to ConnManager successfully: conn num = ", connMgr.Len())
+	fmt.Println("[CONNMANGER] connection add to ConnManager successfully: conn num = ", connMgr.Len())
 }
 
 //删除连接
@@ -45,7 +45,7 @@ func (connMgr *ConnManager) Remove(conn eduiface.IConnection) {
 	//删除连接信息
 	delete(connMgr.connections, conn.GetConnID())
 
-	fmt.Println("connection Remove ConnID=", conn.GetConnID(), " successfully: conn num = ", connMgr.Len())
+	fmt.Println("[CONNMANGER] connection Remove ConnID=", conn.GetConnID(), " successfully: conn num = ", connMgr.Len())
 }
 
 //利用ConnID获取链接
@@ -57,7 +57,7 @@ func (connMgr *ConnManager) Get(connID uint32) (eduiface.IConnection, error) {
 	if conn, ok := connMgr.connections[connID]; ok {
 		return conn, nil
 	} else {
-		return nil, errors.New("connection not found")
+		return nil, errors.New("[CONNMANGER][ERROR] connection not found")
 	}
 }
 
@@ -80,5 +80,5 @@ func (connMgr *ConnManager) ClearConn() {
 		delete(connMgr.connections, connID)
 	}
 
-	fmt.Println("Clear All Connections successfully: conn num = ", connMgr.Len())
+	fmt.Println("[CONNMANGER][IMPORTANT] Clear All Connections successfully: conn num = ", connMgr.Len())
 }

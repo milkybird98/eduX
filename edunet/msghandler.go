@@ -40,7 +40,7 @@ func (mh *MsgHandle) SendMsgToTaskQueue(request eduiface.IRequest) {
 
 	//得到需要处理此条连接的workerID
 	workerID := mh.NextIndex()
-	fmt.Println("Add ConnID=", request.GetConnection().GetConnID(), " request msgID=", request.GetMsgID(), "to workerID=", workerID)
+	fmt.Println("[MSGHAND] Add ConnID=", request.GetConnection().GetConnID(), " request msgID=", request.GetMsgID(), "to workerID=", workerID)
 	//将请求消息发送给任务队列
 	mh.TaskQueue[workerID] <- request
 }
@@ -49,7 +49,7 @@ func (mh *MsgHandle) SendMsgToTaskQueue(request eduiface.IRequest) {
 func (mh *MsgHandle) DoMsgHandler(request eduiface.IRequest) {
 	handler, ok := mh.Apis[request.GetMsgID()]
 	if !ok {
-		fmt.Println("api msgId = ", request.GetMsgID(), " is not FOUND!")
+		fmt.Println("[MSGHAND][WARNING] api msgId = ", request.GetMsgID(), " is not FOUND!")
 		return
 	}
 
@@ -63,16 +63,16 @@ func (mh *MsgHandle) DoMsgHandler(request eduiface.IRequest) {
 func (mh *MsgHandle) AddRouter(msgId uint32, router eduiface.IRouter) {
 	//1 判断当前msg绑定的API处理方法是否已经存在
 	if _, ok := mh.Apis[msgId]; ok {
-		panic("repeated api , msgId = " + strconv.Itoa(int(msgId)))
+		panic("[MSGHAND][ERROR] repeated api , msgId = " + strconv.Itoa(int(msgId)))
 	}
 	//2 添加msg与api的绑定关系
 	mh.Apis[msgId] = router
-	fmt.Println("Add api msgId = ", msgId)
+	fmt.Println("[MSGHAND] Add api msgId = ", msgId)
 }
 
 //启动一个Worker工作流程
 func (mh *MsgHandle) StartOneWorker(workerID int, taskQueue chan eduiface.IRequest) {
-	fmt.Println("Worker ID = ", workerID, " is started.")
+	fmt.Println("[MSGHAND][IMPORTANT] Worker ID = ", workerID, " is started.")
 	//不断的等待队列中的消息
 	for {
 		select {
@@ -86,6 +86,7 @@ func (mh *MsgHandle) StartOneWorker(workerID int, taskQueue chan eduiface.IReque
 //启动worker工作池
 func (mh *MsgHandle) StartWorkerPool() {
 	//遍历需要启动worker的数量，依此启动
+	fmt.Println("[MSGHAND][IMPORTANT] Worker Poll Starting...")
 	for i := 0; i < int(mh.WorkerPoolSize); i++ {
 		//一个worker被启动
 		//给当前worker对应的任务队列开辟空间
@@ -93,4 +94,5 @@ func (mh *MsgHandle) StartWorkerPool() {
 		//启动当前Worker，阻塞的等待对应的任务队列是否有消息传递进来
 		go mh.StartOneWorker(i, mh.TaskQueue[i])
 	}
+	fmt.Println("[MSGHAND][IMPORTANT] Worker Poll Started, Workerpoll Size: ", mh.WorkerPoolSize)
 }

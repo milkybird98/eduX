@@ -2,6 +2,7 @@ package edurouter
 
 import (
 	"fmt"
+	"time"
 
 	"eduX/eduiface"
 	"eduX/edumodel"
@@ -56,7 +57,7 @@ func (router *LoginRouter) PreHandle(request eduiface.IRequest) {
 }
 
 func (router *LoginRouter) Handle(request eduiface.IRequest) {
-	fmt.Println("LoginRouter: ", loginReplyStatus)
+	fmt.Println("[ROUTER] Time: ", time.Now(), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", LoginRouter: ", loginReplyStatus)
 	jsonMsg, err := CombineReplyMsg(loginReplyStatus, nil)
 	if err != nil {
 		fmt.Println("LoginRouter: ", err)

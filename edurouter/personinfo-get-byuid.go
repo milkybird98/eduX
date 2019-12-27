@@ -121,7 +121,7 @@ func (router *PersonInfoGetRouter) PreHandle(request eduiface.IRequest) {
 }
 
 func (router *PersonInfoGetRouter) Handle(request eduiface.IRequest) {
-	fmt.Println("PersonInfoGetRouter: ", persongetReplyStatus)
+	fmt.Println("[ROUTER] Time: ",time.Now(), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", PersonInfoGetRouter: ", persongetReplyStatus)
 	var jsonMsg []byte
 	var err error
 	if persongetReplyStatus == "success" {

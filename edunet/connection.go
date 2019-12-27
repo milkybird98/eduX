@@ -86,64 +86,99 @@ func (c *Connection) StartTransmiter() {
 	defer fmt.Println(c.RemoteAddr().String(), "[conn File Transmiter exit!]")
 	defer c.Stop()
 
+	fmt.Println("[CONNECT] start file transmite operation")
+
 	serectSlice := make([]byte, 24)
 	if _, err := io.ReadFull(c.GetTCPConnection(), serectSlice); err != nil {
-		fmt.Println("read serect error ", err)
+		fmt.Println("[CONNECT][ERROR] read serect error ", err)
 		return
 	}
 
 	fileTag, err := utils.GetFileTranCache(string(serectSlice))
 	if err != nil {
-		fmt.Println("file not in transmit list ", serectSlice, " client IP addr ", c.RemoteAddr())
+		fmt.Println("[CONNECT][ERROR] file not in transmit list ", serectSlice, " client IP addr ", c.RemoteAddr())
 		return
 	}
 
 	clientIP := c.RemoteAddr()
 	if clientIP != fileTag.ClientAddress {
-		fmt.Println("request ip not match, want ", fileTag, " but ", clientIP)
+		fmt.Println("[CONNECT][ERROR] request ip not match, want ", fileTag, " but ", clientIP)
 		return
 	}
 
 	data := "ready"
 	if _, err := c.Conn.Write([]byte(data)); err != nil {
-		fmt.Println("Send Data error: ", err)
+		fmt.Println("[CONNECT][ERROR] Send Data error: ", err)
 		return
 	}
+
+	fmt.Println("[CONNECT] file transmite operation ready")
 
 	if fileTag.ServerToC {
 		path := "./file/" + string(fileTag.ID)
 
 		if res, err := utils.PathExists(path); res != true {
-			fmt.Println("Wanted file not exist,error: ", err)
+			fmt.Println("[CONNECT][WARNING] Wanted file not exist,error: ", err)
 			return
 		}
 
 		file, err := os.Open(path)
 		if err != nil {
-			fmt.Println("Open file error: ", err)
+			fmt.Println("[CONNECT][ERROR] Open file error: ", err)
+			return
+		}
+		defer file.Close()
+
+		size, err := io.Copy(file, c.GetTCPConnection())
+		if err != nil {
+			fmt.Println("[CONNECT][ERROR] File transmite error: ", err)
+			return
+		}
+
+		if size != fileTag.Size {
+			fmt.Println("[CONNECT][WARNING] File size not match, want: ", fileTag.Size, " fact: ", size)
+		}
+
+		fmt.Println("[CONNECT] file transmite operation success!")
+		return
+
+	}
+
+	if fileTag.ClientToS {
+		path := "./file/" + string(fileTag.ID)
+
+		_, err := os.Stat(path)
+		if res, _ := utils.PathExists(path); res == true {
+			fmt.Println("[CONNECT][WARNING] Same serect file already exist: ", string(fileTag.ID))
+			return
+		}
+
+		file, err := os.Create(path)
+		if err != nil {
+			fmt.Println("[CONNECT][ERROR] Create file error:, ", err)
 			return
 		}
 		defer file.Close()
 
 		size, err := io.Copy(c.GetTCPConnection(), file)
 		if err != nil {
-			fmt.Println("File transmite error: ", err)
+			fmt.Println("[CONNECT][WARNING] File transmite error: ", err, ", start removing file...")
 			err := os.Remove(path)
 			if err != nil {
-				fmt.Println("Remove file error: ", err)
+				fmt.Println("[CONNECT][ERROR] Remove file error: ", err)
 			} else {
-				fmt.Println("Remove file suceess")
+				fmt.Println("[CONNECT] Remove file suceess")
 			}
 			return
 		}
 
 		if size != fileTag.Size {
-			fmt.Println("File size not match, want: ", fileTag.Size, " fact: ", size)
+			fmt.Println("[CONNECT][WARNING] File size not match, want: ", fileTag.Size, " fact: ", size, ", start removing file...")
 			err := os.Remove(path)
 			if err != nil {
-				fmt.Println("Remove file error: ", err)
+				fmt.Println("[CONNECT][ERROR] Remove file error: ", err)
 			} else {
-				fmt.Println("Remove file suceess")
+				fmt.Println("[CONNECT] Remove file suceess")
 			}
 			return
 		}
@@ -153,6 +188,14 @@ func (c *Connection) StartTransmiter() {
 		newFile.FileName = fileTag.FileName
 		newFile.ID, err = primitive.ObjectIDFromHex(fileTag.ID)
 		if err != nil {
+			fmt.Println("[CONNECT][WARNING] File ID Decode error: ", err, ", start removing file...")
+			err := os.Remove(path)
+			if err != nil {
+				fmt.Println("[CONNECT][ERROR] Remove file error: ", err)
+			} else {
+				fmt.Println("[CONNECT] Remove file suceess")
+			}
+			return
 		}
 		newFile.Size = uint64(fileTag.Size)
 		newFile.UpdateTime = fileTag.UpdateTime
@@ -160,37 +203,10 @@ func (c *Connection) StartTransmiter() {
 
 		ok := edumodel.AddFile(&newFile)
 		if !ok {
-		}
-
-		return
-	}
-
-	if fileTag.ClientToS {
-		path := "./file/" + string(fileTag.ID)
-
-		_, err := os.Stat(path)
-		if res, _ := utils.PathExists(path); res == true {
-			fmt.Println("Same serect file already exist: ", string(fileTag.ID))
 			return
 		}
 
-		file, err := os.Create(path)
-		if err != nil {
-			fmt.Println("Create file error:, ", err)
-			return
-		}
-		defer file.Close()
-
-		size, err := io.Copy(file, c.GetTCPConnection())
-		if err != nil {
-			fmt.Println("File transmite error: ", err)
-			return
-		}
-
-		if size != fileTag.Size {
-			fmt.Println("File size not match, want: ", fileTag.Size, " fact: ", size)
-		}
-
+		fmt.Println("[CONNECT] file transmite operation success!")
 		return
 	}
 }
@@ -207,7 +223,7 @@ func (c *Connection) StartWriter() {
 		case data := <-c.msgChan:
 			//有数据要写给客户端
 			if _, err := c.Conn.Write(data); err != nil {
-				fmt.Println("Send Data error:, ", err, " Conn Writer exit")
+				fmt.Println("[CONNECT] Send Data error:, ", err, " Conn Writer exit")
 				return
 			}
 		case <-c.ExitBuffChan:
@@ -231,14 +247,14 @@ func (c *Connection) StartReader() {
 		//读取客户端的Msg head
 		headData := make([]byte, dp.GetHeadLen())
 		if _, err := io.ReadFull(c.GetTCPConnection(), headData); err != nil {
-			fmt.Println("read msg head error ", err)
+			fmt.Println("[CONNECT] read msg head error ", err)
 			break
 		}
 
 		//拆包，得到msgid 和 datalen 放在msg中
 		msg, err := dp.Unpack(headData)
 		if err != nil {
-			fmt.Println("unpack error ", err)
+			fmt.Println("[CONNECT] unpack error ", err)
 			break
 		}
 
@@ -247,7 +263,7 @@ func (c *Connection) StartReader() {
 		if msg.GetDataLen() > 0 {
 			data = make([]byte, msg.GetDataLen())
 			if _, err := io.ReadFull(c.GetTCPConnection(), data); err != nil {
-				fmt.Println("read msg data error ", err)
+				fmt.Println("[CONNECT] read msg data error ", err)
 				break
 			}
 		}
@@ -289,7 +305,7 @@ func (c *Connection) Start() {
 
 //停止连接，结束当前连接状态M
 func (c *Connection) Stop() {
-	fmt.Println("Conn Stop()...ConnID = ", c.ConnID)
+	fmt.Println("[CONNECT] Conn Stop()...ConnID = ", c.ConnID)
 	//如果当前链接已经关闭
 	if c.isClosed == true {
 		return
@@ -329,14 +345,14 @@ func (c *Connection) RemoteAddr() net.Addr {
 //直接将Message数据发送数据给远程的TCP客户端
 func (c *Connection) SendMsg(msgId uint32, data []byte) error {
 	if c.isClosed == true {
-		return errors.New("Connection closed when send msg")
+		return errors.New("[CONNECT] Connection closed when send msg")
 	}
 	//将data封包，并且发送
 	dp := NewDataPack()
 	msg, err := dp.Pack(NewMsgPackage(msgId, data))
 	if err != nil {
-		fmt.Println("Pack error msg id = ", msgId)
-		return errors.New("Pack error msg ")
+		fmt.Println("[CONNECT] Pack error msg id = ", msgId)
+		return errors.New("[CONNECT] Pack error msg ")
 	}
 
 	//写回客户端
@@ -361,7 +377,7 @@ func (c *Connection) GetSession(key string) (interface{}, error) {
 	if value, ok := c.session[key]; ok {
 		return value, nil
 	} else {
-		return nil, errors.New("no session found")
+		return nil, errors.New("[CONNECT] no session found")
 	}
 }
 

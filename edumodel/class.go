@@ -37,7 +37,7 @@ func AddClass(newClass *Class) bool {
 
 	_, err := classCollection.InsertOne(ctx, newClass)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("[MODEL]", err)
 		return false
 	}
 
@@ -59,12 +59,14 @@ func GetClassByOrder(skip int, limit int) *[]Class {
 	var result []Class
 	cur, err := classCollection.Find(ctx, filter, option)
 	if err != nil {
+		fmt.Println("[MODEL]", err)
 		return nil
 	}
 
 	for cur.Next(ctx) {
 		var class Class
 		if err := cur.Decode(&class); err != nil {
+			fmt.Println("[MODEL]", err)
 			return nil
 		}
 		result = append(result, class)
@@ -88,7 +90,7 @@ func GetClassByName(className string) *Class {
 	var result Class
 	err := classCollection.FindOne(ctx, filter).Decode(&result)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("[MODEL]", err)
 		return nil
 	}
 
@@ -116,7 +118,7 @@ func GetClassByUID(uid string, place string) *Class {
 	var result Class
 	err := classCollection.FindOne(ctx, filter).Decode(&result)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("[MODEL]", err)
 		return nil
 	}
 
@@ -143,7 +145,7 @@ func CheckUserInClass(className string, uid string, place string) bool {
 
 	count, err := classCollection.CountDocuments(ctx, filter)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("[MODEL]", err)
 		return false
 	}
 
@@ -175,7 +177,7 @@ func UpdateClassStudentByUID(className string, studentList []string) bool {
 
 	_, err := classCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("[MODEL]", err)
 		return false
 	}
 
@@ -203,7 +205,7 @@ func UpdateClassTeacherByUID(className string, teacherList []string) bool {
 
 	_, err := classCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("[MODEL]", err)
 		return false
 	}
 
@@ -226,7 +228,7 @@ func DeleteClassStudentByUID(className string, studentList []string) bool {
 
 	_, err := classCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("[MODEL]", err)
 		return false
 	}
 
@@ -249,7 +251,7 @@ func DeleteClassTeacherByUID(className string, teacherList []string) bool {
 
 	_, err := classCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("[MODEL]", err)
 		return false || len(teacherList) == 0
 	}
 
@@ -270,7 +272,7 @@ func DeleteClassByName(className string) bool {
 
 	_, err := classCollection.DeleteOne(ctx, filter)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("[MODEL]", err)
 		return false
 	}
 

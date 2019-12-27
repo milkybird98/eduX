@@ -5,6 +5,7 @@ import (
 	"eduX/edumodel"
 	"eduX/edunet"
 	"fmt"
+	"time"
 
 	"github.com/tidwall/gjson"
 )
@@ -120,7 +121,7 @@ func (router *FileGetByTagsRouter) PreHandle(request eduiface.IRequest) {
 }
 
 func (router *FileGetByTagsRouter) Handle(request eduiface.IRequest) {
-	fmt.Println("FileGetByTagsRouter: ", filegetbytagsReplyStatus)
+	fmt.Println("[ROUTER] Time: ",time.Now(), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", FileGetByTagsRouter: ", filegetbytagsReplyStatus)
 
 	var jsonMsg []byte
 	var err error

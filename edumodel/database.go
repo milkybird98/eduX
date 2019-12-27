@@ -20,30 +20,30 @@ func ConnectMongo() bool {
 	//创建MongoDB客户端
 	client, err := mongo.NewClient(options.Client().ApplyURI(utils.GlobalObject.DataBaseUrl))
 	if err != nil {
-		fmt.Println("Create MongoDB client failed, error: ", err)
+		fmt.Println("[MODEL] Create MongoDB client failed, error: ", err)
 		return false
 	}
 
 	//客户端尝试连接数据库
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	fmt.Println("Try connecting Mongodb Server at ", utils.GlobalObject.DataBaseUrl)
+	fmt.Println("[MODEL] Try connecting Mongodb Server at ", utils.GlobalObject.DataBaseUrl)
 	err = client.Connect(ctx)
 
 	//连接失败处理
 	if err != nil {
-		fmt.Println("Client connects MongoDB server failed, error: ", err)
+		fmt.Println("[MODEL] Client connects MongoDB server failed, error: ", err)
 		return false
 	}
 
 	err = client.Ping(ctx, nil)
 	if err != nil {
-		fmt.Println("Client ping MongoDB server failed, error: ", err)
+		fmt.Println("[MODEL] Client ping MongoDB server failed, error: ", err)
 		return false
 	}
 	//连接成功,保存客户端对象
 	Client = client
-	fmt.Println("Connect MongoDB server successfully")
+	fmt.Println("[MODEL] Connect MongoDB server successfully")
 	return true
 }
 
@@ -54,22 +54,22 @@ func ConnectDatabase(databaseName *string) bool {
 	//如未指定数据库名称则从GlobalObject中读取默认值
 	if databaseName == nil {
 		databaseName = &utils.GlobalObject.DataBaseName
-		fmt.Println("Use default database name: ", utils.GlobalObject.DataBaseName)
+		fmt.Println("[MODEL] Use default database name: ", utils.GlobalObject.DataBaseName)
 	}
 
 	//连接数据库
-	fmt.Println("Try choosing database named ", *databaseName)
+	fmt.Println("[MODEL] Try choosing database named ", *databaseName)
 	db := Client.Database(*databaseName)
 
 	//连接数据库失败处理
 	if db == nil {
-		fmt.Println("Choose database failed, target name: ", *databaseName)
+		fmt.Println("[MODEL] Choose database failed, target name: ", *databaseName)
 		return false
 	}
 
 	//保存数据库对象
 	Database = db
-	fmt.Println("Choose database successfully")
+	fmt.Println("[MODEL] Choose database successfully")
 	return true
 }
 
@@ -78,14 +78,14 @@ func ConnectDatabase(databaseName *string) bool {
 */
 func GetCollection(collectionName string) *mongo.Collection {
 	if collectionName == "" {
-		fmt.Println("Get database collection failed, collection name CANNOT be empty")
+		fmt.Println("[MODEL] Get database collection failed, collection name CANNOT be empty")
 		return nil
 	}
 
 	collection := Database.Collection(collectionName)
 
 	if collection == nil {
-		fmt.Println("Get collections failed")
+		fmt.Println("[MODEL] Get collections failed")
 		return nil
 	}
 
