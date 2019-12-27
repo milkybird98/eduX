@@ -98,7 +98,7 @@ func (router *FileDeleteRouter) PreHandle(request eduiface.IRequest) {
 
 // Handle 负责将处理结果发回客户端
 func (router *FileDeleteRouter) Handle(request eduiface.IRequest) {
-	fmt.Println("[ROUTER] Time: ", time.Now(), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", FileDeleteRouter: ", filedeleteReplyData)
+	fmt.Println("[ROUTER] ",time.Now().Format("2006-01-01 Jan 2 15:04:05"), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", FileDeleteRouter: ", filedeleteReplyData)
 	jsonMsg, err := CombineReplyMsg(filedeleteReplyData, nil)
 	if err != nil {
 		fmt.Println("FileDeleteRouter: ", err)

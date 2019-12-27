@@ -41,7 +41,7 @@ func (router *LogoutRouter) PreHandle(request eduiface.IRequest) {
 }
 
 func (router *LogoutRouter) Handle(request eduiface.IRequest) {
-	fmt.Println("[ROUTER] Time: ", time.Now(), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", LogoutRouter: ", logoutReplyStatus)
+	fmt.Println("[ROUTER] ", time.Now().Format("2006-01-01 Jan 2 15:04:05"), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", LogoutRouter: ", logoutReplyStatus)
 	jsonMsg, err := CombineReplyMsg(logoutReplyStatus, nil)
 	if err != nil {
 		fmt.Println("LogoutRouter: ", err)

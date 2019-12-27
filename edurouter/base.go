@@ -6,7 +6,6 @@ import (
 	"eduX/utils"
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 
 	"github.com/tidwall/gjson"
 )
@@ -136,7 +135,7 @@ func CombineReplyMsg(status string, dataInJSON interface{}) ([]byte, error) {
 		return nil, err
 	}
 
-	fmt.Println(string(jsonMsg))
+	//fmt.Println(string(jsonMsg))
 	return jsonMsg, nil
 }
 
@@ -169,6 +168,6 @@ func CombineSendMsg(UID string, dataInJSON interface{}) ([]byte, error) {
 		return nil, err
 	}
 
-	fmt.Println(string(jsonMsg))
+	//fmt.Println(string(jsonMsg))
 	return jsonMsg, nil
 }

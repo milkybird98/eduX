@@ -112,7 +112,7 @@ func (router *FileGetBySenderUIDRouter) PreHandle(request eduiface.IRequest) {
 }
 
 func (router *FileGetBySenderUIDRouter) Handle(request eduiface.IRequest) {
-	fmt.Println("[ROUTER] Time: ",time.Now(), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", FileGetBySenderUIDRouter: ", filegetbysenderuidReplyStatus)
+	fmt.Println("[ROUTER] ",time.Now().Format("2006-01-01 Jan 2 15:04:05"), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", FileGetBySenderUIDRouter: ", filegetbysenderuidReplyStatus)
 
 	var jsonMsg []byte
 	var err error

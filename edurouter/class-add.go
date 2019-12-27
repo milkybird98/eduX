@@ -102,7 +102,7 @@ func (router *ClassAddRouter) PreHandle(request eduiface.IRequest) {
 }
 
 func (router *ClassAddRouter) Handle(request eduiface.IRequest) {
-	fmt.Println("[ROUTER] Time: ",time.Now(), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", ClassAddRouter: ", classaddReplyStatus)
+	fmt.Println("[ROUTER] ",time.Now().Format("2006-01-01 Jan 2 15:04:05"), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", ClassAddRouter: ", classaddReplyStatus)
 	jsonMsg, err := CombineReplyMsg(classaddReplyStatus, nil)
 	if err != nil {
 		fmt.Println("ClassAddRouter: ", err)

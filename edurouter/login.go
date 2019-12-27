@@ -57,7 +57,7 @@ func (router *LoginRouter) PreHandle(request eduiface.IRequest) {
 }
 
 func (router *LoginRouter) Handle(request eduiface.IRequest) {
-	fmt.Println("[ROUTER] Time: ", time.Now(), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", LoginRouter: ", loginReplyStatus)
+	fmt.Println("[ROUTER] ",time.Now().Format("2006-01-01 Jan 2 15:04:05"), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", LoginRouter: ", loginReplyStatus)
 	jsonMsg, err := CombineReplyMsg(loginReplyStatus, nil)
 	if err != nil {
 		fmt.Println("LoginRouter: ", err)

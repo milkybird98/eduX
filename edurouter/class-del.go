@@ -79,7 +79,7 @@ func (router *ClassDelRouter) PreHandle(request eduiface.IRequest) {
 
 //Handle 返回课程删除结果
 func (router *ClassDelRouter) Handle(request eduiface.IRequest) {
-	fmt.Println("[ROUTER] Time: ", time.Now(), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", ClassDelRouter: ", classdelReplyStatus)
+	fmt.Println("[ROUTER] ", time.Now().Format("2006-01-01 Jan 2 15:04:05"), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", ClassDelRouter: ", classdelReplyStatus)
 	jsonMsg, err := CombineReplyMsg(classdelReplyStatus, nil)
 	if err != nil {
 		fmt.Println("ClassDelRouter: ", err)
