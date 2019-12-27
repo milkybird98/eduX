@@ -47,7 +47,7 @@ func (router *NewsGetBySenderUIDRouter) PreHandle(request eduiface.IRequest) {
 
 	var Skip int64
 	skipData := gjson.GetBytes(reqMsgInJSON.Data, "skip")
-	if skipData.Exists() {
+	if skipData.Exists() && skipData.Int() >= 0 {
 		Skip = skipData.Int()
 	} else {
 		Skip = 0
@@ -55,7 +55,7 @@ func (router *NewsGetBySenderUIDRouter) PreHandle(request eduiface.IRequest) {
 
 	var Limit int64
 	limitData := gjson.GetBytes(reqMsgInJSON.Data, "limit")
-	if limitData.Exists() {
+	if limitData.Exists() && limitData.Int() > 0 {
 		Limit = limitData.Int()
 	} else {
 		Limit = 10
@@ -120,7 +120,7 @@ func (router *NewsGetBySenderUIDRouter) Handle(request eduiface.IRequest) {
 	var err error
 
 	if newsgetbysenderuidReplyStatus == "success" {
-		jsonMsg, err = CombineReplyMsg(newsgetbysenderuidReplyStatus, classlistgetReplyData)
+		jsonMsg, err = CombineReplyMsg(newsgetbysenderuidReplyStatus, newsgetbysenderuidReplyData)
 	} else {
 		jsonMsg, err = CombineReplyMsg(newsgetbysenderuidReplyStatus, nil)
 	}

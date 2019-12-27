@@ -56,7 +56,7 @@ func (router *QuestionGetByClassNameRouter) PreHandle(request eduiface.IRequest)
 
 	var Skip int64
 	skipData := gjson.GetBytes(reqMsgInJSON.Data, "skip")
-	if skipData.Exists() {
+	if skipData.Exists() && skipData.Int() >= 0 {
 		Skip = skipData.Int()
 	} else {
 		Skip = 0
