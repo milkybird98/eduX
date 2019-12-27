@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"eduX/eduiface"
 	"net"
 	"time"
 
@@ -49,17 +48,32 @@ func GetFileTranCache(key string) (*FileTransmitTag, error) {
 	return &file, nil
 }
 
-type UserOnlineTag struct {
-	LastSeenTime  time.Time
-	ClientAddress net.Addr
-	UID           string
-	Connection    eduiface.IConnection
+type RegisterTimerTag struct {
+	IP net.Addr
 }
 
-var UserOnlineCache gcache.Cache
+var RegisterTimerCache gcache.Cache
 
-func initUserOnlineCache() {
-	UserOnlineCache = gcache.New(int(GlobalObject.UserOnlineCacheSize)).
+func initRegisterTimerCache() {
+	RegisterTimerCache = gcache.New(int(GlobalObject.UserOnlineCacheSize)).
 		LRU().
 		Build()
+}
+
+func SetRegisterTimerCacheExpire(key string, value RegisterTimerTag) {
+	RegisterTimerCache.SetWithExpire(key, value, time.Second*30)
+}
+
+func GetRegisterTimerCache(key string) (*RegisterTimerTag, error) {
+	value, err := RegisterTimerCache.Get(key)
+	if err != nil {
+		return nil, err
+	}
+
+	file, ok := value.(RegisterTimerTag)
+	if !ok {
+		return nil, err
+	}
+
+	return &file, nil
 }
