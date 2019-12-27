@@ -4,6 +4,7 @@ import (
 	"eduX/eduiface"
 	"eduX/edumodel"
 	"eduX/edunet"
+	"encoding/base64"
 	"fmt"
 
 	"github.com/tidwall/gjson"
@@ -115,6 +116,24 @@ func (router *ClassStudentAddRouter) PreHandle(request eduiface.IRequest) {
 		var studentListString []string
 		for _, stu := range studentList {
 			studentListString = append(studentListString, stu.String())
+		}
+
+		for _, stu := range studentListString {
+			student := edumodel.GetUserByUID(stu)
+			if student == nil {
+				var newUser edumodel.User
+				newUser.UID = stu
+				newUser.Name = "未设置"
+				newUser.Pwd = base64.StdEncoding.EncodeToString([]byte(stu))
+				newUser.Place = "student"
+				newUser.Class = className
+				newUser.Gender = 0
+				ok := edumodel.AddUser(&newUser)
+				if !ok {
+					classstudentaddReplyStatus = "model_fail"
+					return
+				}
+			}
 		}
 
 		ok := edumodel.UpdateClassStudentByUID(className, studentListString)
