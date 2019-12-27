@@ -50,12 +50,35 @@ func (router *PersonAddRouter) PreHandle(request eduiface.IRequest) {
 	c := request.GetConnection()
 	sessionPlace, err := c.GetSession("place")
 	if err != nil {
-		personAddReplyStatus = "seesion_error"
+		personAddReplyStatus = "seesion_plcae_error"
 		return
 	}
 
-	if sessionPlace != "manager" {
+	if sessionPlace != "manager" && sessionPlace != "teacher" {
 		personAddReplyStatus = "permission_error"
+		return
+	}
+
+	if sessionPlace == "teacher" && reqDataInJSON.Place != "student" {
+		personAddReplyStatus = "permission_error_teacher_canonly_add_student"
+		return
+	}
+
+	sessionClass, err := c.GetSession("class")
+	if err != nil {
+		personAddReplyStatus = "seesion_class_not_found"
+		return
+	}
+
+	sessionClassString, ok := sessionClass.(string)
+	if !ok {
+		personAddReplyStatus = "seesion_class_data_error"
+		return
+	}
+
+	userData := edumodel.GetUserByUID(reqDataInJSON.UID)
+	if userData != nil {
+		personputReplyStatus = "same_uid_exist"
 		return
 	}
 
@@ -66,7 +89,11 @@ func (router *PersonAddRouter) PreHandle(request eduiface.IRequest) {
 	newUser.Name = reqDataInJSON.Name
 	newUser.Pwd = base64.StdEncoding.EncodeToString([]byte(newUser.UID))
 	newUser.Place = reqDataInJSON.Place
-	newUser.Class = ""
+	if sessionPlace == "teacher" {
+		newUser.Class = sessionClassString
+	} else {
+		newUser.Class = ""
+	}
 	newUser.Gender = 0
 
 	res := edumodel.AddUser(&newUser)
