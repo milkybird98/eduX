@@ -78,6 +78,24 @@ func (router *NewsAddRouter) PreHandle(request eduiface.IRequest) {
 		return
 	}
 
+	placeString, ok := sessionPlace.(string)
+	if ok != true {
+		filegetbytagsReplyStatus = "session_place_data_error"
+		return
+	}
+
+	class := edumodel.GetClassByUID(reqMsgInJSON.UID, placeString)
+	if class == nil {
+		filegetbytagsReplyStatus = "model_fail"
+		return
+	}
+
+	className := class.ClassName
+	if className == "" {
+		filegetbytagsReplyStatus = "not_in_class"
+		return
+	}
+
 	// 拼接数据
 	var newNews edumodel.News
 	newNews.SenderUID = reqMsgInJSON.UID
@@ -87,19 +105,35 @@ func (router *NewsAddRouter) PreHandle(request eduiface.IRequest) {
 	newNews.IsAnnounce = isannounce
 
 	if audientData.Exists() && audientData.IsArray() {
-		for _, audient := range audientData.Array() {
-			if audient.String() != "" {
-				newNews.AudientUID = append(newNews.AudientUID, audient.String())
-			} else {
-				newsaddReplyStatus = "audient_UID_cannot_be_empty"
-				return
+		if sessionPlace == "manager" {
+			for _, audient := range audientData.Array() {
+				if audient.String() != "" {
+					newNews.AudientUID = append(newNews.AudientUID, audient.String())
+				} else {
+					newsaddReplyStatus = "audient_UID_cannot_be_empty"
+					return
+				}
+			}
+		} else if sessionPlace == "teacher" {
+			for _, audient := range audientData.Array() {
+				if audient.String() != "" {
+					if edumodel.CheckUserInClass(className, audient.String(), "student") {
+						newNews.AudientUID = append(newNews.AudientUID, audient.String())
+					} else {
+						newsaddReplyStatus = "permission_error_cannot_send_news_to_another_class"
+						return
+					}
+				} else {
+					newsaddReplyStatus = "audient_UID_cannot_be_empty"
+					return
+				}
 			}
 		}
 	} else {
 		if sessionPlace == "manager" {
 			newNews.AudientUID[0] = "all"
 		} else if sessionPlace == "teacher" {
-			class := edumodel.GetClassByUID(reqMsgInJSON.UID, "student")
+			class := edumodel.GetClassByUID(reqMsgInJSON.UID, "teacher")
 			if class == nil {
 				newsaddReplyStatus = "not_join_class"
 				return
