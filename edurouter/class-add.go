@@ -60,18 +60,30 @@ func (router *ClassAddRouter) PreHandle(request eduiface.IRequest) {
 
 	sessionPlace, err := c.GetSession("place")
 	if err != nil {
-		classaddReplyStatus = "seesion_error"
+		classaddReplyStatus = "seesion_place_not_found"
 		return
 	}
 
 	sessionPlaceString, ok := sessionPlace.(string)
 	if !ok {
-		classaddReplyStatus = "session_error"
+		classaddReplyStatus = "session_place_data_error"
 		return
 	}
 
 	if sessionPlaceString != "manager" {
 		classaddReplyStatus = "permission_error"
+	}
+
+	class := edumodel.GetClassByName(className)
+	if class != nil {
+		classaddReplyStatus = "same_class_exist"
+		return
+	}
+
+	teacher := edumodel.GetUserByUID(teacherUID)
+	if teacher == nil {
+		classaddReplyStatus = "teacher_not_found"
+		return
 	}
 
 	newClass := edumodel.Class{className, []string{}, []string{teacherUID}}
