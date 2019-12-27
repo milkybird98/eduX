@@ -41,7 +41,6 @@ func (router *ClassJoinInGetRouter) PreHandle(request eduiface.IRequest) {
 	place, err := c.GetSession("place")
 	if err != nil {
 		classjoiningetReplyStatus = "session_error"
-
 		return
 	}
 
