@@ -64,7 +64,7 @@ func (router *QuestionGetByClassNameRouter) PreHandle(request eduiface.IRequest)
 
 	var Limit int64
 	limitData := gjson.GetBytes(reqMsgInJSON.Data, "limit")
-	if limitData.Exists() {
+	if limitData.Exists() && limitData.Int() > 0 {
 		Limit = limitData.Int()
 	} else {
 		Limit = 10
@@ -82,6 +82,8 @@ func (router *QuestionGetByClassNameRouter) PreHandle(request eduiface.IRequest)
 	issolvedData := gjson.GetBytes(reqMsgInJSON.Data, "issolved")
 	if issolvedData.Exists() {
 		IsSolved = issolvedData.Bool()
+	} else {
+		IsSolved = false
 	}
 
 	//权限检查
@@ -128,7 +130,7 @@ func (router *QuestionGetByClassNameRouter) Handle(request eduiface.IRequest) {
 	var err error
 
 	if questiongetbyclassnameReplyStatus == "success" {
-		jsonMsg, err = CombineReplyMsg(questiongetbyclassnameReplyStatus, classlistgetReplyData)
+		jsonMsg, err = CombineReplyMsg(questiongetbyclassnameReplyStatus, questiongetbyclassnameReplyData)
 	} else {
 		jsonMsg, err = CombineReplyMsg(questiongetbyclassnameReplyStatus, nil)
 	}

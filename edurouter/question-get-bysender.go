@@ -128,7 +128,7 @@ func (router *QuestionGetBySenderUIDRouter) Handle(request eduiface.IRequest) {
 	var err error
 
 	if questiongetbysenderuidReplyStatus == "success" {
-		jsonMsg, err = CombineReplyMsg(questiongetbysenderuidReplyStatus, classlistgetReplyData)
+		jsonMsg, err = CombineReplyMsg(questiongetbysenderuidReplyStatus, questiongetbysenderuidReplyData)
 	} else {
 		jsonMsg, err = CombineReplyMsg(questiongetbysenderuidReplyStatus, nil)
 	}
