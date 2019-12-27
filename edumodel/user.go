@@ -12,12 +12,20 @@ import (
 var userCollection *mongo.Collection
 
 type User struct {
-	Name   string
-	UID    string
-	Pwd    string
-	Place  string
-	Class  string
-	Gender int
+	Name          string
+	UID           string
+	Pwd           string
+	Place         string
+	Class         string
+	Gender        int
+	Birth         string
+	Political     string
+	Contact       string
+	IsContactPub  bool
+	Email         string
+	IsEmailPub    bool
+	Location      string
+	IsLocationPub bool
 }
 
 func checkUserCollection() {
@@ -97,38 +105,67 @@ func GetUserByClass(className string) *[]*User {
 	return &result
 }
 
-func UpdateUserByID(uid string, class string, name string, pwd string, gender int) bool {
+func UpdateUserByID(newUserData *User) bool {
 	checkUserCollection()
 
-	if uid == "" {
+	if newUserData == nil {
 		return false
 	}
 
-	originData := GetUserByUID(uid)
+	originData := GetUserByUID(newUserData.UID)
 
-	if class == "" {
-		class = originData.Class
+	if newUserData.Pwd != "" {
+		originData.Pwd = newUserData.Pwd
 	}
-	if name == "" {
-		name = originData.Name
+	if newUserData.Name != "" {
+		originData.Name = newUserData.Name
 	}
-	if pwd == "" {
-		pwd = originData.Pwd
+	if newUserData.Gender != 0 {
+		originData.Gender = newUserData.Gender
 	}
-	if gender != 1 && gender != 2 {
-		gender = originData.Gender
+	if newUserData.Birth != "" {
+		originData.Birth = newUserData.Birth
+	}
+	if newUserData.Political != "" {
+		originData.Political = newUserData.Political
+	}
+	if newUserData.Contact != "" {
+		originData.Contact = newUserData.Contact
+	}
+	if newUserData.IsContactPub != originData.IsContactPub {
+		originData.IsContactPub = newUserData.IsContactPub
+	}
+	if newUserData.Email != "" {
+		originData.Email = newUserData.Email
+	}
+	if newUserData.IsEmailPub != originData.IsEmailPub {
+		originData.IsEmailPub = newUserData.IsEmailPub
+	}
+	if newUserData.Location != "" {
+		originData.Location = newUserData.Location
+	}
+	if newUserData.IsLocationPub != originData.IsLocationPub {
+		originData.IsLocationPub = newUserData.IsLocationPub
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	filter := bson.D{{"uid", uid}}
+	filter := bson.D{{"uid", newUserData.UID}}
 	update := bson.D{
 		{"$set", bson.M{
-			"name":   name,
-			"pwd":    pwd,
-			"class":  class,
-			"gender": gender,
+			"name":          originData.Name,
+			"pwd":           originData.Pwd,
+			"class":         originData.Class,
+			"gender":        originData.Gender,
+			"bitrh":         originData.Birth,
+			"political":     originData.Political,
+			"contact":       originData.Contact,
+			"iscontactpub":  originData.IsContactPub,
+			"email":         originData.Email,
+			"isemailpub":    originData.IsEmailPub,
+			"location":      originData.Location,
+			"islocationpub": originData.IsLocationPub,
 		}},
 	}
 

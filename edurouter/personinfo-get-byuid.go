@@ -5,6 +5,7 @@ import (
 	"eduX/edumodel"
 	"eduX/edunet"
 	"fmt"
+	"time"
 
 	"github.com/tidwall/gjson"
 )
@@ -21,7 +22,12 @@ type PersonInfoGetReplyData struct {
 	UID       string `json:"uid"`
 	Name      string `json:"name"`
 	ClassName string `json:"class"`
-	Gender    int    `json:"gender"`
+	Gender    int    `json:"gender,omitempty"`
+	Birth     string `json:"birthday,omitempty"`
+	Political string `json:"polit,omitempty"`
+	Contact   string `json:"contact"`
+	Email     string `json:"email,omitempty"`
+	Location  string `json:"locat,omitempty"`
 }
 
 var persongetReplyStatus string
@@ -34,7 +40,7 @@ func (router *PersonInfoGetRouter) PreHandle(request eduiface.IRequest) {
 	if ok != true {
 		return
 	}
-
+	time.Now().String()
 	persongetReplyStatus, ok = CheckConnectionLogin(request, reqMsgInJSON.UID)
 	if ok != true {
 		return
@@ -47,13 +53,23 @@ func (router *PersonInfoGetRouter) PreHandle(request eduiface.IRequest) {
 	}
 
 	personUID := personInfoGetData.String()
+	if personUID == "" {
+		persongetReplyStatus = "uid_cannot_be_empty"
+		return
+	}
 
 	c := request.GetConnection()
 	var userData *edumodel.User
 
-	sessionUID, err := c.GetSession("UID")
+	sessionPlace, err := c.GetSession("place")
 	if err != nil {
-		persongetReplyStatus = "57session_error"
+		persongetReplyStatus = "64session_error"
+		return
+	}
+
+	placeString, ok := sessionPlace.(string)
+	if ok != true {
+		filegetbytagsReplyStatus = "session_place_data_error"
 		return
 	}
 
@@ -63,34 +79,43 @@ func (router *PersonInfoGetRouter) PreHandle(request eduiface.IRequest) {
 		return
 	}
 
-	if sessionUID != personUID {
-		sessionPlace, err := c.GetSession("place")
-		if err != nil {
-			persongetReplyStatus = "64session_error"
-			return
-		}
-		if sessionPlace == "student" {
-			persongetReplyStatus = "permission_error"
-			return
-		} else if sessionPlace == "teacher" {
-			sessionClass, err := c.GetSession("class")
-			if err != nil {
-				persongetReplyStatus = "73session_error"
-				return
-			}
-			if userData.Class != sessionClass {
+	if reqMsgInJSON.UID != personUID {
+		if placeString == "teacher" || placeString == "student" {
+			ok := edumodel.CheckUserInClass(userData.Class, reqMsgInJSON.UID, placeString)
+			if !ok {
 				persongetReplyStatus = "permission_error"
 				return
 			}
 		}
 	}
 
-	fmt.Println(userData.Class)
-
+	persongetReplyData.UID = userData.UID
+	persongetReplyData.Name = userData.Name
 	persongetReplyData.ClassName = userData.Class
 	persongetReplyData.Gender = userData.Gender
-	persongetReplyData.Name = userData.Name
-	persongetReplyData.UID = userData.UID
+	persongetReplyData.Birth = userData.Birth
+	persongetReplyData.Political = userData.Political
+	if reqMsgInJSON.UID != personUID {
+		if userData.IsContactPub {
+			persongetReplyData.Contact = userData.Contact
+		} else {
+			persongetReplyData.Contact = "未公开"
+		}
+		if userData.IsEmailPub {
+			persongetReplyData.Email = userData.Email
+		} else {
+			persongetReplyData.Email = "未公开"
+		}
+		if userData.IsLocationPub {
+			persongetReplyData.Location = userData.Location
+		} else {
+			persongetReplyData.Location = "未公开"
+		}
+	} else {
+		persongetReplyData.Contact = userData.Contact
+		persongetReplyData.Email = userData.Email
+		persongetReplyData.Location = userData.Location
+	}
 
 	persongetReplyStatus = "success"
 }

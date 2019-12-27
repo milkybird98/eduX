@@ -14,9 +14,17 @@ type PersonInfoPutRouter struct {
 }
 
 type PersonInfoPutData struct {
-	UID    string `json:"uid"`
-	Name   string `json:"name"`
-	Gender int    `json:"gender"`
+	UID           string `json:"uid"`
+	Name          string `json:"name"`
+	Gender        int    `json:"gender,omitempty"`
+	Birth         string `json:"birthday,omitempty"`
+	Political     string `json:"polit,omitempty"`
+	Contact       string `json:"contact"`
+	IsContactPub  bool   `json:"isconpub"`
+	Email         string `json:"email,omitempty"`
+	IsEmailPub    bool   `json:"isemapub,omitempty"`
+	Location      string `json:"locat,omitempty"`
+	IsLocationPub bool   `json:"islocpub,omitempty"`
 }
 
 var personputReplyStatus string
@@ -39,11 +47,24 @@ func (router *PersonInfoPutRouter) PreHandle(request eduiface.IRequest) {
 		return
 	}
 
-	var reqDataInJSON PersonInfoPutData
 	newPersonInfoData := gjson.ParseBytes(reqMsgInJSON.Data)
-	reqDataInJSON.UID = newPersonInfoData.Get("uid").String()
-	reqDataInJSON.Name = newPersonInfoData.Get("name").String()
-	reqDataInJSON.Gender = int(newPersonInfoData.Get("gender").Int())
+	UID := newPersonInfoData.Get("uid").String()
+	if UID == "" {
+		personputReplyStatus = "uid_cannot_be_empty"
+		return
+	}
+
+	userName := newPersonInfoData.Get("name").String()
+	if userName == "" {
+		personputReplyStatus = "name_cannot_be_empty"
+		return
+	}
+
+	userContact := newPersonInfoData.Get("contact").String()
+	if userContact == "" {
+		personputReplyStatus = "contact_cannot_be_empty"
+		return
+	}
 
 	//权限检查
 	c := request.GetConnection()
@@ -53,13 +74,13 @@ func (router *PersonInfoPutRouter) PreHandle(request eduiface.IRequest) {
 		return
 	}
 
-	userData := edumodel.GetUserByUID(reqDataInJSON.UID)
+	userData := edumodel.GetUserByUID(UID)
 	if userData == nil {
 		personputReplyStatus = "user_not_found"
 		return
 	}
 
-	if sessionUID != reqDataInJSON.UID {
+	if sessionUID != UID {
 		sessionPlace, err := c.GetSession("place")
 		if err != nil {
 			personputReplyStatus = "session_error"
@@ -75,6 +96,7 @@ func (router *PersonInfoPutRouter) PreHandle(request eduiface.IRequest) {
 				personputReplyStatus = "session_error"
 				return
 			}
+
 			if userData.Class != sessionClass {
 				personputReplyStatus = "permission_error"
 				return
@@ -83,7 +105,20 @@ func (router *PersonInfoPutRouter) PreHandle(request eduiface.IRequest) {
 	}
 
 	//修改个人信息
-	res := edumodel.UpdateUserByID(reqDataInJSON.UID, "", reqDataInJSON.Name, "", reqDataInJSON.Gender)
+	var newUserInfo edumodel.User
+	newUserInfo.UID = UID
+	newUserInfo.Name = userName
+	newUserInfo.Gender = int(newPersonInfoData.Get("gender").Int())
+	newUserInfo.Birth = newPersonInfoData.Get("birthday").String()
+	newUserInfo.Political = newPersonInfoData.Get("polit").String()
+	newUserInfo.Contact = newPersonInfoData.Get("contact").String()
+	newUserInfo.IsContactPub = newPersonInfoData.Get("isconpub").Bool()
+	newUserInfo.Email = newPersonInfoData.Get("email").String()
+	newUserInfo.IsEmailPub = newPersonInfoData.Get("isemapub").Bool()
+	newUserInfo.Location = newPersonInfoData.Get("locat").String()
+	newUserInfo.IsLocationPub = newPersonInfoData.Get("islocpub").Bool()
+
+	res := edumodel.UpdateUserByID(&newUserInfo)
 	if res {
 		personputReplyStatus = "success"
 	} else {

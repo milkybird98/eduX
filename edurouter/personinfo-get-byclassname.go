@@ -21,14 +21,6 @@ type PersonInfoGetByClassReplyData struct {
 	UserList []PersonInfoGetReplyData `json:"userlist"`
 }
 
-/*
- *	MsgID 101
- *
- *
- *
- *
- */
-
 var persongetbyclassReplyStatus string
 var persongetbyclassReplyData PersonInfoGetByClassReplyData
 
@@ -60,16 +52,29 @@ func (router *PersonInfoGetByClassRouter) PreHandle(request eduiface.IRequest) {
 		return
 	}
 
-	if sessionPlace == "student" {
+	placeString, ok := sessionPlace.(string)
+	if ok != true {
+		filegetbytagsReplyStatus = "session_place_data_error"
+		return
+	}
+
+	if placeString == "student" {
 		persongetbyclassReplyStatus = "permission_error"
 		return
-	} else if sessionPlace == "teacher" {
-		sessionClass, err := c.GetSession("class")
-		if err != nil {
-			persongetbyclassReplyStatus = "69session_error"
+	} else if placeString == "teacher" {
+		class := edumodel.GetClassByUID(reqMsgInJSON.UID, placeString)
+		if class == nil {
+			filegetbytagsReplyStatus = "model_fail"
 			return
 		}
-		if reqClassName != sessionClass {
+
+		className := class.ClassName
+		if className == "" {
+			filegetbytagsReplyStatus = "not_in_class"
+			return
+		}
+
+		if reqClassName != className {
 			persongetbyclassReplyStatus = "permission_error"
 			return
 		}
@@ -82,14 +87,31 @@ func (router *PersonInfoGetByClassRouter) PreHandle(request eduiface.IRequest) {
 	}
 	persongetbyclassReplyStatus = "success"
 
-	for _, personData := range *userManyData {
-		persongetbyclassReplyData.UserList = append(
-			persongetbyclassReplyData.UserList,
-			PersonInfoGetReplyData{
-				personData.UID,
-				personData.Name,
-				personData.Class,
-				personData.Gender})
+	for _, person := range *userManyData {
+		var personData PersonInfoGetReplyData
+		personData.UID = person.UID
+		personData.Name = person.Name
+		personData.ClassName = person.Class
+		personData.Gender = person.Gender
+		personData.Birth = person.Birth
+		personData.Political = person.Political
+		if person.IsContactPub {
+			personData.Contact = person.Contact
+		} else {
+			personData.Contact = "未公开"
+		}
+		if person.IsEmailPub {
+			personData.Email = person.Email
+		} else {
+			personData.Email = "未公开"
+		}
+		if person.IsLocationPub {
+			personData.Location = person.Location
+		} else {
+			personData.Location = "未公开"
+		}
+
+		persongetbyclassReplyData.UserList = append(persongetbyclassReplyData.UserList, personData)
 	}
 }
 
