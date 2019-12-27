@@ -22,16 +22,18 @@ var classjoiningetReplyData ClassJoinInGetReplyData
 
 func (router *ClassJoinInGetRouter) PreHandle(request eduiface.IRequest) {
 	classjoiningetReplyData = ClassJoinInGetReplyData{}
+	var reqMsgInJSON *ReqMsg
+	var ok bool
 
-	reqMsgInJSON, classjoiningetReplyStatus, ok := CheckMsgFormat(request)
+	reqMsgInJSON, classjoiningetReplyStatus, ok = CheckMsgFormat(request)
 	if ok != true {
-		fmt.Println("ClassJoinInGetRouter: ", classjoiningetReplyStatus)
+
 		return
 	}
 
 	classjoiningetReplyStatus, ok = CheckConnectionLogin(request, reqMsgInJSON.UID)
 	if ok != true {
-		fmt.Println("ClassJoinInGetRouter: ", classjoiningetReplyStatus)
+
 		return
 	}
 
@@ -39,14 +41,14 @@ func (router *ClassJoinInGetRouter) PreHandle(request eduiface.IRequest) {
 	place, err := c.GetSession("place")
 	if err != nil {
 		classjoiningetReplyStatus = "session_error"
-		fmt.Println("ClassJoinInGetRouter: ", classjoiningetReplyStatus)
+
 		return
 	}
 
 	placeString, ok := place.(string)
 	if ok != true {
 		classjoiningetReplyStatus = "session_error"
-		fmt.Println("ClassJoinInGetRouter: ", classjoiningetReplyStatus)
+
 		return
 	}
 
@@ -65,6 +67,7 @@ func (router *ClassJoinInGetRouter) PreHandle(request eduiface.IRequest) {
 func (router *ClassJoinInGetRouter) Handle(request eduiface.IRequest) {
 	var jsonMsg []byte
 	var err error
+	fmt.Println("ClassJoinInGetRouter: ", classjoiningetReplyStatus)
 	if classjoiningetReplyStatus == "success" {
 		jsonMsg, err = CombineReplyMsg(classjoiningetReplyStatus, classjoiningetReplyData)
 	} else {
