@@ -16,6 +16,7 @@ var fileCollection *mongo.Collection
 type File struct {
 	ID         primitive.ObjectID `bson:"_id,omitempty"`
 	FileName   string             `bson:"filename"`
+	FileTag    []string           `bson:"filetag"`
 	ClassName  string             `bson:"classname"`
 	Size       uint64             `bson:"size"`
 	UpdaterUID string             `bson:"updateruid"`
@@ -47,6 +48,37 @@ func AddFile(newFile *File) bool {
 	return true
 }
 
+func GetFileByTags(skip int, limit int, Tag []string, ClassName string) *[]File {
+	checkFileCollection()
+
+	if len(Tag) <= 0 {
+		return nil
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	filter := bson.M{"updateruid": Tag, "classname": ClassName}
+	option := options.Find().SetSort(bson.M{"updatetime": 1}).SetSkip(int64(skip)).SetLimit(int64(limit))
+
+	var result []File
+	cur, err := fileCollection.Find(ctx, filter, option)
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+
+	for cur.Next(ctx) {
+		var file File
+		if err := cur.Decode(&file); err != nil {
+			return nil
+		}
+		result = append(result, file)
+	}
+
+	return &result
+}
+
 func GetFileBySenderUID(skip int, limit int, SenderUID string) *[]File {
 	checkFileCollection()
 
@@ -57,7 +89,7 @@ func GetFileBySenderUID(skip int, limit int, SenderUID string) *[]File {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	filter := bson.M{"classname": SenderUID}
+	filter := bson.M{"updateruid": SenderUID}
 	option := options.Find().SetSort(bson.M{"updatetime": 1}).SetSkip(int64(skip)).SetLimit(int64(limit))
 
 	var result []File

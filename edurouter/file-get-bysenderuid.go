@@ -14,7 +14,7 @@ type FileGetBySenderUIDRouter struct {
 }
 
 type FileGetBySenderUIDData struct {
-	Sender string `json:"sender,omitempty"`
+	Sender string `json:"sender"`
 	Skip   int64  `json:"skip"`
 	Limit  int64  `json:"limit"`
 }
@@ -46,7 +46,7 @@ func (router *FileGetBySenderUIDRouter) PreHandle(request eduiface.IRequest) {
 
 	var Skip int64
 	skipData := gjson.GetBytes(reqMsgInJSON.Data, "skip")
-	if skipData.Exists() {
+	if skipData.Exists() && skipData.Int() >= 0 {
 		Skip = skipData.Int()
 	} else {
 		Skip = 0
@@ -54,7 +54,7 @@ func (router *FileGetBySenderUIDRouter) PreHandle(request eduiface.IRequest) {
 
 	var Limit int64
 	limitData := gjson.GetBytes(reqMsgInJSON.Data, "limit")
-	if limitData.Exists() {
+	if limitData.Exists() && limitData.Int() > 0 {
 		Limit = limitData.Int()
 	} else {
 		Limit = 10
@@ -74,38 +74,40 @@ func (router *FileGetBySenderUIDRouter) PreHandle(request eduiface.IRequest) {
 	}
 
 	senderUIDData := gjson.GetBytes(reqMsgInJSON.Data, "sender")
-	if !senderUIDData.Exists() {
-		fileList := edumodel.GetFileBySenderUID(int(Skip), int(Limit), reqMsgInJSON.UID)
-		if fileList != nil {
-			filegetbysenderuidReplyStatus = "success"
-			filegetbysenderuidReplyData.FileList = fileList
-		} else {
-			filegetbysenderuidReplyStatus = "model_fail"
-		}
-	} else {
-		if placeString != "manager" {
-			user := edumodel.GetUserByUID(senderUIDData.String())
-			if user == nil {
-				filegetbysenderuidReplyStatus = "user_not_found"
-				return
-			}
-			
-			ok = edumodel.CheckUserInClass(user.Class, reqMsgInJSON.UID, placeString)
-			if !ok {
-				filegetbysenderuidReplyStatus = "not_in_class"
-				return
-			}
-		}
 
-		senderUID := senderUIDData.String()
-		fileList := edumodel.GetFileBySenderUID(int(Skip), int(Limit), senderUID)
-		if fileList != nil {
-			filegetbysenderuidReplyStatus = "success"
-			filegetbysenderuidReplyData.FileList = fileList
-		} else {
-			filegetbysenderuidReplyStatus = "model_fail"
+	if !senderUIDData.Exists() && senderUIDData.String() != "" {
+		questiongetbyclassnameReplyStatus = "sender_uid_cannot_be_empty"
+		return
+	}
+
+	user := edumodel.GetUserByUID(senderUIDData.String())
+	if user == nil {
+		filegetbysenderuidReplyStatus = "user_not_found"
+		return
+	}
+
+	if user.Class == "" {
+		filegetbysenderuidReplyStatus = "not_in_class"
+		return
+	}
+
+	if placeString != "manager" {
+		ok = edumodel.CheckUserInClass(user.Class, reqMsgInJSON.UID, placeString)
+		if !ok {
+			questiongetbyclassnameReplyStatus = "permission_error_not_in_same_class"
+			return
 		}
 	}
+
+	senderUID := senderUIDData.String()
+	fileList := edumodel.GetFileBySenderUID(int(Skip), int(Limit), senderUID)
+	if fileList != nil {
+		filegetbysenderuidReplyStatus = "success"
+		filegetbysenderuidReplyData.FileList = fileList
+	} else {
+		filegetbysenderuidReplyStatus = "model_fail"
+	}
+
 }
 
 func (router *FileGetBySenderUIDRouter) Handle(request eduiface.IRequest) {
@@ -115,7 +117,7 @@ func (router *FileGetBySenderUIDRouter) Handle(request eduiface.IRequest) {
 	var err error
 
 	if filegetbysenderuidReplyStatus == "success" {
-		jsonMsg, err = CombineReplyMsg(filegetbysenderuidReplyStatus, classlistgetReplyData)
+		jsonMsg, err = CombineReplyMsg(filegetbysenderuidReplyStatus, filegetbysenderuidReplyData)
 	} else {
 		jsonMsg, err = CombineReplyMsg(filegetbysenderuidReplyStatus, nil)
 	}

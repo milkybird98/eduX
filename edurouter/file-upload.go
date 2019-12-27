@@ -18,9 +18,10 @@ type FileAddRouter struct {
 }
 
 type FileAddData struct {
-	FileName  string `json:"filename"`
-	ClassName string `json:"classname"`
-	Size      int64  `json:"size"`
+	FileName  string   `json:"filename"`
+	ClassName string   `json:"classname"`
+	FileTag   []string `json:"filetag"`
+	Size      int64    `json:"size"`
 }
 
 type FileAddReplyData struct {

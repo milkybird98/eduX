@@ -54,7 +54,7 @@ func (router *FileGetByClassNameRouter) PreHandle(request eduiface.IRequest) {
 
 	var Skip int64
 	skipData := gjson.GetBytes(reqMsgInJSON.Data, "skip")
-	if skipData.Exists() {
+	if skipData.Exists() && skipData.Int() >= 0 {
 		Skip = skipData.Int()
 	} else {
 		Skip = 0
@@ -62,7 +62,7 @@ func (router *FileGetByClassNameRouter) PreHandle(request eduiface.IRequest) {
 
 	var Limit int64
 	limitData := gjson.GetBytes(reqMsgInJSON.Data, "limit")
-	if limitData.Exists() {
+	if limitData.Exists() && limitData.Int() > 0 {
 		Limit = limitData.Int()
 	} else {
 		Limit = 10
@@ -91,7 +91,7 @@ func (router *FileGetByClassNameRouter) PreHandle(request eduiface.IRequest) {
 	if placeString != "manager" {
 		ok := edumodel.CheckUserInClass(className, reqMsgInJSON.UID, placeString)
 		if !ok {
-			filegetbyclassnameReplyStatus = "permission_error"
+			filegetbyclassnameReplyStatus = "permission_error_not_in_same_class"
 			return
 		}
 	}
@@ -112,7 +112,7 @@ func (router *FileGetByClassNameRouter) Handle(request eduiface.IRequest) {
 	var err error
 
 	if filegetbyclassnameReplyStatus == "success" {
-		jsonMsg, err = CombineReplyMsg(filegetbyclassnameReplyStatus, classlistgetReplyData)
+		jsonMsg, err = CombineReplyMsg(filegetbyclassnameReplyStatus, filegetbyclassnameReplyData)
 	} else {
 		jsonMsg, err = CombineReplyMsg(filegetbyclassnameReplyStatus, nil)
 	}
