@@ -13,9 +13,10 @@ import (
 var classCollection *mongo.Collection
 
 type Class struct {
-	ClassName   string   `bson:"classname"`
-	TeacherList []string `bson:"teacherlist"`
-	StudentList []string `bson:"studentlist"`
+	ClassName   string    `bson:"classname"`
+	TeacherList []string  `bson:"teacherlist"`
+	StudentList []string  `bson:"studentlist"`
+	CreateDate  time.Time `bson:"createdate"`
 }
 
 func checkClassCollection() {

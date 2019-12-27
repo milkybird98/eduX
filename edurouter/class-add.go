@@ -5,6 +5,7 @@ import (
 	"eduX/edumodel"
 	"eduX/edunet"
 	"fmt"
+	"time"
 
 	"github.com/tidwall/gjson"
 )
@@ -86,7 +87,12 @@ func (router *ClassAddRouter) PreHandle(request eduiface.IRequest) {
 		return
 	}
 
-	newClass := edumodel.Class{className, []string{teacherUID}, []string{}}
+	var newClass edumodel.Class
+	newClass.ClassName = className
+	newClass.TeacherList = []string{teacherUID}
+	newClass.StudentList = []string{}
+	newClass.CreateDate = time.Now()
+
 	ok = edumodel.AddClass(&newClass) && edumodel.AddUserToClassByUID([]string{teacherUID}, className)
 	if ok == true {
 		classaddReplyStatus = "success"
