@@ -74,12 +74,13 @@ func (router *ClassStudentAddRouter) PreHandle(request eduiface.IRequest) {
 
 	//添加学生
 	if placeString == "student" {
-		ok := edumodel.UpdateClassStudentByUID(className, []string{reqMsgInJSON.UID})
+		ok := edumodel.UpdateClassStudentByUID(className, []string{reqMsgInJSON.UID}) && edumodel.AddUserToClassByUID([]string{reqMsgInJSON.UID}, className)
 		if ok == true {
 			classstudentaddReplyStatus = "success"
 		} else {
 			classstudentaddReplyStatus = "model_fail"
 		}
+
 	} else if placeString == "teacher" {
 		ok := edumodel.CheckUserInClass(className, reqMsgInJSON.UID, "teacher")
 		if ok != true {
@@ -94,10 +95,14 @@ func (router *ClassStudentAddRouter) PreHandle(request eduiface.IRequest) {
 			studentList := studentListData.Array()
 			var studentListString []string
 			for _, stu := range studentList {
+				student := edumodel.GetUserByUID(stu.String())
+				if student == nil {
+					continue
+				}
 				studentListString = append(studentListString, stu.String())
 			}
 
-			ok := edumodel.UpdateClassStudentByUID(className, studentListString)
+			ok := edumodel.UpdateClassStudentByUID(className, studentListString) && edumodel.AddUserToClassByUID(studentListString, className)
 			if ok == true {
 				classstudentaddReplyStatus = "success"
 			} else {
@@ -121,7 +126,7 @@ func (router *ClassStudentAddRouter) PreHandle(request eduiface.IRequest) {
 			studentListString = append(studentListString, stu.String())
 		}
 
-		ok := edumodel.UpdateClassStudentByUID(className, studentListString)
+		ok := edumodel.UpdateClassStudentByUID(className, studentListString) && edumodel.AddUserToClassByUID(studentListString, className)
 		if ok == true {
 			classstudentaddReplyStatus = "success"
 		} else {

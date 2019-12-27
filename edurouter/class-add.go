@@ -86,8 +86,8 @@ func (router *ClassAddRouter) PreHandle(request eduiface.IRequest) {
 		return
 	}
 
-	newClass := edumodel.Class{className, []string{}, []string{teacherUID}}
-	ok = edumodel.AddClass(&newClass)
+	newClass := edumodel.Class{className, []string{teacherUID}, []string{}}
+	ok = edumodel.AddClass(&newClass) && edumodel.AddUserToClassByUID([]string{teacherUID}, className)
 	if ok == true {
 		classaddReplyStatus = "success"
 	} else {

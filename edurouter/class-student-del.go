@@ -74,11 +74,11 @@ func (router *ClassStudentDelRouter) PreHandle(request eduiface.IRequest) {
 
 	//删除学生
 	if placeString == "student" {
-		ok := edumodel.DeleteClassStudentByUID(className, []string{reqMsgInJSON.UID})
+		ok := edumodel.UpdateClassStudentByUID(className, []string{reqMsgInJSON.UID}) && edumodel.DeleteUserFromClassByUID([]string{reqMsgInJSON.UID}, className)
 		if ok == true {
-			classstudentdelReplyStatus = "success"
+			classstudentaddReplyStatus = "success"
 		} else {
-			classstudentdelReplyStatus = "model_fail"
+			classstudentaddReplyStatus = "model_fail"
 		}
 	} else if placeString == "teacher" {
 		ok := edumodel.CheckUserInClass(className, reqMsgInJSON.UID, "teacher")
@@ -97,11 +97,11 @@ func (router *ClassStudentDelRouter) PreHandle(request eduiface.IRequest) {
 				studentListString = append(studentListString, stu.String())
 			}
 
-			ok := edumodel.DeleteClassStudentByUID(className, studentListString)
+			ok := edumodel.UpdateClassStudentByUID(className, studentListString) && edumodel.DeleteUserFromClassByUID(studentListString, className)
 			if ok == true {
-				classstudentdelReplyStatus = "success"
+				classstudentaddReplyStatus = "success"
 			} else {
-				classstudentdelReplyStatus = "model_fail"
+				classstudentaddReplyStatus = "model_fail"
 			}
 		}
 	} else if placeString == "manager" {
@@ -117,11 +117,11 @@ func (router *ClassStudentDelRouter) PreHandle(request eduiface.IRequest) {
 			studentListString = append(studentListString, stu.String())
 		}
 
-		ok := edumodel.DeleteClassStudentByUID(className, studentListString)
+		ok := edumodel.UpdateClassStudentByUID(className, studentListString) && edumodel.DeleteUserFromClassByUID(studentListString, className)
 		if ok == true {
-			classstudentdelReplyStatus = "success"
+			classstudentaddReplyStatus = "success"
 		} else {
-			classstudentdelReplyStatus = "model_fail"
+			classstudentaddReplyStatus = "model_fail"
 		}
 	}
 }
