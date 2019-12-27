@@ -14,8 +14,12 @@ import (
 )
 
 func TestServerPersonOperation(t *testing.T) {
-	edumodel.ConnectMongo()
-	edumodel.ConnectDatabase(nil)
+	if !edumodel.ConnectMongo() {
+		t.FailNow()
+	}
+	if !edumodel.ConnectDatabase(nil) {
+		t.FailNow()
+	}
 
 	//创建一个server句柄
 	s := edunet.NewServer()
@@ -46,6 +50,8 @@ func ClientTestSA(t *testing.T) {
 	}
 
 	{
+		fmt.Println("[test] login")
+
 		db := edunet.NewDataPack()
 
 		var loginData edurouter.LoginData
@@ -63,7 +69,7 @@ func ClientTestSA(t *testing.T) {
 			return
 		}
 
-		buf := make([]byte, 512)
+		buf := make([]byte, 2048)
 		cnt, err := conn.Read(buf)
 		if err != nil {
 			fmt.Println("read buf error ")
@@ -81,15 +87,22 @@ func ClientTestSA(t *testing.T) {
 		replyData := gjson.ParseBytes(replyMsg.GetData())
 		replystatus := replyData.Get("status").String()
 		fmt.Printf("reply status %s\n", replystatus)
+		data, _ = base64.StdEncoding.DecodeString(replyData.Get("data").String())
+		fmt.Println("reply data: ", string(data))
+		if replystatus == "success" {
+			fmt.Println("[test] login pass")
+		}
 	}
 
 	{
+		fmt.Println("[test] person info add router")
+
 		db := edunet.NewDataPack()
 
 		var student edurouter.PersonAddData
 		student.Place = "student"
 		student.Name = "测试姓名1"
-		student.UID = "U1001"
+		student.UID = "U1005"
 
 		msgData, _ := edurouter.CombineSendMsg("M1001", student)
 
@@ -103,7 +116,7 @@ func ClientTestSA(t *testing.T) {
 			return
 		}
 
-		buf := make([]byte, 512)
+		buf := make([]byte, 2048)
 		cnt, err := conn.Read(buf)
 		if err != nil {
 			fmt.Println("read buf error ")
@@ -121,11 +134,73 @@ func ClientTestSA(t *testing.T) {
 		replyData := gjson.ParseBytes(replyMsg.GetData())
 		replystatus := replyData.Get("status").String()
 		fmt.Printf("reply status %s\n", replystatus)
+		data, _ = base64.StdEncoding.DecodeString(replyData.Get("data").String())
+		fmt.Println("reply data: ", string(data))
+		if replystatus == "success" {
+			fmt.Println("[test] person add pass")
+		}
 
+	}
+	{
+		fmt.Println("[test] person info put by uid router")
+
+		db := edunet.NewDataPack()
+
+		var person edurouter.PersonInfoPutData
+
+		person.UID = "U1005"
+		person.Name = "新名字"
+		person.Gender = 2
+		person.Birth = ""
+		person.Political = "群众"
+		person.Contact = "123456789"
+		person.IsContactPub = true
+		person.Email = "asd@asd.com"
+		person.IsEmailPub = false
+
+		msgData, _ := edurouter.CombineSendMsg("M1001", person)
+
+		msg := edunet.NewMsgPackage(4, msgData)
+
+		data, _ := db.Pack(msg)
+
+		_, err := conn.Write(data)
+		if err != nil {
+			fmt.Println("write error err ", err)
+			return
+		}
+
+		buf := make([]byte, 2048)
+		cnt, err := conn.Read(buf)
+		if err != nil {
+			fmt.Println("read buf error ")
+			return
+		}
+
+		replyMsg, err := db.Unpack(buf)
+		if err != nil {
+			fmt.Println("unpack error ", err)
+			return
+		}
+
+		//根据 dataLen 读取 data，放在msg.Data中
+
+		replyMsg.SetData(buf[8:cnt])
+
+		fmt.Printf("server call back msgID = %d, msgLength = %d, originLength = %d\n", replyMsg.GetMsgId(), replyMsg.GetDataLen(), cnt)
+
+		replyData := gjson.ParseBytes(replyMsg.GetData())
+		replystatus := replyData.Get("status").String()
+		fmt.Println("reply status: ", replystatus)
+		data, _ = base64.StdEncoding.DecodeString(replyData.Get("data").String())
+		fmt.Println("reply data: ", string(data))
+		if replystatus == "success" {
+			fmt.Println("[test] person info put pass")
+		}
 	}
 
 	{
-		fmt.Println("test person info get by class router")
+		fmt.Println("[test] person info get by class router")
 
 		db := edunet.NewDataPack()
 
@@ -145,7 +220,7 @@ func ClientTestSA(t *testing.T) {
 			return
 		}
 
-		buf := make([]byte, 512)
+		buf := make([]byte, 2048)
 		cnt, err := conn.Read(buf)
 		if err != nil {
 			fmt.Println("read buf error ")
@@ -165,20 +240,22 @@ func ClientTestSA(t *testing.T) {
 		fmt.Printf("server call back msgID = %d, msgLength = %d, originLength = %d\n", replyMsg.GetMsgId(), replyMsg.GetDataLen(), cnt)
 
 		replyData := gjson.ParseBytes(replyMsg.GetData())
-		replystatus := replyData.Get("status")
-		fmt.Println("reply status: ", replystatus.String())
+		replystatus := replyData.Get("status").String()
+		fmt.Println("reply status: ", replystatus)
 		data, _ = base64.StdEncoding.DecodeString(replyData.Get("data").String())
 		fmt.Println("reply data: ", string(data))
+		if replystatus == "success" {
+			fmt.Println("[test] person info get by class pass")
+		}
 	}
 	{
-
-		fmt.Println("test person info get by uid router")
+		fmt.Println("[test] person info get by uid router")
 
 		db := edunet.NewDataPack()
 
 		var person edurouter.PersonInfoGetData
 
-		person.UID = "U1001"
+		person.UID = "U1005"
 
 		msgData, _ := edurouter.CombineSendMsg("M1001", person)
 
@@ -192,7 +269,7 @@ func ClientTestSA(t *testing.T) {
 			return
 		}
 
-		buf := make([]byte, 512)
+		buf := make([]byte, 2048)
 		cnt, err := conn.Read(buf)
 		if err != nil {
 			fmt.Println("read buf error ")
@@ -212,60 +289,13 @@ func ClientTestSA(t *testing.T) {
 		fmt.Printf("server call back msgID = %d, msgLength = %d, originLength = %d\n", replyMsg.GetMsgId(), replyMsg.GetDataLen(), cnt)
 
 		replyData := gjson.ParseBytes(replyMsg.GetData())
-		replystatus := replyData.Get("status")
-		fmt.Println("reply status: ", replystatus.String())
+		replystatus := replyData.Get("status").String()
+		fmt.Println("reply status: ", replystatus)
 		data, _ = base64.StdEncoding.DecodeString(replyData.Get("data").String())
 		fmt.Println("reply data: ", string(data))
-
-	}
-
-	{
-		fmt.Println("test person info put by uid router")
-
-		db := edunet.NewDataPack()
-
-		var person edurouter.PersonInfoPutData
-
-		person.UID = "U1001"
-		person.Name = "tt"
-		person.Gender = 2
-
-		msgData, _ := edurouter.CombineSendMsg("M1001", person)
-
-		msg := edunet.NewMsgPackage(4, msgData)
-
-		data, _ := db.Pack(msg)
-
-		_, err := conn.Write(data)
-		if err != nil {
-			fmt.Println("write error err ", err)
-			return
+		if replystatus == "success" {
+			fmt.Println("[test] person info get by uid pass")
 		}
-
-		buf := make([]byte, 512)
-		cnt, err := conn.Read(buf)
-		if err != nil {
-			fmt.Println("read buf error ")
-			return
-		}
-
-		replyMsg, err := db.Unpack(buf)
-		if err != nil {
-			fmt.Println("unpack error ", err)
-			return
-		}
-
-		//根据 dataLen 读取 data，放在msg.Data中
-
-		replyMsg.SetData(buf[8:cnt])
-
-		fmt.Printf("server call back msgID = %d, msgLength = %d, originLength = %d\n", replyMsg.GetMsgId(), replyMsg.GetDataLen(), cnt)
-
-		replyData := gjson.ParseBytes(replyMsg.GetData())
-		replystatus := replyData.Get("status")
-		fmt.Println("reply status: ", replystatus.String())
-		data, _ = base64.StdEncoding.DecodeString(replyData.Get("data").String())
-		fmt.Println("reply data: ", string(data))
 	}
 
 }
