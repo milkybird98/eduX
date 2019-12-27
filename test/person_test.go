@@ -13,7 +13,7 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-func TestServerStudentAdd(t *testing.T) {
+func TestServerPersonOperation(t *testing.T) {
 	edumodel.ConnectMongo()
 	edumodel.ConnectDatabase(nil)
 
