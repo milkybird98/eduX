@@ -12,10 +12,16 @@ import (
 
 func TestQuestionModel(t *testing.T) {
 	fmt.Println("start connect mongo")
-	edumodel.ConnectMongo()
+	ok := edumodel.ConnectMongo()
+	if !ok {
+		t.Fail()
+	}
 
 	fmt.Println("start choose database")
-	edumodel.ConnectDatabase(nil)
+	ok = edumodel.ConnectDatabase(nil)
+	if !ok {
+		t.Fail()
+	}
 
 	teacherList := []string{"T1001", "T1002"}
 	studentList := []string{"U1001", "U1002"}
@@ -24,6 +30,7 @@ func TestQuestionModel(t *testing.T) {
 		"ts1001",
 		teacherList,
 		studentList,
+		time.Now(),
 	}
 
 	fmt.Println("add question")
@@ -36,7 +43,7 @@ func TestQuestionModel(t *testing.T) {
 	newQuestion.IsSolved = false
 	newQuestion.IsDeleted = false
 
-	ok := edumodel.AddQuestion(&newQuestion)
+	ok = edumodel.AddQuestion(&newQuestion)
 	if ok {
 		fmt.Println("pass")
 	} else {
@@ -82,10 +89,16 @@ func TestQuestionModel(t *testing.T) {
 
 func TestClassModel(t *testing.T) {
 	fmt.Println("start connect mongo")
-	edumodel.ConnectMongo()
+	ok := edumodel.ConnectMongo()
+	if !ok {
+		return
+	}
 
 	fmt.Println("start choose database")
-	edumodel.ConnectDatabase(nil)
+	ok = edumodel.ConnectDatabase(nil)
+	if !ok {
+		return
+	}
 
 	teacherList := []string{"T1001", "T1002"}
 	studentList := []string{"U1001", "U1002"}
@@ -95,6 +108,7 @@ func TestClassModel(t *testing.T) {
 		"ts1001",
 		teacherList,
 		studentList,
+		time.Now(),
 	}
 	if edumodel.AddClass(class) {
 		fmt.Println("success")
@@ -154,10 +168,16 @@ func TestClassModel(t *testing.T) {
 
 func TestUserModel(t *testing.T) {
 	fmt.Println("start connect mongo")
-	edumodel.ConnectMongo()
+	ok := edumodel.ConnectMongo()
+	if !ok {
+		return
+	}
 
 	fmt.Println("start choose database")
-	edumodel.ConnectDatabase(nil)
+	ok = edumodel.ConnectDatabase(nil)
+	if !ok {
+		return
+	}
 
 	fmt.Println("add first user")
 	user := &edumodel.User{
@@ -167,6 +187,14 @@ func TestUserModel(t *testing.T) {
 		"stu",
 		"ds1233",
 		1,
+		"1982-12-22",
+		"群众",
+		"123456789",
+		false,
+		"",
+		false,
+		"Hubei",
+		true,
 	}
 	edumodel.AddUser(user)
 
@@ -175,7 +203,8 @@ func TestUserModel(t *testing.T) {
 	fmt.Println(user)
 
 	fmt.Println("update user by id")
-	edumodel.UpdateUserByID("U1000", "ts1002", "", "", 0)
+
+	edumodel.UpdateUserByID(user)
 	user = edumodel.GetUserByUID("U1000")
 	fmt.Println(user)
 
