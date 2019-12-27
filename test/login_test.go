@@ -1,4 +1,4 @@
-package edutest
+package test
 
 import (
 	"eduX/edumodel"
