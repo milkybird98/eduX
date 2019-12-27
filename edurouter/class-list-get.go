@@ -43,8 +43,21 @@ func (router *ClassListGetRouter) PreHandle(request eduiface.IRequest) {
 		return
 	}
 
-	Skip := gjson.GetBytes(reqMsgInJSON.Data, "skip").Int()
-	Limit := gjson.GetBytes(reqMsgInJSON.Data, "limit").Int()
+	var Skip int64
+	skipData := gjson.GetBytes(reqMsgInJSON.Data, "skip")
+	if skipData.Exists() {
+		Skip = skipData.Int()
+	} else {
+		Skip = 0
+	}
+
+	var Limit int64
+	limitData := gjson.GetBytes(reqMsgInJSON.Data, "limit")
+	if limitData.Exists() {
+		Limit = limitData.Int()
+	} else {
+		Limit = 10
+	}
 
 	//权限检查
 	c := request.GetConnection()
