@@ -97,15 +97,13 @@ func (router *QuestionAnswerRouter) PreHandle(request eduiface.IRequest) {
 	ok = edumodel.AnserQuestionByInnerID(innerIDString, UID, answer)
 	if ok {
 		questionanswerReplyStatus = "success"
-		return
 	} else {
 		questionanswerReplyStatus = "model_fail"
-		return
 	}
 }
 
 func (router *QuestionAnswerRouter) Handle(request eduiface.IRequest) {
-	fmt.Println("[ROUTER] ",time.Now().Format("2006-01-01 Jan 2 15:04:05"), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", QuestionAnswerRouter: ", questionanswerReplyStatus)
+	fmt.Println("[ROUTER] ", time.Now().Format("2006-01-01 Jan 2 15:04:05"), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", QuestionAnswerRouter: ", questionanswerReplyStatus)
 	jsonMsg, err := CombineReplyMsg(questionanswerReplyStatus, nil)
 	if err != nil {
 		fmt.Println("QuestionAnswerRouter: ", err)

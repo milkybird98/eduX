@@ -56,25 +56,6 @@ func (router *QuestionAddRouter) PreHandle(request eduiface.IRequest) {
 	}
 
 	c := request.GetConnection()
-
-	sessionClass, err := c.GetSession("class")
-	if err != nil {
-		questionaddReplyStatus = "session_error"
-		return
-	}
-
-	sessionClassString, ok := sessionClass.(string)
-	if !ok {
-		questionaddReplyStatus = "session_error"
-		return
-	}
-
-	class := edumodel.GetClassByUID(reqMsgInJSON.UID, "student")
-	if class == nil {
-		questionaddReplyStatus = "not_join_class"
-		return
-	}
-
 	sessionPlace, err := c.GetSession("place")
 	if err != nil {
 		questionaddReplyStatus = "seesion_error"
@@ -92,11 +73,17 @@ func (router *QuestionAddRouter) PreHandle(request eduiface.IRequest) {
 		return
 	}
 
+	class := edumodel.GetClassByUID(reqMsgInJSON.UID, "student")
+	if class == nil {
+		questionaddReplyStatus = "not_join_class"
+		return
+	}
+
 	var question edumodel.Question
 	question.Title = titleData.String()
 	question.Text = textData.String()
 	question.SenderUID = reqMsgInJSON.UID
-	question.ClassName = sessionClassString
+	question.ClassName = class.ClassName
 	question.SendTime = time.Now()
 	question.IsSolved = false
 
@@ -110,7 +97,7 @@ func (router *QuestionAddRouter) PreHandle(request eduiface.IRequest) {
 
 // Handle 返回处理结果
 func (router *QuestionAddRouter) Handle(request eduiface.IRequest) {
-	fmt.Println("[ROUTER] ",time.Now().Format("2006-01-01 Jan 2 15:04:05"), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", QuestionAddRouter: ", questionaddReplyStatus)
+	fmt.Println("[ROUTER] ", time.Now().Format("2006-01-01 Jan 2 15:04:05"), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", QuestionAddRouter: ", questionaddReplyStatus)
 	jsonMsg, err := CombineReplyMsg(questionaddReplyStatus, nil)
 	if err != nil {
 		fmt.Println("QuestionAddRouter: ", err)
