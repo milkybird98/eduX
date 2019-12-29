@@ -183,7 +183,6 @@ func TestUserModel(t *testing.T) {
 	user := &edumodel.User{
 		"test",
 		"U1000",
-		"123123",
 		"stu",
 		"ds1233",
 		1,

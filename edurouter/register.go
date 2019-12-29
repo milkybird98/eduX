@@ -43,6 +43,11 @@ func (router *RegisterRouter) PreHandle(request eduiface.IRequest) {
 		return
 	}
 
+	if !gjson.Valid(string(reqMsgInJSON.Data)) {
+		personputReplyStatus = "data_format_error"
+		return
+	}
+
 	registerData := gjson.ParseBytes(reqMsgInJSON.Data)
 
 	uidData := registerData.Get("uid")
@@ -84,11 +89,18 @@ func (router *RegisterRouter) PreHandle(request eduiface.IRequest) {
 	var newUser edumodel.User
 	newUser.UID = uidInString
 	newUser.Place = "student"
-	newUser.Pwd = string(pwdInByteDecode)
 
-	res := edumodel.AddUser(&newUser)
+	var newUserAuth edumodel.UserAuth
+	newUserAuth.UID = uidInString
+	newUserAuth.Pwd = string(pwdInByteDecode)
+
+	res := edumodel.AddUser(&newUser) && edumodel.AddUserAuth(&newUserAuth)
 	if res {
 		registerReplyStatus = "success"
+		c := request.GetConnection()
+		c.SetSession("isLogined", true)
+		c.SetSession("UID", newUser.UID)
+		c.SetSession("place", newUser.Place)
 	} else {
 		registerReplyStatus = "model_fail"
 	}
@@ -96,7 +108,7 @@ func (router *RegisterRouter) PreHandle(request eduiface.IRequest) {
 }
 
 func (router *RegisterRouter) Handle(request eduiface.IRequest) {
-	fmt.Println("[ROUTER] ",time.Now().Format("2006-01-01 Jan 2 15:04:05"), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", [ROUTER] Time: ", time.Now(), " Client address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), "RegisterRouter: ", registerReplyStatus)
+	fmt.Println("[ROUTER] ", time.Now().Format("2006-01-01 Jan 2 15:04:05"), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", [ROUTER] Time: ", time.Now(), " Client address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), "RegisterRouter: ", registerReplyStatus)
 	jsonMsg, err := CombineReplyMsg(registerReplyStatus, nil)
 	if err != nil {
 		fmt.Println("RegisterRouter: ", err)

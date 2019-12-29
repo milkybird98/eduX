@@ -92,13 +92,13 @@ func (router *PersonInfoPutRouter) PreHandle(request eduiface.IRequest) {
 			personputReplyStatus = "permission_error"
 			return
 		} else if sessionPlace == "teacher" {
-			sessionClass, err := c.GetSession("class")
-			if err != nil {
-				personputReplyStatus = "session_error"
+			class := edumodel.GetClassByUID(reqMsgInJSON.UID, "teacher")
+			if class == nil {
+				personputReplyStatus = "not_in_class"
 				return
 			}
 
-			if userData.Class != sessionClass {
+			if userData.Class != class.ClassName {
 				personputReplyStatus = "permission_error"
 				return
 			}
@@ -128,7 +128,7 @@ func (router *PersonInfoPutRouter) PreHandle(request eduiface.IRequest) {
 }
 
 func (router *PersonInfoPutRouter) Handle(request eduiface.IRequest) {
-	fmt.Println("[ROUTER] ",time.Now().Format("2006-01-01 Jan 2 15:04:05"), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", PersonInfoPutRouter: ", personputReplyStatus)
+	fmt.Println("[ROUTER] ", time.Now().Format("2006-01-01 Jan 2 15:04:05"), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", PersonInfoPutRouter: ", personputReplyStatus)
 	jsonMsg, err := CombineReplyMsg(personputReplyStatus, nil)
 	if err != nil {
 		fmt.Println("PersonInfoPutRouter: ", err)

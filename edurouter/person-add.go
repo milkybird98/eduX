@@ -68,19 +68,22 @@ func (router *PersonAddRouter) PreHandle(request eduiface.IRequest) {
 
 	userData := edumodel.GetUserByUID(reqDataInJSON.UID)
 	if userData != nil {
-		personputReplyStatus = "same_uid_exist"
+		personAddReplyStatus = "same_uid_exist"
 		return
 	}
 
 	//数据库操作
 	var newUser edumodel.User
+	var newUserAuth edumodel.UserAuth
 
 	newUser.UID = reqDataInJSON.UID
 	newUser.Name = reqDataInJSON.Name
-	newUser.Pwd = base64.StdEncoding.EncodeToString([]byte(newUser.UID))
 	newUser.Place = reqDataInJSON.Place
 
-	res := edumodel.AddUser(&newUser)
+	newUserAuth.UID = reqDataInJSON.UID
+	newUserAuth.Pwd = base64.StdEncoding.EncodeToString([]byte(newUser.UID))
+
+	res := edumodel.AddUser(&newUser) && edumodel.AddUserAuth(&newUserAuth)
 	if res {
 		personAddReplyStatus = "success"
 	} else {
@@ -90,7 +93,7 @@ func (router *PersonAddRouter) PreHandle(request eduiface.IRequest) {
 }
 
 func (router *PersonAddRouter) Handle(request eduiface.IRequest) {
-	fmt.Println("[ROUTER] ",time.Now().Format("2006-01-01 Jan 2 15:04:05"), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", PersonAddRouter: ", personAddReplyStatus)
+	fmt.Println("[ROUTER] ", time.Now().Format("2006-01-01 Jan 2 15:04:05"), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", PersonAddRouter: ", personAddReplyStatus)
 	jsonMsg, err := CombineReplyMsg(personAddReplyStatus, nil)
 	if err != nil {
 		fmt.Println("PersonAddRouter: ", err)
