@@ -44,8 +44,7 @@ type GlobalObj struct {
 	/*
 		Cache
 	*/
-	FileTransCacheSize  uint32
-	UserOnlineCacheSize uint32
+	CacheTableSize int
 }
 
 /*
@@ -91,23 +90,22 @@ func (g *GlobalObj) Reload() {
 func init() {
 	//初始化GlobalObject变量，设置一些默认值
 	GlobalObject = &GlobalObj{
-		Name:                "eduXServerApp",
-		Version:             "V0.1",
-		TcpPort:             23333,
-		Host:                "0.0.0.0",
-		MaxConn:             12000,
-		MaxPacketSize:       4096,
-		ConfFilePath:        "conf/eduX.json",
-		WorkerPoolSize:      10,
-		MaxWorkerTaskLen:    1024,
-		MaxMsgChanLen:       1024,
-		DataBaseUrl:         "mongodb://localhost:27017",
-		DataBaseName:        "eduPlatform",
-		FileTransCacheSize:  1024,
-		UserOnlineCacheSize: 4096,
+		Name:             "eduXServerApp",
+		Version:          "V0.1",
+		TcpPort:          23333,
+		Host:             "0.0.0.0",
+		MaxConn:          12000,
+		MaxPacketSize:    4096,
+		ConfFilePath:     "conf/eduX.json",
+		WorkerPoolSize:   10,
+		MaxWorkerTaskLen: 1024,
+		MaxMsgChanLen:    1024,
+		DataBaseUrl:      "mongodb://localhost:27017",
+		DataBaseName:     "eduPlatform",
+		CacheTableSize:   4096,
 	}
 
-	initFileTranCache()
+	InitCache()
 
 	//从配置文件中重新加载一些用户配置的参数
 	GlobalObject.Reload()

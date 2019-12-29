@@ -24,7 +24,7 @@ type FileTransmitTag struct {
 var FileTransmitCache gcache.Cache
 
 func initFileTranCache() {
-	FileTransmitCache = gcache.New(int(GlobalObject.FileTransCacheSize)).
+	FileTransmitCache = gcache.New(int(GlobalObject.CacheTableSize)).
 		LRU().
 		Build()
 }
@@ -55,7 +55,7 @@ type RegisterTimerTag struct {
 var RegisterTimerCache gcache.Cache
 
 func initRegisterTimerCache() {
-	RegisterTimerCache = gcache.New(int(GlobalObject.UserOnlineCacheSize)).
+	RegisterTimerCache = gcache.New(int(GlobalObject.CacheTableSize)).
 		LRU().
 		Build()
 }
@@ -76,4 +76,40 @@ func GetRegisterTimerCache(key string) (*RegisterTimerTag, error) {
 	}
 
 	return &file, nil
+}
+
+type ResetPasswordTag struct {
+	UID string
+}
+
+var ResetPasswordCache gcache.Cache
+
+func initResetPasswordCache() {
+	ResetPasswordCache = gcache.New(int(GlobalObject.CacheTableSize)).
+		LRU().
+		Build()
+}
+
+func SetResetPasswordCacheExpire(key string, value ResetPasswordTag) {
+	ResetPasswordCache.SetWithExpire(key, value, time.Minute*5)
+}
+
+func GetResetPasswordCache(key string) (*ResetPasswordTag, error) {
+	value, err := ResetPasswordCache.Get(key)
+	if err != nil {
+		return nil, err
+	}
+
+	file, ok := value.(ResetPasswordTag)
+	if !ok {
+		return nil, err
+	}
+
+	return &file, nil
+}
+
+func InitCache() {
+	initFileTranCache()
+	initRegisterTimerCache()
+	initResetPasswordCache()
 }
