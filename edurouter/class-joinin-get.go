@@ -28,13 +28,11 @@ func (router *ClassJoinInGetRouter) PreHandle(request eduiface.IRequest) {
 
 	reqMsgInJSON, classjoiningetReplyStatus, ok = CheckMsgFormat(request)
 	if ok != true {
-
 		return
 	}
 
 	classjoiningetReplyStatus, ok = CheckConnectionLogin(request, reqMsgInJSON.UID)
 	if ok != true {
-
 		return
 	}
 
@@ -48,7 +46,6 @@ func (router *ClassJoinInGetRouter) PreHandle(request eduiface.IRequest) {
 	placeString, ok := place.(string)
 	if ok != true {
 		classjoiningetReplyStatus = "session_error"
-
 		return
 	}
 
@@ -65,7 +62,7 @@ func (router *ClassJoinInGetRouter) PreHandle(request eduiface.IRequest) {
 }
 
 func (router *ClassJoinInGetRouter) Handle(request eduiface.IRequest) {
-	fmt.Println("[ROUTER] ",time.Now().Format("2006-01-01 Jan 2 15:04:05"), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ",ClassJoinInGetRouter: ", classjoiningetReplyStatus)
+	fmt.Println("[ROUTER] ", time.Now().Format("2006-01-01 Jan 2 15:04:05"), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ",ClassJoinInGetRouter: ", classjoiningetReplyStatus)
 	var jsonMsg []byte
 	var err error
 	if classjoiningetReplyStatus == "success" {
