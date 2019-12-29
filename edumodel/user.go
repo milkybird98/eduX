@@ -14,7 +14,6 @@ var userCollection *mongo.Collection
 type User struct {
 	Name          string
 	UID           string
-	Pwd           string
 	Place         string
 	Class         string
 	Gender        int
@@ -116,9 +115,6 @@ func UpdateUserByID(newUserData *User) bool {
 
 	originData := GetUserByUID(newUserData.UID)
 
-	if newUserData.Pwd != "" {
-		originData.Pwd = newUserData.Pwd
-	}
 	if newUserData.Name != "" {
 		originData.Name = newUserData.Name
 	}
@@ -157,7 +153,6 @@ func UpdateUserByID(newUserData *User) bool {
 	update := bson.D{
 		{"$set", bson.M{
 			"name":          originData.Name,
-			"pwd":           originData.Pwd,
 			"class":         originData.Class,
 			"gender":        originData.Gender,
 			"bitrh":         originData.Birth,
