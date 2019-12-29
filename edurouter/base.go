@@ -6,6 +6,8 @@ import (
 	"eduX/utils"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
+	"fmt"
 
 	"github.com/tidwall/gjson"
 )
@@ -135,7 +137,7 @@ func CombineReplyMsg(status string, dataInJSON interface{}) ([]byte, error) {
 		return nil, err
 	}
 
-	//fmt.Println(string(jsonMsg))
+	fmt.Println(string(jsonMsg))
 	return jsonMsg, nil
 }
 
@@ -168,6 +170,34 @@ func CombineSendMsg(UID string, dataInJSON interface{}) ([]byte, error) {
 		return nil, err
 	}
 
-	//fmt.Println(string(jsonMsg))
+	fmt.Println(string(jsonMsg))
 	return jsonMsg, nil
+}
+
+func PwdRemoveSalr(pwdWithSalt []byte) (string, error) {
+	if pwdWithSalt == nil {
+		return "", errors.New("pwd_cannot_be_empty")
+	}
+
+	if len(pwdWithSalt) <= 7 {
+		return "", errors.New("pwd_too_short")
+	}
+
+	//去盐
+	pwdWithSalt = pwdWithSalt[7:]
+	pwdWithSalt[3] -= 2
+	pwdWithSalt[5] -= 3
+	pwdWithSalt[7] -= 7
+	pwdWithSalt[8] -= 11
+	pwdWithSalt[10] -= 13
+
+	pwdInByteDecode := make([]byte, 64)
+
+	_, err := base64.StdEncoding.Decode(pwdInByteDecode, pwdWithSalt)
+	if err != nil {
+		return "", errors.New("pwd_format_error")
+	}
+
+	newPwdInString := string(pwdInByteDecode)
+	return newPwdInString, nil
 }
