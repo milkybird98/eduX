@@ -25,6 +25,7 @@ type ClassStudentDelData struct {
 var classstudentdelReplyStatus string
 
 // PreHandle 数据检查,权限检查,更新数据库
+// PreHandle 用于进行原始数据校验,权限验证,身份验证,数据获取和数据库操作
 func (router *ClassStudentDelRouter) PreHandle(request eduiface.IRequest) {
 	var reqMsgInJSON *ReqMsg
 	var ok bool
@@ -129,6 +130,7 @@ func (router *ClassStudentDelRouter) PreHandle(request eduiface.IRequest) {
 }
 
 // Handle 返回处理结果
+// Handle 用于将请求的处理结果发回客户端
 func (router *ClassStudentDelRouter) Handle(request eduiface.IRequest) {
 	fmt.Println("[ROUTER] ", time.Now().In(utils.GlobalObject.TimeLocal).Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", ClassStudentDelRouter: ", classstudentdelReplyStatus)
 	jsonMsg, err := CombineReplyMsg(classstudentdelReplyStatus, nil)

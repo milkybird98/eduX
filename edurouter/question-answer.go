@@ -22,6 +22,7 @@ type QuestionAnswerData struct {
 
 var questionanswerReplyStatus string
 
+// PreHandle 用于进行原始数据校验,权限验证,身份验证,数据获取和数据库操作
 func (router *QuestionAnswerRouter) PreHandle(request eduiface.IRequest) {
 	var reqMsgInJSON *ReqMsg
 	var ok bool
@@ -103,6 +104,7 @@ func (router *QuestionAnswerRouter) PreHandle(request eduiface.IRequest) {
 	}
 }
 
+// Handle 用于将请求的处理结果发回客户端
 func (router *QuestionAnswerRouter) Handle(request eduiface.IRequest) {
 	fmt.Println("[ROUTER] ", time.Now().In(utils.GlobalObject.TimeLocal).In(utils.GlobalObject.TimeLocal).Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", QuestionAnswerRouter: ", questionanswerReplyStatus)
 	jsonMsg, err := CombineReplyMsg(questionanswerReplyStatus, nil)

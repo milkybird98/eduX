@@ -25,6 +25,7 @@ type QuestionAddData struct {
 var questionaddReplyStatus string
 
 // PreHandle 数据格式验证,检查学生是否加入班级,权限验证并更新数据库
+// PreHandle 用于进行原始数据校验,权限验证,身份验证,数据获取和数据库操作
 func (router *QuestionAddRouter) PreHandle(request eduiface.IRequest) {
 	var reqMsgInJSON *ReqMsg
 	var ok bool
@@ -97,6 +98,7 @@ func (router *QuestionAddRouter) PreHandle(request eduiface.IRequest) {
 }
 
 // Handle 返回处理结果
+// Handle 用于将请求的处理结果发回客户端
 func (router *QuestionAddRouter) Handle(request eduiface.IRequest) {
 	fmt.Println("[ROUTER] ", time.Now().In(utils.GlobalObject.TimeLocal).Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", QuestionAddRouter: ", questionaddReplyStatus)
 	jsonMsg, err := CombineReplyMsg(questionaddReplyStatus, nil)

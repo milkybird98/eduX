@@ -34,6 +34,7 @@ type PersonInfoGetReplyData struct {
 var persongetReplyStatus string
 var persongetReplyData PersonInfoGetReplyData
 
+// PreHandle 用于进行原始数据校验,权限验证,身份验证,数据获取和数据库操作
 func (router *PersonInfoGetRouter) PreHandle(request eduiface.IRequest) {
 	var reqMsgInJSON *ReqMsg
 	var ok bool
@@ -121,6 +122,7 @@ func (router *PersonInfoGetRouter) PreHandle(request eduiface.IRequest) {
 	persongetReplyStatus = "success"
 }
 
+// Handle 用于将请求的处理结果发回客户端
 func (router *PersonInfoGetRouter) Handle(request eduiface.IRequest) {
 	fmt.Println("[ROUTER] ", time.Now().In(utils.GlobalObject.TimeLocal).Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", PersonInfoGetRouter: ", persongetReplyStatus)
 	var jsonMsg []byte

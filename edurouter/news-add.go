@@ -24,6 +24,7 @@ type NewsAddData struct {
 
 var newsaddReplyStatus string
 
+// PreHandle 用于进行原始数据校验,权限验证,身份验证,数据获取和数据库操作
 func (router *NewsAddRouter) PreHandle(request eduiface.IRequest) {
 	var reqMsgInJSON *ReqMsg
 	var ok bool
@@ -153,6 +154,7 @@ func (router *NewsAddRouter) PreHandle(request eduiface.IRequest) {
 }
 
 // Handle 返回处理结果
+// Handle 用于将请求的处理结果发回客户端
 func (router *NewsAddRouter) Handle(request eduiface.IRequest) {
 	fmt.Println("[ROUTER] ", time.Now().In(utils.GlobalObject.TimeLocal).Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", NewsAddRouter: ", newsaddReplyStatus)
 	jsonMsg, err := CombineReplyMsg(newsaddReplyStatus, nil)

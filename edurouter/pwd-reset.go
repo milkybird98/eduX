@@ -26,6 +26,7 @@ type PwdResetData struct {
 
 var pwdresetReplyStatus string
 
+// PreHandle 用于进行原始数据校验,权限验证,身份验证,数据获取和数据库操作
 func (router *PwdResetRouter) PreHandle(request eduiface.IRequest) {
 	// 数据验证
 	var reqMsgInJSON *ReqMsg
@@ -196,6 +197,7 @@ func (router *PwdResetRouter) PreHandle(request eduiface.IRequest) {
 	}
 }
 
+// Handle 用于将请求的处理结果发回客户端
 func (router *PwdResetRouter) Handle(request eduiface.IRequest) {
 	fmt.Println("[ROUTER] ", time.Now().In(utils.GlobalObject.TimeLocal).Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", PwdResetRouter: ", registerReplyStatus)
 	jsonMsg, err := CombineReplyMsg(registerReplyStatus, nil)
