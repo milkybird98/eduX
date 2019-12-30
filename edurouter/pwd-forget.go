@@ -18,7 +18,6 @@ type PwdForgetRouter struct {
 }
 
 type PwdForgetData struct {
-	Pwd     string `json:"pwd"`
 	AnswerA string `json:"aa"`
 	AnswerB string `json:"ab"`
 	AnswerC string `json:"ac"`
@@ -26,7 +25,7 @@ type PwdForgetData struct {
 
 type PwdForgetReplyData struct {
 	UID    string `json:"uid"`
-	serect string `json:"serect"`
+	Serect string `json:"serect"`
 }
 
 var pwdforgetReplyStatus string
@@ -74,12 +73,13 @@ func (router *PwdForgetRouter) PreHandle(request eduiface.IRequest) {
 		AnswerBData.String() == auth.AnswerB &&
 		AnswerCData.String() == auth.AnswerC {
 		newSerect := primitive.NewObjectID().Hex()
+
 		newCache := utils.ResetPasswordTag{reqMsgInJSON.UID}
 
 		utils.SetResetPasswordCacheExpire(newSerect, newCache)
 
 		pwdforgetReplyData.UID = reqMsgInJSON.UID
-		pwdforgetReplyData.serect = newSerect
+		pwdforgetReplyData.Serect = newSerect
 
 		pwdforgetReplyStatus = "success"
 	} else {

@@ -19,9 +19,9 @@ type PwdResetRouter struct {
 
 type PwdResetData struct {
 	UID       string `json:"uid"`
-	OriginPwd []byte `json:"oripwd"`
+	OriginPwd string `json:"oripwd"`
 	Serect    string `json:"serect"`
-	NewPwd    []byte `json:"newpwd"`
+	NewPwd    string `json:"newpwd"`
 }
 
 var pwdresetReplyStatus string
@@ -74,7 +74,7 @@ func (router *PwdResetRouter) PreHandle(request eduiface.IRequest) {
 	}
 
 	// 获取旧密码或serect
-	pwdData := resetPwdData.Get("pwd")
+	pwdData := resetPwdData.Get("oripwd")
 	serectData := resetPwdData.Get("serect")
 
 	// 二者必须有其一
@@ -145,9 +145,11 @@ func (router *PwdResetRouter) PreHandle(request eduiface.IRequest) {
 
 	// 身份验证
 	if user.Place == "student" {
-		if pwdInString != "" && pwdInString != userAuth.Pwd {
-			registerReplyStatus = "password_wrong"
-			return
+		if pwdInString != "" {
+			if pwdInString != userAuth.Pwd {
+				registerReplyStatus = "password_wrong"
+				return
+			}
 		} else if serectInString != "" {
 			cache, err := utils.GetResetPasswordCache(serectInString)
 			if err != nil || cache == nil || cache.UID != reqMsgInJSON.UID {
@@ -168,9 +170,11 @@ func (router *PwdResetRouter) PreHandle(request eduiface.IRequest) {
 				newPwdInString = base64.StdEncoding.EncodeToString([]byte(uidInString))
 			}
 		} else {
-			if pwdInString != "" && pwdInString != userAuth.Pwd {
-				registerReplyStatus = "password_wrong"
-				return
+			if pwdInString != "" {
+				if pwdInString != userAuth.Pwd {
+					registerReplyStatus = "password_wrong"
+					return
+				}
 			} else if serectInString != "" {
 				cache, err := utils.GetResetPasswordCache(serectInString)
 				if err != nil || cache == nil || cache.UID != reqMsgInJSON.UID {

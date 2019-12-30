@@ -5,7 +5,6 @@ import (
 	"eduX/edumodel"
 	"eduX/edunet"
 	"eduX/utils"
-	"encoding/base64"
 	"fmt"
 	"time"
 
@@ -62,21 +61,11 @@ func (router *RegisterRouter) PreHandle(request eduiface.IRequest) {
 		registerReplyStatus = "pwd_cannot_be_empty"
 		return
 	}
-	pwdInBtye := []byte(pwdData.String())
+	pwdInByte := []byte(pwdData.String())
+	pwdInDecode, err := PwdRemoveSalr(pwdInByte)
 
-	//去盐
-	pwdInBtye = pwdInBtye[7:]
-	pwdInBtye[3] -= 2
-	pwdInBtye[5] -= 3
-	pwdInBtye[7] -= 7
-	pwdInBtye[8] -= 11
-	pwdInBtye[10] -= 13
-
-	pwdInByteDecode := make([]byte, 64)
-
-	_, err := base64.StdEncoding.Decode(pwdInByteDecode, pwdInBtye)
 	if err != nil {
-		registerReplyStatus = "pwd_format_error"
+		loginReplyStatus = "pwd_format_error"
 		return
 	}
 
@@ -92,7 +81,7 @@ func (router *RegisterRouter) PreHandle(request eduiface.IRequest) {
 
 	var newUserAuth edumodel.UserAuth
 	newUserAuth.UID = uidInString
-	newUserAuth.Pwd = string(pwdInByteDecode)
+	newUserAuth.Pwd = pwdInDecode
 
 	res := edumodel.AddUser(&newUser) && edumodel.AddUserAuth(&newUserAuth)
 	if res {
