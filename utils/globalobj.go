@@ -108,7 +108,7 @@ func init() {
 		MaxWorkerTaskLen: 1024,
 		MaxMsgChanLen:    1024,
 		TimeLocal:        time.FixedZone("CST", 8*3600),
-		TimeFormat:       GlobalObject.TimeFormat,
+		TimeFormat:       "2006-01-01 Jan 2 15:12:13",
 		DataBaseUrl:      "mongodb://localhost:27017",
 		DataBaseName:     "eduPlatform",
 		CacheTableSize:   4096,

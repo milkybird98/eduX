@@ -145,6 +145,8 @@ func (router *PwdResetRouter) PreHandle(request eduiface.IRequest) {
 	}
 
 	// 身份验证
+	var passwordResetNews *edumodel.News
+	passwordResetNews = nil
 	if user.Place == "student" {
 		if pwdInString != "" {
 			if pwdInString != userAuth.Pwd {
@@ -161,14 +163,23 @@ func (router *PwdResetRouter) PreHandle(request eduiface.IRequest) {
 			registerReplyStatus = "auth_fail"
 			return
 		}
-	} else if user.Place == "teacher" {
+	} else if user.Place == "teacher" || user.Place == "manager" {
 		if uidInString != reqMsgInJSON.UID {
-			teacherAuth := edumodel.GetUserAuthByUID(reqMsgInJSON.UID)
-			if pwdInString != teacherAuth.Pwd {
+			userAuth := edumodel.GetUserAuthByUID(reqMsgInJSON.UID)
+			if pwdInString != userAuth.Pwd {
 				registerReplyStatus = "password_wrong"
 				return
 			} else {
 				newPwdInString = base64.StdEncoding.EncodeToString([]byte(uidInString))
+
+				var newNews edumodel.News
+				newNews.SenderUID = reqMsgInJSON.UID
+				newNews.SendTime = time.Now().In(utils.GlobalObject.TimeLocal)
+				newNews.IsAnnounce = false
+				newNews.Title = "密码重置成功"
+				newNews.Text = "你好,你的密码已经重置完成,请及时修改密码,以防他人恶意登陆."
+
+				passwordResetNews = &newNews
 			}
 		} else {
 			if pwdInString != "" {
@@ -191,10 +202,20 @@ func (router *PwdResetRouter) PreHandle(request eduiface.IRequest) {
 
 	ok = edumodel.UpdateUserAuthByUID(uidInString, newPwdInString, "", "", "", "", "", "")
 	if ok {
-		registerReplyStatus = "success"
+		if passwordResetNews != nil {
+			ok = edumodel.AddNews(passwordResetNews)
+			if ok {
+				registerReplyStatus = "success"
+			} else {
+				registerReplyStatus = "model_fail"
+			}
+		} else {
+			registerReplyStatus = "success"
+		}
 	} else {
 		registerReplyStatus = "model_fail"
 	}
+
 }
 
 // Handle 用于将请求的处理结果发回客户端
