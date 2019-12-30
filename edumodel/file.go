@@ -2,6 +2,7 @@ package edumodel
 
 import (
 	"context"
+	"eduX/utils"
 	"fmt"
 	"time"
 
@@ -166,6 +167,50 @@ func GetFileByUUID(uuidInString string) *File {
 	}
 
 	return &result
+}
+
+func GetFileNumberAll(className string) int {
+	checkFileCollection()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	filter := bson.M{"classname": className}
+
+	count, err := fileCollection.CountDocuments(ctx, filter)
+	if err != nil {
+		fmt.Println("[MODEL]", err)
+		return -1
+	}
+
+	return int(count)
+}
+
+func GetFileNumberByDate(className string, targetDate time.Time) int {
+	checkFileCollection()
+
+	if targetDate.IsZero() || targetDate.After(time.Now().In(utils.GlobalObject.TimeLocal).Add(time.Hour*24)) {
+		fmt.Println("[MODEL] time out of range")
+		return -1
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	var cstZone = time.FixedZone("CST", 8*3600)
+	targetDateInDay := time.Date(targetDate.Year(), targetDate.Month(), targetDate.Day(), 0, 0, 0, 0, cstZone)
+	targetNextDateInDay := targetDateInDay.Add(time.Hour * 24)
+
+	filter := bson.M{"classname": className,
+		"updatetime": bson.M{"$gt": targetDateInDay, "$lt": targetNextDateInDay}}
+
+	count, err := fileCollection.CountDocuments(ctx, filter)
+	if err != nil {
+		fmt.Println("[MODEL]", err)
+		return -1
+	}
+
+	return int(count)
 }
 
 func DeleteFileByUUID(uuidInString string) bool {

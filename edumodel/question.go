@@ -2,6 +2,7 @@ package edumodel
 
 import (
 	"context"
+	"eduX/utils"
 	"fmt"
 	"time"
 
@@ -259,7 +260,7 @@ func AnserQuestionByInnerID(idInString string, UID string, answer string) bool {
 	defer cancel()
 
 	filter := bson.M{"_id": id, "isdeleted": false}
-	update := bson.M{"$set": bson.M{"answeruid": UID, "issolved": true, "answer": answer, "answertime": time.Now()}}
+	update := bson.M{"$set": bson.M{"answeruid": UID, "issolved": true, "answer": answer, "answertime": time.Now().In(utils.GlobalObject.TimeLocal)}}
 
 	_, err = quesCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
@@ -268,6 +269,92 @@ func AnserQuestionByInnerID(idInString string, UID string, answer string) bool {
 	}
 
 	return true
+}
+
+func GetQuestionNumberAll(className string) int {
+	checkQuesCollection()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	filter := bson.M{"classname": className, "isdeleted": false}
+
+	count, err := quesCollection.CountDocuments(ctx, filter)
+	if err != nil {
+		fmt.Println("[MODEL]", err)
+		return -1
+	}
+
+	return int(count)
+}
+
+func GetQuestionAnsweredNumberAll(className string) int {
+	checkQuesCollection()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	filter := bson.M{"classname": className, "isdeleted": false, "issolved": true}
+
+	count, err := quesCollection.CountDocuments(ctx, filter)
+	if err != nil {
+		fmt.Println("[MODEL]", err)
+		return -1
+	}
+
+	return int(count)
+}
+
+func GetQuestionNumberByDate(className string, targetDate time.Time) int {
+	checkQuesCollection()
+
+	if targetDate.IsZero() || targetDate.After(time.Now().In(utils.GlobalObject.TimeLocal).Add(time.Hour*24)) {
+		fmt.Println("[MODEL] time out of range")
+		return -1
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	targetDateInDay := time.Date(targetDate.Year(), targetDate.Month(), targetDate.Day(), 0, 0, 0, 0, utils.GlobalObject.TimeLocal)
+	targetNextDateInDay := targetDateInDay.Add(time.Hour * 24)
+
+	filter := bson.M{"classname": className, "isdeleted": false,
+		"sendtime": bson.M{"$gt": targetDateInDay, "$lt": targetNextDateInDay}}
+
+	count, err := quesCollection.CountDocuments(ctx, filter)
+	if err != nil {
+		fmt.Println("[MODEL]", err)
+		return -1
+	}
+
+	return int(count)
+}
+
+func GetQuestionAnsweredNumberByDate(className string, targetDate time.Time) int {
+	checkQuesCollection()
+
+	if targetDate.IsZero() || targetDate.After(time.Now().In(utils.GlobalObject.TimeLocal).Add(time.Hour*24)) {
+		fmt.Println("[MODEL] time out of range")
+		return -1
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	targetDateInDay := time.Date(targetDate.Year(), targetDate.Month(), targetDate.Day(), 0, 0, 0, 0, utils.GlobalObject.TimeLocal)
+	targetNextDateInDay := targetDateInDay.Add(time.Hour * 24)
+
+	filter := bson.M{"classname": className, "isdeleted": false, "issolved": true,
+		"answertime": bson.M{"$gt": targetDateInDay, "$lt": targetNextDateInDay}}
+
+	count, err := quesCollection.CountDocuments(ctx, filter)
+	if err != nil {
+		fmt.Println("[MODEL]", err)
+		return -1
+	}
+
+	return int(count)
 }
 
 func DeleteQuestionByInnerID(idInString string) bool {
