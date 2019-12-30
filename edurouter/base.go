@@ -90,7 +90,7 @@ func CheckConnectionLogin(request eduiface.IRequest, UID string) (string, bool) 
 	c := request.GetConnection()
 	sessionUID, err := c.GetSession("UID")
 	if err != nil {
-		return "session_error", false
+		return "session_uid_not_found", false
 	}
 
 	if sessionUID != UID {
@@ -99,7 +99,7 @@ func CheckConnectionLogin(request eduiface.IRequest, UID string) (string, bool) 
 
 	value, err := c.GetSession("isLogined")
 	if err != nil {
-		return "session_error", false
+		return "session_login_status_not_found", false
 	}
 
 	if value == false {
@@ -203,4 +203,24 @@ func PwdRemoveSalr(pwdWithSalt []byte) (string, error) {
 	zeroIndex := bytes.IndexByte(pwdInByteDecode, 0)
 	newPwdInString := string(pwdInByteDecode[0:zeroIndex])
 	return newPwdInString, nil
+}
+
+func GetSkipAndLimit(msgData []byte) (int64, int64) {
+	var Skip int64
+	skipData := gjson.GetBytes(msgData, "skip")
+	if skipData.Exists() && skipData.Int() >= 0 {
+		Skip = skipData.Int()
+	} else {
+		Skip = 0
+	}
+
+	var Limit int64
+	limitData := gjson.GetBytes(msgData, "limit")
+	if limitData.Exists() && limitData.Int() > 0 {
+		Limit = limitData.Int()
+	} else {
+		Limit = 10
+	}
+
+	return Skip, Limit
 }

@@ -65,21 +65,7 @@ func (router *FileGetByTagsRouter) PreHandle(request eduiface.IRequest) {
 		return
 	}
 
-	var Skip int64
-	skipData := gjson.GetBytes(reqMsgInJSON.Data, "skip")
-	if skipData.Exists() && skipData.Int() >= 0 {
-		Skip = skipData.Int()
-	} else {
-		Skip = 0
-	}
-
-	var Limit int64
-	limitData := gjson.GetBytes(reqMsgInJSON.Data, "limit")
-	if limitData.Exists() && limitData.Int() > 0 {
-		Limit = limitData.Int()
-	} else {
-		Limit = 10
-	}
+	Skip, Limit := GetSkipAndLimit(reqMsgInJSON.Data)
 
 	//权限检查
 	c := request.GetConnection()
@@ -122,7 +108,7 @@ func (router *FileGetByTagsRouter) PreHandle(request eduiface.IRequest) {
 }
 
 func (router *FileGetByTagsRouter) Handle(request eduiface.IRequest) {
-	fmt.Println("[ROUTER] ",time.Now().In(utils.GlobalObject.TimeLocal).Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", FileGetByTagsRouter: ", filegetbytagsReplyStatus)
+	fmt.Println("[ROUTER] ", time.Now().In(utils.GlobalObject.TimeLocal).Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", FileGetByTagsRouter: ", filegetbytagsReplyStatus)
 
 	var jsonMsg []byte
 	var err error
