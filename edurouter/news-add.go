@@ -105,7 +105,7 @@ func (router *NewsAddRouter) PreHandle(request eduiface.IRequest) {
 	newNews.Text = textData.String()
 	newNews.IsAnnounce = isannounce
 
-	if audientData.Exists() && audientData.IsArray() {
+	if audientData.Exists() && audientData.IsArray() && len(audientData.Array()) > 0 {
 		if sessionPlace == "manager" {
 			for _, audient := range audientData.Array() {
 				if audient.String() != "" {

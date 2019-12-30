@@ -47,14 +47,13 @@ func (router *FileGetByTagsRouter) PreHandle(request eduiface.IRequest) {
 	}
 
 	tagsData := gjson.GetBytes(reqMsgInJSON.Data, "tags")
-	if !tagsData.Exists() || !tagsData.IsArray() {
+	if !tagsData.Exists() || !tagsData.IsArray() || len(tagsData.Array()) == 0 {
 		filegetbytagsReplyStatus = "tags_cannot_be_empty"
 		return
 	}
 
-	tags := tagsData.Array()
 	var tagInString []string
-	for _, tag := range tags {
+	for _, tag := range tagsData.Array() {
 		if tag.String() != "" {
 			tagInString = append(tagInString, tag.String())
 		}
