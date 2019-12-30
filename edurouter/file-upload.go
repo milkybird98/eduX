@@ -104,7 +104,7 @@ func (router *FileAddRouter) PreHandle(request eduiface.IRequest) {
 	newFileTag.ClientAddress = c.GetTCPConnection().RemoteAddr()
 	newFileTag.ClassName = classNameData.String()
 	newFileTag.UpdaterUID = reqMsgInJSON.UID
-	newFileTag.UpdateTime = time.Now()
+	newFileTag.UpdateTime = time.Now().In(utils.GlobalObject.TimeLocal)
 	newFileTag.ServerToC = false
 	newFileTag.ClientToS = true
 

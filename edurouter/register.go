@@ -97,7 +97,7 @@ func (router *RegisterRouter) PreHandle(request eduiface.IRequest) {
 }
 
 func (router *RegisterRouter) Handle(request eduiface.IRequest) {
-	fmt.Println("[ROUTER] ", time.Now().Format("2006-01-01 Jan 2 15:04:05"), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", [ROUTER] Time: ", time.Now(), " Client address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), "RegisterRouter: ", registerReplyStatus)
+	fmt.Println("[ROUTER] ", time.Now().In(utils.GlobalObject.TimeLocal).Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", [ROUTER] Time: ", time.Now().In(utils.GlobalObject.TimeLocal), " Client address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), "RegisterRouter: ", registerReplyStatus)
 	jsonMsg, err := CombineReplyMsg(registerReplyStatus, nil)
 	if err != nil {
 		fmt.Println("RegisterRouter: ", err)

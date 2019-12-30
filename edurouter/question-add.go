@@ -4,6 +4,7 @@ import (
 	"eduX/eduiface"
 	"eduX/edumodel"
 	"eduX/edunet"
+	"eduX/utils"
 	"fmt"
 	"time"
 
@@ -84,7 +85,7 @@ func (router *QuestionAddRouter) PreHandle(request eduiface.IRequest) {
 	question.Text = textData.String()
 	question.SenderUID = reqMsgInJSON.UID
 	question.ClassName = class.ClassName
-	question.SendTime = time.Now()
+	question.SendTime = time.Now().In(utils.GlobalObject.TimeLocal)
 	question.IsSolved = false
 
 	ok = edumodel.AddQuestion(&question)
@@ -97,7 +98,7 @@ func (router *QuestionAddRouter) PreHandle(request eduiface.IRequest) {
 
 // Handle 返回处理结果
 func (router *QuestionAddRouter) Handle(request eduiface.IRequest) {
-	fmt.Println("[ROUTER] ", time.Now().Format("2006-01-01 Jan 2 15:04:05"), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", QuestionAddRouter: ", questionaddReplyStatus)
+	fmt.Println("[ROUTER] ", time.Now().In(utils.GlobalObject.TimeLocal).Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", QuestionAddRouter: ", questionaddReplyStatus)
 	jsonMsg, err := CombineReplyMsg(questionaddReplyStatus, nil)
 	if err != nil {
 		fmt.Println("QuestionAddRouter: ", err)

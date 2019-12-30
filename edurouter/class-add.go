@@ -4,6 +4,7 @@ import (
 	"eduX/eduiface"
 	"eduX/edumodel"
 	"eduX/edunet"
+	"eduX/utils"
 	"fmt"
 	"time"
 
@@ -91,7 +92,7 @@ func (router *ClassAddRouter) PreHandle(request eduiface.IRequest) {
 	newClass.ClassName = className
 	newClass.TeacherList = []string{teacherUID}
 	newClass.StudentList = []string{}
-	newClass.CreateDate = time.Now()
+	newClass.CreateDate = time.Now().In(utils.GlobalObject.TimeLocal)
 
 	ok = edumodel.AddClass(&newClass) && edumodel.AddUserToClassByUID([]string{teacherUID}, className)
 	if ok == true {
@@ -102,7 +103,7 @@ func (router *ClassAddRouter) PreHandle(request eduiface.IRequest) {
 }
 
 func (router *ClassAddRouter) Handle(request eduiface.IRequest) {
-	fmt.Println("[ROUTER] ",time.Now().Format("2006-01-01 Jan 2 15:04:05"), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", ClassAddRouter: ", classaddReplyStatus)
+	fmt.Println("[ROUTER] ", time.Now().In(utils.GlobalObject.TimeLocal).Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", ClassAddRouter: ", classaddReplyStatus)
 	jsonMsg, err := CombineReplyMsg(classaddReplyStatus, nil)
 	if err != nil {
 		fmt.Println("ClassAddRouter: ", err)

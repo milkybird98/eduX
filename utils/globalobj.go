@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
+	"time"
 )
 
 /*
@@ -40,6 +41,12 @@ type GlobalObj struct {
 	*/
 	DataBaseUrl  string
 	DataBaseName string
+
+	/*
+		Time
+	*/
+	TimeLocal  *time.Location
+	TimeFormat string
 
 	/*
 		Cache
@@ -100,6 +107,8 @@ func init() {
 		WorkerPoolSize:   10,
 		MaxWorkerTaskLen: 1024,
 		MaxMsgChanLen:    1024,
+		TimeLocal:        time.FixedZone("CST", 8*3600),
+		TimeFormat:       GlobalObject.TimeFormat,
 		DataBaseUrl:      "mongodb://localhost:27017",
 		DataBaseName:     "eduPlatform",
 		CacheTableSize:   4096,

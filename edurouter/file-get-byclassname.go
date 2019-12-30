@@ -4,6 +4,7 @@ import (
 	"eduX/eduiface"
 	"eduX/edumodel"
 	"eduX/edunet"
+	"eduX/utils"
 	"fmt"
 	"time"
 
@@ -46,7 +47,7 @@ func (router *FileGetByClassNameRouter) PreHandle(request eduiface.IRequest) {
 	}
 
 	classNameData := gjson.GetBytes(reqMsgInJSON.Data, "class")
-	if !classNameData.Exists() {
+	if !classNameData.Exists() || classNameData.String() == "" {
 		filegetbyclassnameReplyStatus = "classname_cannot_be_empty"
 		return
 	}
@@ -107,7 +108,7 @@ func (router *FileGetByClassNameRouter) PreHandle(request eduiface.IRequest) {
 }
 
 func (router *FileGetByClassNameRouter) Handle(request eduiface.IRequest) {
-	fmt.Println("[ROUTER] ",time.Now().Format("2006-01-01 Jan 2 15:04:05"), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", FileGetByClassNameRouter: ", filegetbyclassnameReplyStatus)
+	fmt.Println("[ROUTER] ", time.Now().In(utils.GlobalObject.TimeLocal).Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", FileGetByClassNameRouter: ", filegetbyclassnameReplyStatus)
 
 	var jsonMsg []byte
 	var err error
