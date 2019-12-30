@@ -23,23 +23,13 @@ func TestQuestionModel(t *testing.T) {
 		t.Fail()
 	}
 
-	teacherList := []string{"T1001", "T1002"}
-	studentList := []string{"U1001", "U1002"}
-
-	_ = edumodel.Class{
-		"ts1001",
-		teacherList,
-		studentList,
-		time.Now(),
-	}
-
 	fmt.Println("add question")
 	var newQuestion edumodel.Question
 	newQuestion.Title = "测试 Question"
 	newQuestion.Text = "this is a < 测试问题》"
 	newQuestion.SenderUID = "U1001"
 	newQuestion.ClassName = "ts1001"
-	newQuestion.SendTime = time.Now()
+	newQuestion.SendTime = time.Now().In(utils.GlobalObject.TimeLocal)
 	newQuestion.IsSolved = false
 	newQuestion.IsDeleted = false
 
@@ -108,7 +98,7 @@ func TestClassModel(t *testing.T) {
 		"ts1001",
 		teacherList,
 		studentList,
-		time.Now(),
+		time.Now().In(utils.GlobalObject.TimeLocal),
 	}
 	if edumodel.AddClass(class) {
 		fmt.Println("success")
