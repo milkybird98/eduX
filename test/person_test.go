@@ -55,7 +55,16 @@ func ClientTestSA(t *testing.T) {
 		db := edunet.NewDataPack()
 
 		var loginData edurouter.LoginData
-		loginData.Pwd = "123"
+		loginData.Pwd = base64.StdEncoding.EncodeToString([]byte("12312312"))
+
+		PwdInByte := []byte(loginData.Pwd)
+		PwdInByte[2] += 2
+		PwdInByte[3] += 3
+		PwdInByte[5] += 7
+		PwdInByte[6] += 11
+
+		loginData.Pwd = string(PwdInByte)
+		loginData.Pwd = ("1234567") + loginData.Pwd
 
 		msgData, _ := edurouter.CombineSendMsg("M1001", loginData)
 

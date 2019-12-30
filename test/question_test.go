@@ -56,7 +56,16 @@ func ClientTestQO(t *testing.T) {
 		db := edunet.NewDataPack()
 
 		var Data edurouter.LoginData
-		Data.Pwd = "123"
+		Data.Pwd = base64.StdEncoding.EncodeToString([]byte("12312312"))
+
+		PwdInByte := []byte(Data.Pwd)
+		PwdInByte[2] += 2
+		PwdInByte[3] += 3
+		PwdInByte[5] += 7
+		PwdInByte[6] += 11
+
+		Data.Pwd = string(PwdInByte)
+		Data.Pwd = ("1234567") + Data.Pwd
 
 		msgData, _ := edurouter.CombineSendMsg("U1003", Data)
 
@@ -100,7 +109,16 @@ func ClientTestQO(t *testing.T) {
 		db := edunet.NewDataPack()
 
 		var Data edurouter.LoginData
-		Data.Pwd = "123"
+		Data.Pwd = base64.StdEncoding.EncodeToString([]byte("12312312"))
+
+		PwdInByte := []byte(Data.Pwd)
+		PwdInByte[2] += 2
+		PwdInByte[3] += 3
+		PwdInByte[5] += 7
+		PwdInByte[6] += 11
+
+		Data.Pwd = string(PwdInByte)
+		Data.Pwd = ("1234567") + Data.Pwd
 
 		msgData, _ := edurouter.CombineSendMsg("T1001", Data)
 
@@ -284,7 +302,7 @@ func ClientTestQO(t *testing.T) {
 		db := edunet.NewDataPack()
 
 		var Data edurouter.QuestionGetBySenderUIDData
-		Data.SenderUID = "U1001"
+		Data.SenderUID = "U1003"
 		Data.DeferSolved = false
 		Data.IsSolved = true
 		Data.Limit = 3
