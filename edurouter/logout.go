@@ -3,6 +3,7 @@ package edurouter
 import (
 	"eduX/eduiface"
 	"eduX/edunet"
+	"eduX/utils"
 	"fmt"
 	"time"
 )
@@ -26,22 +27,11 @@ func (router *LogoutRouter) PreHandle(request eduiface.IRequest) {
 		return
 	}
 
-	sessionUID, err := request.GetConnection().GetSession("UID")
-	if err != nil {
-		logoutReplyStatus = "session_error"
-		return
-	}
-
-	if sessionUID == reqMsgInJSON.UID {
-		logoutReplyStatus = "success"
-	} else {
-		logoutReplyStatus = "logout_fail"
-	}
-
+	logoutReplyStatus = "success"
 }
 
 func (router *LogoutRouter) Handle(request eduiface.IRequest) {
-	fmt.Println("[ROUTER] ", time.Now().Format("2006-01-01 Jan 2 15:04:05"), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", LogoutRouter: ", logoutReplyStatus)
+	fmt.Println("[ROUTER] ", time.Now().In(utils.GlobalObject.TimeLocal).Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", LogoutRouter: ", logoutReplyStatus)
 	jsonMsg, err := CombineReplyMsg(logoutReplyStatus, nil)
 	if err != nil {
 		fmt.Println("LogoutRouter: ", err)
