@@ -9,9 +9,9 @@ type Message struct {
 //创建一个Message消息包
 func NewMsgPackage(id uint32, data []byte) *Message {
 	return &Message{
-		Id:     id,
+		Id:      id,
 		DataLen: uint32(len(data)),
-		Data:   data,
+		Data:    data,
 	}
 }
 

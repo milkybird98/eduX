@@ -15,12 +15,12 @@ var newsCollection *mongo.Collection
 
 type News struct {
 	ID         primitive.ObjectID `bson:"_id,omitempty"`
-	IsAnnounce bool
-	Title      string
-	Text       string
-	SenderUID  string
-	SendTime   time.Time
-	AudientUID []string
+	IsAnnounce bool               `bson:"isan"`
+	Title      string             `bson:"title"`
+	Text       string             `bson:"text"`
+	SenderUID  string             `bson:"senuid"`
+	SendTime   time.Time          `bson:"sentime"`
+	AudientUID []string           `bson:"audiuid"`
 }
 
 func checkNewsCollection() {
