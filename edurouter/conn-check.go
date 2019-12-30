@@ -3,11 +3,10 @@ package edurouter
 import (
 	"eduX/eduiface"
 	"eduX/edunet"
+	"eduX/utils"
 
 	"fmt"
 	"time"
-
-	"github.com/tidwall/gjson"
 )
 
 type PingRouter struct {
@@ -17,9 +16,10 @@ type PingRouter struct {
 var conncheckReplyStatus string
 
 func (router *PingRouter) PreHandle(request eduiface.IRequest) {
-	reqMsgInJSON, conncheckReplyStatus, ok := CheckMsgFormat(request)
+	var reqMsgInJSON *ReqMsg
+	var ok bool
+	reqMsgInJSON, conncheckReplyStatus, ok = CheckMsgFormat(request)
 	if ok != true {
-		fmt.Println("PingRouter: ", conncheckReplyStatus)
 		return
 	}
 
@@ -28,23 +28,11 @@ func (router *PingRouter) PreHandle(request eduiface.IRequest) {
 		return
 	}
 
-	pingData := gjson.GetBytes(reqMsgInJSON.Data, "ping")
-	if !pingData.Exists() {
-		conncheckReplyStatus = "data_format_error"
-		return
-	}
-
-	reqPing := pingData.String()
-
-	if reqPing == "ping" {
-		conncheckReplyStatus = "pong"
-	} else {
-		conncheckReplyStatus = "data_format_error"
-	}
+	conncheckReplyStatus = "pong"
 }
 
 func (router *PingRouter) Handle(request eduiface.IRequest) {
-	fmt.Println("[ROUTER] ",time.Now().Format("2006-01-01 Jan 2 15:04:05"), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", PingRouter: ", conncheckReplyStatus)
+	fmt.Println("[ROUTER] ", time.Now().In(utils.GlobalObject.TimeLocal).Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", PingRouter: ", conncheckReplyStatus)
 	jsonMsg, err := CombineReplyMsg(conncheckReplyStatus, nil)
 	if err != nil {
 		fmt.Println("PingRouter: ", err)
