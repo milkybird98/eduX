@@ -1,6 +1,7 @@
 package edurouter
 
 import (
+	"bytes"
 	"crypto/md5"
 	"eduX/eduiface"
 	"eduX/utils"
@@ -179,25 +180,27 @@ func PwdRemoveSalr(pwdWithSalt []byte) (string, error) {
 		return "", errors.New("pwd_cannot_be_empty")
 	}
 
-	if len(pwdWithSalt) <= 7 {
+	if len(pwdWithSalt) <= 7+7 {
 		return "", errors.New("pwd_too_short")
 	}
 
 	//去盐
-	pwdWithSalt = pwdWithSalt[7:]
-	pwdWithSalt[3] -= 2
-	pwdWithSalt[5] -= 3
-	pwdWithSalt[7] -= 7
-	pwdWithSalt[8] -= 11
-	pwdWithSalt[10] -= 13
+	pwdWithoutSalt := pwdWithSalt[7:]
+	//fmt.Println(string(pwdWithoutSalt))
+	pwdWithoutSalt[2] -= 2
+	pwdWithoutSalt[3] -= 3
+	pwdWithoutSalt[5] -= 7
+	pwdWithoutSalt[6] -= 11
 
+	//fmt.Println(string(pwdWithoutSalt))
 	pwdInByteDecode := make([]byte, 64)
 
-	_, err := base64.StdEncoding.Decode(pwdInByteDecode, pwdWithSalt)
+	_, err := base64.StdEncoding.Decode(pwdInByteDecode, pwdWithoutSalt)
 	if err != nil {
 		return "", errors.New("pwd_format_error")
 	}
 
-	newPwdInString := string(pwdInByteDecode)
+	zeroIndex := bytes.IndexByte(pwdInByteDecode, 0)
+	newPwdInString := string(pwdInByteDecode[0:zeroIndex])
 	return newPwdInString, nil
 }

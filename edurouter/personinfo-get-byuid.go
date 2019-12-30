@@ -69,7 +69,7 @@ func (router *PersonInfoGetRouter) PreHandle(request eduiface.IRequest) {
 
 	placeString, ok := sessionPlace.(string)
 	if ok != true {
-		filegetbytagsReplyStatus = "session_place_data_error"
+		persongetReplyStatus = "session_place_data_error"
 		return
 	}
 

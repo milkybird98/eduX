@@ -1,7 +1,6 @@
 package edurouter
 
 import (
-	"encoding/base64"
 	"fmt"
 	"time"
 
@@ -42,20 +41,10 @@ func (router *LoginRouter) PreHandle(request eduiface.IRequest) {
 		return
 	}
 
-	pwdInBtye := []byte(loginData.String())
-	//去盐
-	pwdInBtye = pwdInBtye[7:]
-	pwdInBtye[3] -= 2
-	pwdInBtye[5] -= 3
-	pwdInBtye[7] -= 7
-	pwdInBtye[8] -= 11
-	pwdInBtye[10] -= 13
-
-	pwdInByteDecode := make([]byte, 64)
-
-	_, err := base64.StdEncoding.Decode(pwdInByteDecode, pwdInBtye)
+	pwdInByte := []byte(loginData.String())
+	pwdInDecode, err := PwdRemoveSalr(pwdInByte)
 	if err != nil {
-		registerReplyStatus = "pwd_format_error"
+		loginReplyStatus = "pwd_format_error"
 		return
 	}
 
@@ -65,7 +54,9 @@ func (router *LoginRouter) PreHandle(request eduiface.IRequest) {
 		return
 	}
 
-	if string(pwdInByteDecode) == authData.Pwd {
+	//fmt.Println([]byte(pwdInDecode))
+	//fmt.Println([]byte(authData.Pwd))
+	if pwdInDecode == authData.Pwd {
 		loginReplyStatus = "success"
 		c := request.GetConnection()
 

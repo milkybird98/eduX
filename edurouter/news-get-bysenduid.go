@@ -73,13 +73,13 @@ func (router *NewsGetBySenderUIDRouter) PreHandle(request eduiface.IRequest) {
 	c := request.GetConnection()
 	sessionPlace, err := c.GetSession("place")
 	if err != nil {
-		questiongetbyclassnameReplyStatus = "session_error"
+		newsgetbysenderuidReplyStatus = "session_error"
 		return
 	}
 
 	placeString, ok := sessionPlace.(string)
 	if ok != true {
-		questiongetbyclassnameReplyStatus = "session_error"
+		newsgetbysenderuidReplyStatus = "session_error"
 		return
 	}
 

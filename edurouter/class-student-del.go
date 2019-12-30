@@ -77,9 +77,9 @@ func (router *ClassStudentDelRouter) PreHandle(request eduiface.IRequest) {
 	if placeString == "student" {
 		ok := edumodel.UpdateClassStudentByUID(className, []string{reqMsgInJSON.UID}) && edumodel.DeleteUserFromClassByUID([]string{reqMsgInJSON.UID}, className)
 		if ok == true {
-			classstudentaddReplyStatus = "success"
+			classstudentdelReplyStatus = "success"
 		} else {
-			classstudentaddReplyStatus = "model_fail"
+			classstudentdelReplyStatus = "model_fail"
 		}
 	} else if placeString == "teacher" {
 		ok := edumodel.CheckUserInClass(className, reqMsgInJSON.UID, "teacher")
@@ -100,9 +100,9 @@ func (router *ClassStudentDelRouter) PreHandle(request eduiface.IRequest) {
 
 			ok := edumodel.UpdateClassStudentByUID(className, studentListString) && edumodel.DeleteUserFromClassByUID(studentListString, className)
 			if ok == true {
-				classstudentaddReplyStatus = "success"
+				classstudentdelReplyStatus = "success"
 			} else {
-				classstudentaddReplyStatus = "model_fail"
+				classstudentdelReplyStatus = "model_fail"
 			}
 		}
 	} else if placeString == "manager" {
@@ -120,16 +120,16 @@ func (router *ClassStudentDelRouter) PreHandle(request eduiface.IRequest) {
 
 		ok := edumodel.UpdateClassStudentByUID(className, studentListString) && edumodel.DeleteUserFromClassByUID(studentListString, className)
 		if ok == true {
-			classstudentaddReplyStatus = "success"
+			classstudentdelReplyStatus = "success"
 		} else {
-			classstudentaddReplyStatus = "model_fail"
+			classstudentdelReplyStatus = "model_fail"
 		}
 	}
 }
 
 // Handle 返回处理结果
 func (router *ClassStudentDelRouter) Handle(request eduiface.IRequest) {
-	fmt.Println("[ROUTER] ",time.Now().Format("2006-01-01 Jan 2 15:04:05"), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", ClassStudentDelRouter: ", classstudentdelReplyStatus)
+	fmt.Println("[ROUTER] ", time.Now().Format("2006-01-01 Jan 2 15:04:05"), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", ClassStudentDelRouter: ", classstudentdelReplyStatus)
 	jsonMsg, err := CombineReplyMsg(classstudentdelReplyStatus, nil)
 	if err != nil {
 		fmt.Println("ClassStudentDelRouter: ", err)

@@ -55,7 +55,7 @@ func (router *PersonInfoGetByClassRouter) PreHandle(request eduiface.IRequest) {
 
 	placeString, ok := sessionPlace.(string)
 	if ok != true {
-		filegetbytagsReplyStatus = "session_place_data_error"
+		persongetbyclassReplyStatus = "session_place_data_error"
 		return
 	}
 
@@ -65,13 +65,13 @@ func (router *PersonInfoGetByClassRouter) PreHandle(request eduiface.IRequest) {
 	} else if placeString == "teacher" {
 		class := edumodel.GetClassByUID(reqMsgInJSON.UID, placeString)
 		if class == nil {
-			filegetbytagsReplyStatus = "model_fail"
+			persongetbyclassReplyStatus = "model_fail"
 			return
 		}
 
 		className := class.ClassName
 		if className == "" {
-			filegetbytagsReplyStatus = "not_in_class"
+			persongetbyclassReplyStatus = "not_in_class"
 			return
 		}
 
@@ -117,7 +117,7 @@ func (router *PersonInfoGetByClassRouter) PreHandle(request eduiface.IRequest) {
 }
 
 func (router *PersonInfoGetByClassRouter) Handle(request eduiface.IRequest) {
-	fmt.Println("[ROUTER] ",time.Now().Format("2006-01-01 Jan 2 15:04:05"), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", PersonInfoGetByClassRouter: ", persongetbyclassReplyStatus)
+	fmt.Println("[ROUTER] ", time.Now().Format("2006-01-01 Jan 2 15:04:05"), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", PersonInfoGetByClassRouter: ", persongetbyclassReplyStatus)
 	var jsonMsg []byte
 	var err error
 
