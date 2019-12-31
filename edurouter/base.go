@@ -282,6 +282,10 @@ func GetSessionPlace(c eduiface.IConnection) (string, error) {
 		return "", errors.New("session_place_data_error")
 	}
 
+	if placeString != "manager" && placeString != "teacher" && placeString != "student" {
+		return "", errors.New("session_place_format_error")
+	}
+
 	// 返回从session中得到的身份数据
 	return placeString, nil
 }
