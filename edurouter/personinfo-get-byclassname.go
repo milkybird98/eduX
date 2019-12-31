@@ -11,85 +11,83 @@ import (
 	"github.com/tidwall/gjson"
 )
 
+// PersonInfoGetByClassRouter 处理获取全班人员数据请求
 type PersonInfoGetByClassRouter struct {
 	edunet.BaseRouter
 }
 
+// PersonInfoGetByClassData 定义获取全班人员数据时的参数
 type PersonInfoGetByClassData struct {
 	ClassName string `json:"class"`
 }
 
+// PersonInfoGetByClassReplyData 定义获取全班人员数据的返回参数
 type PersonInfoGetByClassReplyData struct {
 	UserList []PersonInfoGetReplyData `json:"userlist"`
 }
 
+// 返回状态码
 var persongetbyclassReplyStatus string
+
+// 返回数据
 var persongetbyclassReplyData PersonInfoGetByClassReplyData
 
 // PreHandle 用于进行原始数据校验,权限验证,身份验证,数据获取和数据库操作
 func (router *PersonInfoGetByClassRouter) PreHandle(request eduiface.IRequest) {
 	var reqMsgInJSON *ReqMsg
 	var ok bool
+	// 试图解码原始数据,并检查校验和
 	reqMsgInJSON, persongetbyclassReplyStatus, ok = CheckMsgFormat(request)
 	if ok != true {
 		return
 	}
 
+	// 检查当前连接是否已登录
 	persongetbyclassReplyStatus, ok = CheckConnectionLogin(request, reqMsgInJSON.UID)
 	if ok != true {
 		return
 	}
 
+	// 从Data段获取班级名称数据
 	reqClassNameData := gjson.GetBytes(reqMsgInJSON.Data, "class")
+	// 不存在则返回错误码
 	if !reqClassNameData.Exists() {
 		persongetbyclassReplyStatus = "data_format_error"
 		return
 	}
-
 	reqClassName := reqClassNameData.String()
 
+	// 权限验证
+
 	c := request.GetConnection()
-	sessionPlace, err := c.GetSession("place")
+	// 试图从session中获取身份数据
+	placeString, err := GetSessionPlace(c)
+	// 若不存在则返回
 	if err != nil {
-		persongetbyclassReplyStatus = "59session_error"
+		classdelReplyStatus = err.Error()
 		return
 	}
 
-	placeString, ok := sessionPlace.(string)
-	if ok != true {
-		persongetbyclassReplyStatus = "session_place_data_error"
-		return
-	}
-
-	if placeString == "student" {
-		persongetbyclassReplyStatus = "permission_error"
-		return
-	} else if placeString == "teacher" {
-		class := edumodel.GetClassByUID(reqMsgInJSON.UID, placeString)
-		if class == nil {
-			persongetbyclassReplyStatus = "model_fail"
-			return
-		}
-
-		className := class.ClassName
-		if className == "" {
-			persongetbyclassReplyStatus = "not_in_class"
-			return
-		}
-
-		if reqClassName != className {
-			persongetbyclassReplyStatus = "permission_error"
+	// 如果当前用户是教师或者学生
+	if placeString == "teacher" || placeString == "student" {
+		// 检测当前用户是否在查询班级中
+		ok := edumodel.CheckUserInClass(reqClassName, reqMsgInJSON.UID, placeString)
+		// 如果不在则权限错误
+		if !ok {
+			classdelReplyStatus = "permission_error"
 			return
 		}
 	}
 
+	//查询数据库
+	// 通过班级数据库获取人员数据
 	userManyData := edumodel.GetUserByClass(reqClassName)
 	if userManyData == nil || len(*userManyData) <= 0 {
 		persongetbyclassReplyStatus = "data_not_found"
 		return
 	}
-	persongetbyclassReplyStatus = "success"
 
+	// 将人员隐私数据进行保护
 	for _, person := range *userManyData {
 		var personData PersonInfoGetReplyData
 		personData.UID = person.UID
@@ -114,27 +112,34 @@ func (router *PersonInfoGetByClassRouter) PreHandle(request eduiface.IRequest) {
 			personData.Location = "未公开"
 		}
 
+		// 添加到返回数据中
 		persongetbyclassReplyData.UserList = append(persongetbyclassReplyData.UserList, personData)
 	}
+
+	// 设定返回状态为success
+	persongetbyclassReplyStatus = "success"
 }
 
 // Handle 用于将请求的处理结果发回客户端
 func (router *PersonInfoGetByClassRouter) Handle(request eduiface.IRequest) {
+	// 打印请求处理Log
 	fmt.Println("[ROUTER] ", time.Now().In(utils.GlobalObject.TimeLocal).Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", PersonInfoGetByClassRouter: ", persongetbyclassReplyStatus)
 	var jsonMsg []byte
 	var err error
 
+	// 生成返回数据
 	if persongetbyclassReplyStatus == "success" {
 		jsonMsg, err = CombineReplyMsg(persongetbyclassReplyStatus, persongetbyclassReplyData)
-
 	} else {
 		jsonMsg, err = CombineReplyMsg(persongetbyclassReplyStatus, nil)
 	}
+	// 如果生成失败则报错返回
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println(", PersonInfoGetByClassRouter: ", err)
 		return
 	}
 
+	// 发送返回数据
 	c := request.GetConnection()
 	c.SendMsg(request.GetMsgID(), jsonMsg)
 }

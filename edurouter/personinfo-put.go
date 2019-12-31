@@ -11,10 +11,12 @@ import (
 	"github.com/tidwall/gjson"
 )
 
+// PersonInfoPutRouter 处理人员信息更新请求
 type PersonInfoPutRouter struct {
 	edunet.BaseRouter
 }
 
+// PersonInfoPutData 定义人员信息更新参数
 type PersonInfoPutData struct {
 	UID           string `json:"uid"`
 	Name          string `json:"name"`
@@ -29,41 +31,51 @@ type PersonInfoPutData struct {
 	IsLocationPub bool   `json:"islocpub,omitempty"`
 }
 
+// 返回状态码
 var personputReplyStatus string
 
 // PreHandle 用于进行原始数据校验,权限验证,身份验证,数据获取和数据库操作
 func (router *PersonInfoPutRouter) PreHandle(request eduiface.IRequest) {
 	var reqMsgInJSON *ReqMsg
 	var ok bool
+	// 试图解码原始数据,并检查校验和
 	reqMsgInJSON, personputReplyStatus, ok = CheckMsgFormat(request)
 	if ok != true {
 		return
 	}
 
+	// 检查当前连接是否已登录
 	personputReplyStatus, ok = CheckConnectionLogin(request, reqMsgInJSON.UID)
 	if ok != true {
 		return
 	}
 
+	// 验证请求数据Data段格式是否正确
 	if !gjson.Valid(string(reqMsgInJSON.Data)) {
 		personputReplyStatus = "data_format_error"
 		return
 	}
 
 	newPersonInfoData := gjson.ParseBytes(reqMsgInJSON.Data)
+	// 试图获取人员uid数据
 	UID := newPersonInfoData.Get("uid").String()
+	// 若不存在则返回错误码
 	if UID == "" {
 		personputReplyStatus = "uid_cannot_be_empty"
 		return
 	}
 
+	// 试图获取人员数据
 	userName := newPersonInfoData.Get("name").String()
+	// 若不存在则返回错误码
 	if userName == "" {
 		personputReplyStatus = "name_cannot_be_empty"
 		return
 	}
 
+	// 试图获取人员数据
 	userContact := newPersonInfoData.Get("contact").String()
+	// 若不存在则返回错误码
 	if userContact == "" {
 		personputReplyStatus = "contact_cannot_be_empty"
 		return
@@ -71,43 +83,40 @@ func (router *PersonInfoPutRouter) PreHandle(request eduiface.IRequest) {
 
 	//权限检查
 	c := request.GetConnection()
-	sessionUID, err := c.GetSession("UID")
-	if err != nil {
-		personputReplyStatus = "session_error"
-		return
-	}
 
+	// 查询要更新数据的用户是否存在
 	userData := edumodel.GetUserByUID(UID)
+	// 不存在则返回错误码
 	if userData == nil {
 		personputReplyStatus = "user_not_found"
 		return
 	}
 
-	if sessionUID != UID {
-		sessionPlace, err := c.GetSession("place")
-		if err != nil {
-			personputReplyStatus = "session_error"
-			return
-		}
+	// 试图从session中获取身份数据
+	placeString, err := GetSessionPlace(c)
+	// 若不存在则返回
+	if err != nil {
+		classdelReplyStatus = err.Error()
+		return
+	}
 
-		if sessionPlace == "student" {
+	// 如果是要修改他人数据
+	if reqMsgInJSON.UID != UID {
+		// 如果是学生则权限错误
+		if placeString == "student" {
 			personputReplyStatus = "permission_error"
 			return
-		} else if sessionPlace == "teacher" {
-			class := edumodel.GetClassByUID(reqMsgInJSON.UID, "teacher")
-			if class == nil {
-				personputReplyStatus = "not_in_class"
-				return
-			}
-
-			if userData.Class != class.ClassName {
+		} else if placeString == "teacher" {
+			// 如果是教师则要求在同一班级
+			ok := edumodel.CheckUserInClass(userData.Class, reqMsgInJSON.UID, placeString)
+			if !ok {
 				personputReplyStatus = "permission_error"
 				return
 			}
 		}
 	}
 
-	//修改个人信息
+	// 拼接更新数据
 	var newUserInfo edumodel.User
 	newUserInfo.UID = UID
 	newUserInfo.Name = userName
@@ -121,7 +130,9 @@ func (router *PersonInfoPutRouter) PreHandle(request eduiface.IRequest) {
 	newUserInfo.Location = newPersonInfoData.Get("locat").String()
 	newUserInfo.IsLocationPub = newPersonInfoData.Get("islocpub").Bool()
 
+	// 更新数据库
 	res := edumodel.UpdateUserByID(&newUserInfo)
+	// 若成功则返回success,否则返回错误码
 	if res {
 		personputReplyStatus = "success"
 	} else {
@@ -131,13 +142,17 @@ func (router *PersonInfoPutRouter) PreHandle(request eduiface.IRequest) {
 
 // Handle 用于将请求的处理结果发回客户端
 func (router *PersonInfoPutRouter) Handle(request eduiface.IRequest) {
+	// 打印请求处理Log
 	fmt.Println("[ROUTER] ", time.Now().In(utils.GlobalObject.TimeLocal).Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", PersonInfoPutRouter: ", personputReplyStatus)
+	// 生成返回数据
 	jsonMsg, err := CombineReplyMsg(personputReplyStatus, nil)
+	// 如果生成失败则报错返回
 	if err != nil {
 		fmt.Println("PersonInfoPutRouter: ", err)
 		return
 	}
 
+	// 发送返回数据
 	c := request.GetConnection()
 	c.SendMsg(request.GetMsgID(), jsonMsg)
 }
