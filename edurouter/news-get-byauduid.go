@@ -96,7 +96,7 @@ func (router *NewsGetByAudientUIDRouter) PreHandle(request eduiface.IRequest) {
 		// 获取听众数据
 		audientUIDData := gjson.GetBytes(reqMsgInJSON.Data, "audient")
 		// 若听众数据不存在则报错返回
-		if !audientUIDData.Exists() {
+		if !audientUIDData.Exists() || audientUIDData.String() == "" {
 			newgetbyaudientuidReplyStatus = "audientuid_cannot_be_empty"
 			return
 		}

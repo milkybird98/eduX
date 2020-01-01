@@ -64,7 +64,7 @@ func (router *ClassStudentDelRouter) PreHandle(request eduiface.IRequest) {
 	// 检查班级是否存在
 	classNameData := newMsgData.Get("class")
 	// 若不存在则返回
-	if !classNameData.Exists() {
+	if !classNameData.Exists() || classNameData.String() == "" {
 		classstudentdelReplyStatus = "class_cannot_be_empty"
 		return
 	}

@@ -43,7 +43,7 @@ func (router *QuestionAnswerRouter) PreHandle(request eduiface.IRequest) {
 	}
 
 	answerData := gjson.GetBytes(reqMsgInJSON.Data, "answer")
-	if !answerData.Exists() {
+	if !answerData.Exists() || answerData.String() == "" {
 		questionanswerReplyStatus = "answer_cannot_be_empty"
 		return
 	}
@@ -51,7 +51,7 @@ func (router *QuestionAnswerRouter) PreHandle(request eduiface.IRequest) {
 	answer := answerData.String()
 
 	innerIDData := gjson.GetBytes(reqMsgInJSON.Data, "id")
-	if !innerIDData.Exists() {
+	if !innerIDData.Exists() || innerIDData.String() == "" {
 		questionanswerReplyStatus = "questionid_cannot_be_empty"
 		return
 	}

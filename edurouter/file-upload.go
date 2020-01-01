@@ -65,7 +65,7 @@ func (router *FileAddRouter) PreHandle(request eduiface.IRequest) {
 	// 尝试获取文件名称
 	fileNameData := newFileData.Get("filename")
 	// 如果文件名称不存在则返回错误码
-	if !fileNameData.Exists() {
+	if !fileNameData.Exists() || fileNameData.String() == "" {
 		fileaddReplyStatus = "fileName_cannot_be_empty"
 		return
 	}
@@ -73,7 +73,7 @@ func (router *FileAddRouter) PreHandle(request eduiface.IRequest) {
 	// 尝试获取班级名称
 	classNameData := newFileData.Get("classname")
 	// 若班级名称不存在则返回错误码
-	if !classNameData.Exists() {
+	if !classNameData.Exists() || classNameData.String() == "" {
 		fileaddReplyStatus = "className_cannot_be_empty"
 		return
 	}
@@ -81,7 +81,7 @@ func (router *FileAddRouter) PreHandle(request eduiface.IRequest) {
 	// 尝试获取文件大小
 	sizeData := newFileData.Get("size")
 	// 如果文件大小不存在则返回错误码
-	if !sizeData.Exists() {
+	if !sizeData.Exists() || sizeData.Int() <= 0 {
 		fileaddReplyStatus = "size_cannot_be_empty"
 		return
 	}

@@ -50,7 +50,7 @@ func (router *QuestionGetBySenderUIDRouter) PreHandle(request eduiface.IRequest)
 	}
 
 	senderUIDData := gjson.GetBytes(reqMsgInJSON.Data, "uid")
-	if !senderUIDData.Exists() {
+	if !senderUIDData.Exists() || senderUIDData.String() == "" {
 		questiongetbysenderuidReplyStatus = "senderuid_cannot_be_empty"
 		return
 	}

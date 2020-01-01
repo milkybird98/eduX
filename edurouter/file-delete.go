@@ -50,7 +50,7 @@ func (router *FileDeleteRouter) PreHandle(request eduiface.IRequest) {
 	// 尝试从数据Data段获取文件id
 	innerIDData := gjson.GetBytes(reqMsgInJSON.Data, "id")
 	// 若不存在则返回错误码
-	if !innerIDData.Exists() {
+	if !innerIDData.Exists() || innerIDData.String() == "" {
 		filedeleteReplyData = "fileid_cannot_be_empty"
 		return
 	}

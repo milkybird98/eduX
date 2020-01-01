@@ -17,6 +17,7 @@ type PwdResetRouter struct {
 	edunet.BaseRouter
 }
 
+// PwdResetData 定了重设密码时的请求参数
 type PwdResetData struct {
 	UID       string `json:"uid"`
 	OriginPwd string `json:"oripwd"`
@@ -24,6 +25,7 @@ type PwdResetData struct {
 	NewPwd    string `json:"newpwd"`
 }
 
+// 返回状态码
 var pwdresetReplyStatus string
 
 // PreHandle 用于进行原始数据校验,权限验证,身份验证,数据获取和数据库操作
@@ -147,31 +149,38 @@ func (router *PwdResetRouter) PreHandle(request eduiface.IRequest) {
 	// 身份验证
 	var passwordResetNews *edumodel.News
 	passwordResetNews = nil
+	// 如果当前连接用户是学生
 	if user.Place == "student" {
+		// 如果填写了原密码则判断原密码是否一致
 		if pwdInString != "" {
+			// 如果密码不一致则报错返回
 			if pwdInString != userAuth.Pwd {
 				registerReplyStatus = "password_wrong"
 				return
 			}
-		} else if serectInString != "" {
+		} else if serectInString != "" { // 如果填写了serect则判断serect是否存在
 			cache, err := utils.GetResetPasswordCache(serectInString)
+			// 如果serect不存在或者对应uid不一致,则报错返回
 			if err != nil || cache == nil || cache.UID != reqMsgInJSON.UID {
 				registerReplyStatus = "serect_not_found"
 				return
 			}
-		} else {
+		} else { // 否则授权失败
 			registerReplyStatus = "auth_fail"
 			return
 		}
-	} else if user.Place == "teacher" || user.Place == "manager" {
-		if uidInString != reqMsgInJSON.UID {
+	} else if user.Place == "teacher" || user.Place == "manager" { // 如果用户是教师或者管理员
+		if uidInString != reqMsgInJSON.UID { // 如果修改他人密码
 			userAuth := edumodel.GetUserAuthByUID(reqMsgInJSON.UID)
+			// 检查密码填写是否正确
 			if pwdInString != userAuth.Pwd {
 				registerReplyStatus = "password_wrong"
 				return
 			} else {
+				// 重置密码
 				newPwdInString = base64.StdEncoding.EncodeToString([]byte(uidInString))
 
+				// 想用户发送提醒消息
 				var newNews edumodel.News
 				newNews.SenderUID = reqMsgInJSON.UID
 				newNews.SendTime = time.Now().In(utils.GlobalObject.TimeLocal)
@@ -181,28 +190,31 @@ func (router *PwdResetRouter) PreHandle(request eduiface.IRequest) {
 
 				passwordResetNews = &newNews
 			}
-		} else {
-			if pwdInString != "" {
+		} else { // 修改自己的密码
+			if pwdInString != "" { // 如果填写了原密码则判断原密码是否一致
 				if pwdInString != userAuth.Pwd {
 					registerReplyStatus = "password_wrong"
 					return
 				}
-			} else if serectInString != "" {
+			} else if serectInString != "" { // 如果填写了serect则判断serect是否存在
 				cache, err := utils.GetResetPasswordCache(serectInString)
 				if err != nil || cache == nil || cache.UID != reqMsgInJSON.UID {
 					registerReplyStatus = "serect_not_found"
 					return
 				}
-			} else {
+			} else { // 否则授权失败
 				registerReplyStatus = "auth_fail"
 				return
 			}
 		}
 	}
 
+	// 更新用户授权数据库
 	ok = edumodel.UpdateUserAuthByUID(uidInString, newPwdInString, "", "", "", "", "", "")
 	if ok {
+		// 如果有新的消息需要发送
 		if passwordResetNews != nil {
+			// 更新消息数据库
 			ok = edumodel.AddNews(passwordResetNews)
 			if ok {
 				registerReplyStatus = "success"
@@ -220,13 +232,17 @@ func (router *PwdResetRouter) PreHandle(request eduiface.IRequest) {
 
 // Handle 用于将请求的处理结果发回客户端
 func (router *PwdResetRouter) Handle(request eduiface.IRequest) {
+	// 打印请求处理Log
 	fmt.Println("[ROUTER] ", time.Now().In(utils.GlobalObject.TimeLocal).Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", PwdResetRouter: ", registerReplyStatus)
+	// 生成返回数据
 	jsonMsg, err := CombineReplyMsg(registerReplyStatus, nil)
+	// 如果生成失败则报错返回
 	if err != nil {
 		fmt.Println("PwdResetRouter: ", err)
 		return
 	}
 
+	// 发送返回数据
 	c := request.GetConnection()
 	c.SendMsg(request.GetMsgID(), jsonMsg)
 }

@@ -64,7 +64,7 @@ func (router *FileDownloadRouter) PreHandle(request eduiface.IRequest) {
 	// 尝试获取uuid数据
 	UUIDData := newFileData.Get("uuid")
 	// 若文件对应uuid数据不存在,则返回错误码
-	if !UUIDData.Exists() {
+	if !UUIDData.Exists() || UUIDData.String() == "" {
 		filedownloadReplyStatus = "UUID_cannot_be_empty"
 		return
 	}

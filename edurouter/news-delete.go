@@ -49,7 +49,7 @@ func (router *NewsDeleteRouter) PreHandle(request eduiface.IRequest) {
 	// 试图从Data段获取消息id数据
 	innerIDData := gjson.GetBytes(reqMsgInJSON.Data, "id")
 	// 若不存在则返回错误码
-	if !innerIDData.Exists() {
+	if !innerIDData.Exists() || innerIDData.String() == "" {
 		newdeleteReplyStatus = "newsid_cannot_be_empty"
 		return
 	}

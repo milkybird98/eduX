@@ -44,7 +44,7 @@ func (router *QuestionDeleteRouter) PreHandle(request eduiface.IRequest) {
 	}
 
 	innerIDData := gjson.GetBytes(reqMsgInJSON.Data, "id")
-	if !innerIDData.Exists() {
+	if !innerIDData.Exists() || innerIDData.String() == "" {
 		questiondeleteReplyStatus = "questionid_cannot_be_empty"
 		return
 	}

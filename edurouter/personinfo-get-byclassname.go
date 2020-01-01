@@ -51,7 +51,7 @@ func (router *PersonInfoGetByClassRouter) PreHandle(request eduiface.IRequest) {
 	// 从Data段获取班级名称数据
 	reqClassNameData := gjson.GetBytes(reqMsgInJSON.Data, "class")
 	// 不存在则返回错误码
-	if !reqClassNameData.Exists() {
+	if !reqClassNameData.Exists() || reqClassNameData.String() == "" {
 		persongetbyclassReplyStatus = "data_format_error"
 		return
 	}

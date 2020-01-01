@@ -102,7 +102,7 @@ func (router *NewsGetBySenderUIDRouter) PreHandle(request eduiface.IRequest) {
 		// 获取发送者数据
 		senderUIDData := gjson.GetBytes(reqMsgInJSON.Data, "sender")
 		// 若发送者数据不存在则报错返回
-		if !senderUIDData.Exists() {
+		if !senderUIDData.Exists() || senderUIDData.String() == "" {
 			newsgetbysenderuidReplyStatus = "senderuid_cannot_be_empty"
 			return
 		}

@@ -72,7 +72,7 @@ func (router *FileGetBySenderUIDRouter) PreHandle(request eduiface.IRequest) {
 	// 尝试获取发送者uid数据
 	senderUIDData := gjson.GetBytes(reqMsgInJSON.Data, "sender")
 	// 如果不存在,则返回错误码
-	if !senderUIDData.Exists() && senderUIDData.String() != "" {
+	if !senderUIDData.Exists() || senderUIDData.String() == "" {
 		questiongetbyclassnameReplyStatus = "sender_uid_cannot_be_empty"
 		return
 	}

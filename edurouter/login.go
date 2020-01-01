@@ -45,7 +45,7 @@ func (router *LoginRouter) PreHandle(request eduiface.IRequest) {
 	// 尝试从请求数据Data段获取密码数据
 	loginData := gjson.GetBytes(reqMsgInJSON.Data, "pwd")
 	// 若数据不存在,则返回错误码
-	if !loginData.Exists() {
+	if !loginData.Exists() || loginData.String() == "" {
 		loginReplyStatus = "data_format_error"
 		return
 	}

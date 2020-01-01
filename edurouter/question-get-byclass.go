@@ -50,7 +50,7 @@ func (router *QuestionGetByClassNameRouter) PreHandle(request eduiface.IRequest)
 	}
 
 	classNameData := gjson.GetBytes(reqMsgInJSON.Data, "class")
-	if !classNameData.Exists() {
+	if !classNameData.Exists() || classNameData.String() == "" {
 		questiongetbyclassnameReplyStatus = "classname_cannot_be_empty"
 		return
 	}

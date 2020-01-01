@@ -55,7 +55,7 @@ func (router *NewsAddRouter) PreHandle(request eduiface.IRequest) {
 	// 从Data段中获取消息标题
 	titleData := newNewsData.Get("title")
 	// 如果消息标题不存在,则返回错误码
-	if !titleData.Exists() {
+	if !titleData.Exists() || titleData.String() == "" {
 		newsaddReplyStatus = "title_cannot_be_empty"
 		return
 	}
@@ -63,7 +63,7 @@ func (router *NewsAddRouter) PreHandle(request eduiface.IRequest) {
 	// 从Data段中获取新消息正文
 	textData := newNewsData.Get("text")
 	// 如果消息正文不存在,则返回错误码
-	if !textData.Exists() {
+	if !textData.Exists() || textData.String() == "" {
 		newsaddReplyStatus = "title_cannot_be_empty"
 		return
 	}
@@ -75,7 +75,7 @@ func (router *NewsAddRouter) PreHandle(request eduiface.IRequest) {
 	isannounceData := newNewsData.Get("isannounce")
 	var isannounce bool
 	// 如果不存在,则认为默认是非公告
-	if !isannounceData.Exists() {
+	if !isannounceData.Exists() || isannounceData.String() == "" {
 		isannounce = false
 	} else {
 		isannounce = isannounceData.Bool()
