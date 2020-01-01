@@ -176,20 +176,20 @@ func (router *PwdResetRouter) PreHandle(request eduiface.IRequest) {
 			if pwdInString != userAuth.Pwd {
 				registerReplyStatus = "password_wrong"
 				return
-			} else {
-				// 重置密码
-				newPwdInString = base64.StdEncoding.EncodeToString([]byte(uidInString))
-
-				// 想用户发送提醒消息
-				var newNews edumodel.News
-				newNews.SenderUID = reqMsgInJSON.UID
-				newNews.SendTime = time.Now().In(utils.GlobalObject.TimeLocal)
-				newNews.IsAnnounce = false
-				newNews.Title = "密码重置成功"
-				newNews.Text = "你好,你的密码已经重置完成,请及时修改密码,以防他人恶意登陆."
-
-				passwordResetNews = &newNews
 			}
+			// 重置密码
+			newPwdInString = base64.StdEncoding.EncodeToString([]byte(uidInString))
+
+			// 想用户发送提醒消息
+			var newNews edumodel.News
+			newNews.SenderUID = reqMsgInJSON.UID
+			newNews.SendTime = time.Now().In(utils.GlobalObject.TimeLocal)
+			newNews.IsAnnounce = false
+			newNews.Title = "密码重置成功"
+			newNews.Text = "你好,你的密码已经重置完成,请及时修改密码,以防他人恶意登陆."
+
+			passwordResetNews = &newNews
+
 		} else { // 修改自己的密码
 			if pwdInString != "" { // 如果填写了原密码则判断原密码是否一致
 				if pwdInString != userAuth.Pwd {

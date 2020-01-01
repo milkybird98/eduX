@@ -95,10 +95,8 @@ func (router *PwdSetQuestionRouter) PreHandle(request eduiface.IRequest) {
 		newQuestionData.Get("ac").String())
 	if ok { // 如果更新成功则返回success,否则返回错误码
 		pwdsetquestionReplyStatus = "success"
-		return
 	} else {
 		pwdsetquestionReplyStatus = "model_fail"
-		return
 	}
 }
 
