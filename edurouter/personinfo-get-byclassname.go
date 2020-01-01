@@ -64,7 +64,7 @@ func (router *PersonInfoGetByClassRouter) PreHandle(request eduiface.IRequest) {
 	placeString, err := GetSessionPlace(c)
 	// 若不存在则返回
 	if err != nil {
-		classdelReplyStatus = err.Error()
+		persongetbyclassReplyStatus = err.Error()
 		return
 	}
 
@@ -74,7 +74,7 @@ func (router *PersonInfoGetByClassRouter) PreHandle(request eduiface.IRequest) {
 		ok := edumodel.CheckUserInClass(reqClassName, reqMsgInJSON.UID, placeString)
 		// 如果不在则权限错误
 		if !ok {
-			classdelReplyStatus = "permission_error"
+			persongetbyclassReplyStatus = "permission_error"
 			return
 		}
 	}

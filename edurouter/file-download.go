@@ -77,7 +77,7 @@ func (router *FileDownloadRouter) PreHandle(request eduiface.IRequest) {
 	placeString, err := GetSessionPlace(c)
 	// 若不存在则返回
 	if err != nil {
-		classdelReplyStatus = err.Error()
+		filedownloadReplyStatus = err.Error()
 		return
 	}
 
@@ -87,7 +87,7 @@ func (router *FileDownloadRouter) PreHandle(request eduiface.IRequest) {
 	file := edumodel.GetFileByUUID(UUID)
 	// 若不存在则返回错误码
 	if file == nil {
-		classdelReplyStatus = "file_not_found"
+		filedownloadReplyStatus = "file_not_found"
 		return
 	}
 

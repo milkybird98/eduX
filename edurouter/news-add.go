@@ -87,7 +87,7 @@ func (router *NewsAddRouter) PreHandle(request eduiface.IRequest) {
 	placeString, err := GetSessionPlace(c)
 	// 若不存在则返回
 	if err != nil {
-		classdelReplyStatus = err.Error()
+		newsaddReplyStatus = err.Error()
 		return
 	}
 
@@ -101,7 +101,7 @@ func (router *NewsAddRouter) PreHandle(request eduiface.IRequest) {
 	class := edumodel.GetClassByUID(reqMsgInJSON.UID, placeString)
 	// 如果班级不存在则报错
 	if class == nil {
-		filegetbytagsReplyStatus = "not_in_class"
+		newsaddReplyStatus = "not_in_class"
 		return
 	}
 

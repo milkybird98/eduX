@@ -77,13 +77,13 @@ func (router *NewsGetBySenderUIDRouter) PreHandle(request eduiface.IRequest) {
 	placeString, err := GetSessionPlace(c)
 	// 若不存在则返回
 	if err != nil {
-		classdelReplyStatus = err.Error()
+		newsgetbysenderuidReplyStatus = err.Error()
 		return
 	}
 
 	// 如果用户是学生则权限错误
 	if placeString == "student" {
-		newgetbyaudientuidReplyStatus = "permission_error"
+		newsgetbysenderuidReplyStatus = "permission_error"
 		return
 	}
 

@@ -58,7 +58,7 @@ func (router *ClassStudentAddRouter) PreHandle(request eduiface.IRequest) {
 	placeString, err := GetSessionPlace(c)
 	// 若不存在则返回
 	if err != nil {
-		classdelReplyStatus = err.Error()
+		classstudentaddReplyStatus = err.Error()
 		return
 	}
 
