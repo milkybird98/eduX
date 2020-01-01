@@ -70,7 +70,7 @@ func (router *QuestionAddRouter) PreHandle(request eduiface.IRequest) {
 	placeString, err := GetSessionPlace(c)
 	// 若不存在则返回
 	if err != nil {
-		classdelReplyStatus = err.Error()
+		questionaddReplyStatus = err.Error()
 		return
 	}
 
@@ -80,7 +80,7 @@ func (router *QuestionAddRouter) PreHandle(request eduiface.IRequest) {
 		return
 	}
 
-	// 试图获取班级数据 
+	// 试图获取班级数据
 	class := edumodel.GetClassByUID(reqMsgInJSON.UID, "student")
 	// 未加入班级,报错返回
 	if class == nil {
