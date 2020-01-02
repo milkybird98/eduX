@@ -183,7 +183,7 @@ func (router *PwdResetRouter) PreHandle(request eduiface.IRequest) {
 			// 想用户发送提醒消息
 			var newNews edumodel.News
 			newNews.SenderUID = reqMsgInJSON.UID
-			newNews.SendTime = time.Now().In(utils.GlobalObject.TimeLocal)
+			newNews.SendTime = time.Now()
 			newNews.IsAnnounce = false
 			newNews.Title = "密码重置成功"
 			newNews.Text = "你好,你的密码已经重置完成,请及时修改密码,以防他人恶意登陆."
@@ -233,7 +233,7 @@ func (router *PwdResetRouter) PreHandle(request eduiface.IRequest) {
 // Handle 用于将请求的处理结果发回客户端
 func (router *PwdResetRouter) Handle(request eduiface.IRequest) {
 	// 打印请求处理Log
-	fmt.Println("[ROUTER] ", time.Now().In(utils.GlobalObject.TimeLocal).Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", PwdResetRouter: ", registerReplyStatus)
+	fmt.Println("[ROUTER] ", time.Now().Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", PwdResetRouter: ", registerReplyStatus)
 	// 生成返回数据
 	jsonMsg, err := CombineReplyMsg(registerReplyStatus, nil)
 	// 如果生成失败则报错返回

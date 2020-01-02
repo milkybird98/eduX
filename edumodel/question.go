@@ -260,7 +260,7 @@ func AnserQuestionByInnerID(idInString string, UID string, answer string) bool {
 	defer cancel()
 
 	filter := bson.M{"_id": id, "isdeleted": false}
-	update := bson.M{"$set": bson.M{"answeruid": UID, "issolved": true, "answer": answer, "answertime": time.Now().In(utils.GlobalObject.TimeLocal)}}
+	update := bson.M{"$set": bson.M{"answeruid": UID, "issolved": true, "answer": answer, "answertime": time.Now()}}
 
 	_, err = quesCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
@@ -308,7 +308,7 @@ func GetQuestionAnsweredNumberAll(className string) int {
 func GetQuestionNumberByDate(className string, targetDate time.Time) int {
 	checkQuesCollection()
 
-	if targetDate.IsZero() || targetDate.After(time.Now().In(utils.GlobalObject.TimeLocal).Add(time.Hour*24)) {
+	if targetDate.IsZero() || targetDate.After(time.Now().Add(time.Hour*24)) {
 		fmt.Println("[MODEL] time out of range")
 		return -1
 	}
@@ -334,7 +334,7 @@ func GetQuestionNumberByDate(className string, targetDate time.Time) int {
 func GetQuestionAnsweredNumberByDate(className string, targetDate time.Time) int {
 	checkQuesCollection()
 
-	if targetDate.IsZero() || targetDate.After(time.Now().In(utils.GlobalObject.TimeLocal).Add(time.Hour*24)) {
+	if targetDate.IsZero() || targetDate.After(time.Now().Add(time.Hour*24)) {
 		fmt.Println("[MODEL] time out of range")
 		return -1
 	}

@@ -114,7 +114,7 @@ func (router *ClassAddRouter) PreHandle(request eduiface.IRequest) {
 	newClass.ClassName = className
 	newClass.TeacherList = []string{teacherUID}
 	newClass.StudentList = []string{}
-	newClass.CreateDate = time.Now().In(utils.GlobalObject.TimeLocal)
+	newClass.CreateDate = time.Now()
 
 	// 更新数据库
 	ok = edumodel.AddClass(&newClass) && edumodel.AddUserToClassByUID([]string{teacherUID}, className)
@@ -128,7 +128,7 @@ func (router *ClassAddRouter) PreHandle(request eduiface.IRequest) {
 // Handle 用于将请求的处理结果发回客户端
 func (router *ClassAddRouter) Handle(request eduiface.IRequest) {
 	// 打印请求处理Log
-	fmt.Println("[ROUTER] ", time.Now().In(utils.GlobalObject.TimeLocal).Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", ClassAddRouter: ", classaddReplyStatus)
+	fmt.Println("[ROUTER] ", time.Now().Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", ClassAddRouter: ", classaddReplyStatus)
 	// 生成返回数据
 	jsonMsg, err := CombineReplyMsg(classaddReplyStatus, nil)
 	// 如果生成失败则报错返回

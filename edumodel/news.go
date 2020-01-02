@@ -19,7 +19,7 @@ type News struct {
 	Title      string             `bson:"title"`
 	Text       string             `bson:"text"`
 	SenderUID  string             `bson:"senuid"`
-	SendTime   time.Time          `bson:"sentime"`
+	SendTime   time.Time          `bson:"sendtime"`
 	AudientUID []string           `bson:"audiuid"`
 }
 

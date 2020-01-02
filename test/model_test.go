@@ -2,7 +2,6 @@ package test
 
 import (
 	"eduX/edumodel"
-	"eduX/utils"
 	"encoding/json"
 	"fmt"
 	"testing"
@@ -30,7 +29,7 @@ func TestQuestionModel(t *testing.T) {
 	newQuestion.Text = "this is a < 测试问题》"
 	newQuestion.SenderUID = "U1001"
 	newQuestion.ClassName = "ts1001"
-	newQuestion.SendTime = time.Now().In(utils.GlobalObject.TimeLocal)
+	newQuestion.SendTime = time.Now()
 	newQuestion.IsSolved = false
 	newQuestion.IsDeleted = false
 
@@ -99,7 +98,7 @@ func TestClassModel(t *testing.T) {
 		"ts1001",
 		teacherList,
 		studentList,
-		time.Now().In(utils.GlobalObject.TimeLocal),
+		time.Now(),
 	}
 	if edumodel.AddClass(class) {
 		fmt.Println("success")

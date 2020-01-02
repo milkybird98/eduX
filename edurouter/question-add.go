@@ -95,7 +95,7 @@ func (router *QuestionAddRouter) PreHandle(request eduiface.IRequest) {
 	question.SenderUID = reqMsgInJSON.UID
 	question.ClassName = class.ClassName
 	// 获取当前时间
-	question.SendTime = time.Now().In(utils.GlobalObject.TimeLocal)
+	question.SendTime = time.Now()
 	question.IsSolved = false
 
 	// 更新数据库
@@ -110,7 +110,7 @@ func (router *QuestionAddRouter) PreHandle(request eduiface.IRequest) {
 // Handle 用于将请求的处理结果发回客户端
 func (router *QuestionAddRouter) Handle(request eduiface.IRequest) {
 	// 打印请求处理Log
-	fmt.Println("[ROUTER] ", time.Now().In(utils.GlobalObject.TimeLocal).Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", QuestionAddRouter: ", questionaddReplyStatus)
+	fmt.Println("[ROUTER] ", time.Now().Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", QuestionAddRouter: ", questionaddReplyStatus)
 	// 生成返回数据
 	jsonMsg, err := CombineReplyMsg(questionaddReplyStatus, nil)
 	// 如果生成失败则报错返回

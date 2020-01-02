@@ -101,7 +101,7 @@ func (router *NewsGetByTimeOrderRouter) PreHandle(request eduiface.IRequest) {
 // Handle 用于将请求的处理结果发回客户端
 func (router *NewsGetByTimeOrderRouter) Handle(request eduiface.IRequest) {
 	// 打印请求处理Log
-	fmt.Println("[ROUTER] Time: ", time.Now().In(utils.GlobalObject.TimeLocal).Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", NewsGetByTimeOrderRouter: ", newgetbytimeorderReplyStatus)
+	fmt.Println("[ROUTER] Time: ", time.Now().Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", NewsGetByTimeOrderRouter: ", newgetbytimeorderReplyStatus)
 
 	var jsonMsg []byte
 	var err error
