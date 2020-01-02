@@ -199,8 +199,14 @@ func GetFileNumberByDate(className string, targetDate time.Time) int {
 	targetDateInDay := time.Date(targetDate.Year(), targetDate.Month(), targetDate.Day(), 0, 0, 0, 0, time.Local)
 	targetNextDateInDay := targetDateInDay.Add(time.Hour * 24)
 
-	filter := bson.M{"classname": className,
-		"updatetime": bson.M{"$gt": targetDateInDay, "$lt": targetNextDateInDay}}
+	var filter interface{}
+	if className == "" {
+		filter = bson.M{
+			"updatetime": bson.M{"$gt": targetDateInDay, "$lt": targetNextDateInDay}}
+	} else {
+		filter = bson.M{"classname": className,
+			"updatetime": bson.M{"$gt": targetDateInDay, "$lt": targetNextDateInDay}}
+	}
 
 	count, err := fileCollection.CountDocuments(ctx, filter)
 	if err != nil {

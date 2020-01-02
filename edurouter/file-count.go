@@ -73,14 +73,17 @@ func (router *FileCountRouter) PreHandle(request eduiface.IRequest) {
 
 	// 试图从Data段中获取日期数据
 	timeData := gjson.GetBytes(reqMsgInJSON.Data, "time")
-	// 按照RFC3339标准解码时间数据
-	targetTime, err := time.Parse(time.RFC3339, timeData.String())
-	// 如果日期数据存在则指定统计日期,否则统计全部数据
+	var targetTime time.Time
 	var isTimeRequired bool
-	if err != nil || targetTime.IsZero() {
-		isTimeRequired = false
-	} else {
-		isTimeRequired = true
+	// 解码时间数据
+	if timeData.Exists() && timeData.String() != "" {
+		targetTime, err = time.Parse(time.RFC3339, timeData.String())
+		// 如果成功解码出时间则限定统计时间
+		if err != nil || targetTime.IsZero() {
+			isTimeRequired = false
+		} else {
+			isTimeRequired = true
+		}
 	}
 
 	// 尝试从Data段中获取班级名称

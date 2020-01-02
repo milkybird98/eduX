@@ -74,14 +74,17 @@ func (router *QuestionCountRouter) PreHandle(request eduiface.IRequest) {
 
 	// 获取查询的时间参数
 	timeData := gjson.GetBytes(reqMsgInJSON.Data, "time")
-	// 解码时间数据
-	targetTime, err := time.Parse(time.RFC3339, timeData.String())
+	var targetTime time.Time
 	var isTimeRequired bool
-	// 如果成功解码出时间则限定统计时间
-	if err != nil || targetTime.IsZero() {
-		isTimeRequired = false
-	} else {
-		isTimeRequired = true
+	// 解码时间数据
+	if timeData.Exists() && timeData.String() != "" {
+		targetTime, err = time.Parse(time.RFC3339, timeData.String())
+		// 如果成功解码出时间则限定统计时间
+		if err != nil || targetTime.IsZero() {
+			isTimeRequired = false
+		} else {
+			isTimeRequired = true
+		}
 	}
 
 	// 获取班级名
@@ -98,9 +101,9 @@ func (router *QuestionCountRouter) PreHandle(request eduiface.IRequest) {
 		}
 	} else {
 		if IsSolved {
-			questioncountReplyData.Number = edumodel.GetQuestionAnsweredNumberByDate(className, targetTime)
+			questioncountReplyData.Number = edumodel.GetQuestionAnsweredNumberAll(className)
 		} else {
-			questioncountReplyData.Number = edumodel.GetQuestionNumberByDate(className, targetTime)
+			questioncountReplyData.Number = edumodel.GetQuestionNumberAll(className)
 		}
 	}
 

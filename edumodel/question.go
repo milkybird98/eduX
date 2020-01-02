@@ -2,7 +2,6 @@ package edumodel
 
 import (
 	"context"
-	"eduX/utils"
 	"fmt"
 	"time"
 
@@ -277,7 +276,12 @@ func GetQuestionNumberAll(className string) int {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	filter := bson.M{"classname": className, "isdeleted": false}
+	var filter interface{}
+	if className == "" {
+		filter = bson.M{"isdeleted": false}
+	} else {
+		filter = bson.M{"classname": className, "isdeleted": false}
+	}
 
 	count, err := quesCollection.CountDocuments(ctx, filter)
 	if err != nil {
@@ -294,7 +298,12 @@ func GetQuestionAnsweredNumberAll(className string) int {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	filter := bson.M{"classname": className, "isdeleted": false, "issolved": true}
+	var filter interface{}
+	if className == "" {
+		filter = bson.M{"isdeleted": false, "issolved": true}
+	} else {
+		filter = bson.M{"classname": className, "isdeleted": false, "issolved": true}
+	}
 
 	count, err := quesCollection.CountDocuments(ctx, filter)
 	if err != nil {
@@ -316,11 +325,17 @@ func GetQuestionNumberByDate(className string, targetDate time.Time) int {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	targetDateInDay := time.Date(targetDate.Year(), targetDate.Month(), targetDate.Day(), 0, 0, 0, 0, utils.GlobalObject.TimeLocal)
+	targetDateInDay := time.Date(targetDate.Year(), targetDate.Month(), targetDate.Day(), 0, 0, 0, 0, time.Local)
 	targetNextDateInDay := targetDateInDay.Add(time.Hour * 24)
 
-	filter := bson.M{"classname": className, "isdeleted": false,
-		"sendtime": bson.M{"$gt": targetDateInDay, "$lt": targetNextDateInDay}}
+	var filter interface{}
+	if className == "" {
+		filter = bson.M{"isdeleted": false,
+			"sendtime": bson.M{"$gt": targetDateInDay, "$lt": targetNextDateInDay}}
+	} else {
+		filter = bson.M{"classname": className, "isdeleted": false,
+			"sendtime": bson.M{"$gt": targetDateInDay, "$lt": targetNextDateInDay}}
+	}
 
 	count, err := quesCollection.CountDocuments(ctx, filter)
 	if err != nil {
@@ -342,11 +357,17 @@ func GetQuestionAnsweredNumberByDate(className string, targetDate time.Time) int
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	targetDateInDay := time.Date(targetDate.Year(), targetDate.Month(), targetDate.Day(), 0, 0, 0, 0, utils.GlobalObject.TimeLocal)
+	targetDateInDay := time.Date(targetDate.Year(), targetDate.Month(), targetDate.Day(), 0, 0, 0, 0, time.Local)
 	targetNextDateInDay := targetDateInDay.Add(time.Hour * 24)
 
-	filter := bson.M{"classname": className, "isdeleted": false, "issolved": true,
-		"answertime": bson.M{"$gt": targetDateInDay, "$lt": targetNextDateInDay}}
+	var filter interface{}
+	if className == "" {
+		filter = bson.M{"isdeleted": false, "issolved": true,
+			"sendtime": bson.M{"$gt": targetDateInDay, "$lt": targetNextDateInDay}}
+	} else {
+		filter = bson.M{"classname": className, "isdeleted": false, "issolved": true,
+			"sendtime": bson.M{"$gt": targetDateInDay, "$lt": targetNextDateInDay}}
+	}
 
 	count, err := quesCollection.CountDocuments(ctx, filter)
 	if err != nil {
