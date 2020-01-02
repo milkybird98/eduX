@@ -86,6 +86,17 @@ func (router *FileAddRouter) PreHandle(request eduiface.IRequest) {
 		return
 	}
 
+	// 从Data段获取文件标签数据
+	var tagInString []string
+	tagsData := gjson.GetBytes(reqMsgInJSON.Data, "filetag")
+	if tagsData.Exists() && tagsData.IsArray() && len(tagsData.Array()) > 0 {
+		for _, tag := range tagsData.Array() {
+			if tag.String() != "" {
+				tagInString = append(tagInString, tag.String())
+			}
+		}
+	}
+
 	// 权限检查
 	c := request.GetConnection()
 	// 试图从session中获取身份数据
@@ -116,13 +127,14 @@ func (router *FileAddRouter) PreHandle(request eduiface.IRequest) {
 	var newFileTag utils.FileTransmitTag
 	newFileTag.FileName = fileNameData.String()
 	newFileTag.ID = fileAddReplyData.SerectID
+	newFileTag.FileTags = tagInString
 	newFileTag.Size = sizeData.Int()
 	// 获取当前连接客户端地址
 	newFileTag.ClientAddress = c.GetTCPConnection().RemoteAddr()
 	newFileTag.ClassName = classNameData.String()
 	newFileTag.UpdaterUID = reqMsgInJSON.UID
 	// 生成上传时间
-	newFileTag.UpdateTime = time.Now().In(utils.GlobalObject.TimeLocal)
+	newFileTag.UpdateTime = time.Now()
 	newFileTag.ServerToC = false
 	newFileTag.ClientToS = true
 
@@ -135,7 +147,7 @@ func (router *FileAddRouter) PreHandle(request eduiface.IRequest) {
 // Handle 用于将请求的处理结果发回客户端
 func (router *FileAddRouter) Handle(request eduiface.IRequest) {
 	// 打印请求处理Log
-	fmt.Println("[ROUTER] ", time.Now().In(utils.GlobalObject.TimeLocal).Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", FileAddRouter: ", fileaddReplyStatus)
+	fmt.Println("[ROUTER] ", time.Now().Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", FileAddRouter: ", fileaddReplyStatus)
 
 	var jsonMsg []byte
 	var err error

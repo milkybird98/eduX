@@ -124,7 +124,7 @@ func (router *FileGetByTagsRouter) PreHandle(request eduiface.IRequest) {
 // Handle 用于将请求的处理结果发回客户端
 func (router *FileGetByTagsRouter) Handle(request eduiface.IRequest) {
 	// 打印请求处理Log
-	fmt.Println("[ROUTER] ", time.Now().In(utils.GlobalObject.TimeLocal).Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", FileGetByTagsRouter: ", filegetbytagsReplyStatus)
+	fmt.Println("[ROUTER] ", time.Now().Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", FileGetByTagsRouter: ", filegetbytagsReplyStatus)
 
 	var jsonMsg []byte
 	var err error

@@ -171,6 +171,13 @@ func (s *Server) Serve() {
 	select {}
 }
 
+func (s *Server) ServeFile() {
+	s.Port++
+	s.StartFile()
+
+	select {}
+}
+
 //路由功能：给当前服务注册一个路由业务方法，供客户端链接处理使用
 func (s *Server) AddRouter(msgId uint32, router eduiface.IRouter) {
 	s.msgHandler.AddRouter(msgId, router)

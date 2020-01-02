@@ -2,7 +2,6 @@ package edumodel
 
 import (
 	"context"
-	"eduX/utils"
 	"fmt"
 	"time"
 
@@ -59,7 +58,7 @@ func GetFileByTags(skip int, limit int, Tag []string, ClassName string) *[]File 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	filter := bson.M{"updateruid": Tag, "classname": ClassName}
+	filter := bson.M{"filetag": Tag, "classname": ClassName}
 	option := options.Find().SetSort(bson.M{"updatetime": 1}).SetSkip(int64(skip)).SetLimit(int64(limit))
 
 	var result []File
@@ -189,7 +188,7 @@ func GetFileNumberAll(className string) int {
 func GetFileNumberByDate(className string, targetDate time.Time) int {
 	checkFileCollection()
 
-	if targetDate.IsZero() || targetDate.After(time.Now().In(utils.GlobalObject.TimeLocal).Add(time.Hour*24)) {
+	if targetDate.IsZero() || targetDate.After(time.Now().Add(time.Hour*24)) {
 		fmt.Println("[MODEL] time out of range")
 		return -1
 	}
@@ -197,8 +196,7 @@ func GetFileNumberByDate(className string, targetDate time.Time) int {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	var cstZone = time.FixedZone("CST", 8*3600)
-	targetDateInDay := time.Date(targetDate.Year(), targetDate.Month(), targetDate.Day(), 0, 0, 0, 0, cstZone)
+	targetDateInDay := time.Date(targetDate.Year(), targetDate.Month(), targetDate.Day(), 0, 0, 0, 0, time.Local)
 	targetNextDateInDay := targetDateInDay.Add(time.Hour * 24)
 
 	filter := bson.M{"classname": className,

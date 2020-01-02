@@ -95,12 +95,19 @@ func (router *FileDeleteRouter) PreHandle(request eduiface.IRequest) {
 	}
 
 	//数据库更新
+
+	workPath, err := os.Getwd()
+	if err != nil {
+		filedeleteReplyData = "inner_error"
+		return
+	}
+
 	// 拼接文件地址
-	path := "./file/" + innerIDString
+	path := workPath + "/file/" + innerIDString
 	// 试图删除文件
 	err = os.Remove(path)
 	// 如果成功则更新数据库数据,删除对应文件元数据
-	if err != nil {
+	if err == nil {
 		ok := edumodel.DeleteFileByUUID(innerIDString)
 		// 如果成功则返回success,否则返回错误码
 		if !ok {
@@ -117,7 +124,7 @@ func (router *FileDeleteRouter) PreHandle(request eduiface.IRequest) {
 // Handle 用于将请求的处理结果发回客户端
 func (router *FileDeleteRouter) Handle(request eduiface.IRequest) {
 	// 打印请求处理Log
-	fmt.Println("[ROUTER] ", time.Now().In(utils.GlobalObject.TimeLocal).Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", FileDeleteRouter: ", filedeleteReplyData)
+	fmt.Println("[ROUTER] ", time.Now().Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", FileDeleteRouter: ", filedeleteReplyData)
 	// 生成返回数据
 	jsonMsg, err := CombineReplyMsg(filedeleteReplyData, nil)
 	// 如果生成失败则报错返回

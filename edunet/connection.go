@@ -82,7 +82,7 @@ func initSession(session map[string]interface{}) {
 	文件传输Goroutine,和客户端进行文件传输
 */
 func (c *Connection) StartTransmiter() {
-	fmt.Println("[Writer Goroutine is running]")
+	fmt.Println("[File Transmiter Goroutine is running]")
 	defer fmt.Println(c.RemoteAddr().String(), "[conn File Transmiter exit!]")
 	defer c.Stop()
 
@@ -100,11 +100,13 @@ func (c *Connection) StartTransmiter() {
 		return
 	}
 
-	clientIP := c.RemoteAddr()
-	if clientIP != fileTag.ClientAddress {
-		fmt.Println("[CONNECT][ERROR] request ip not match, want ", fileTag, " but ", clientIP)
-		return
-	}
+	/*
+		clientIP := c.RemoteAddr()
+		if clientIP != fileTag.ClientAddress {
+			fmt.Println("[CONNECT][ERROR] request ip not match, want ", fileTag, " but ", clientIP)
+			return
+		}
+	*/
 
 	data := "ready"
 	if _, err := c.Conn.Write([]byte(data)); err != nil {
@@ -114,22 +116,29 @@ func (c *Connection) StartTransmiter() {
 
 	fmt.Println("[CONNECT] file transmite operation ready")
 
-	if fileTag.ServerToC {
-		path := "./file/" + string(fileTag.ID)
+	workPath, err := os.Getwd()
+	if err != nil {
+		fmt.Println("[CONNECT][ERROR] get work directory fail: ", err)
+		return
+	}
 
-		if res, err := utils.PathExists(path); res != true {
+	if fileTag.ServerToC {
+
+		filePath := workPath + "/file/" + string(fileTag.ID)
+
+		if res, err := utils.PathExists(filePath); res != true {
 			fmt.Println("[CONNECT][WARNING] Wanted file not exist,error: ", err)
 			return
 		}
 
-		file, err := os.Open(path)
+		file, err := os.Open(filePath)
 		if err != nil {
 			fmt.Println("[CONNECT][ERROR] Open file error: ", err)
 			return
 		}
 		defer file.Close()
 
-		size, err := io.Copy(file, c.GetTCPConnection())
+		size, err := io.CopyN(c.GetTCPConnection(), file, fileTag.Size)
 		if err != nil {
 			fmt.Println("[CONNECT][ERROR] File transmite error: ", err)
 			return
@@ -145,25 +154,27 @@ func (c *Connection) StartTransmiter() {
 	}
 
 	if fileTag.ClientToS {
-		path := "./file/" + string(fileTag.ID)
+		filePath := workPath + "/file/" + string(fileTag.ID)
 
-		_, err := os.Stat(path)
-		if res, _ := utils.PathExists(path); res == true {
+		_, err := os.Stat(filePath)
+		if res, _ := utils.PathExists(filePath); res == true {
 			fmt.Println("[CONNECT][WARNING] Same serect file already exist: ", string(fileTag.ID))
 			return
 		}
 
-		file, err := os.Create(path)
+		file, err := os.Create(filePath)
 		if err != nil {
 			fmt.Println("[CONNECT][ERROR] Create file error:, ", err)
 			return
 		}
 		defer file.Close()
 
-		size, err := io.Copy(c.GetTCPConnection(), file)
+		fmt.Println(fileTag.Size)
+
+		size, err := io.CopyN(file, c.GetTCPConnection(), fileTag.Size)
 		if err != nil {
 			fmt.Println("[CONNECT][WARNING] File transmite error: ", err, ", start removing file...")
-			err := os.Remove(path)
+			err := os.Remove(filePath)
 			if err != nil {
 				fmt.Println("[CONNECT][ERROR] Remove file error: ", err)
 			} else {
@@ -174,7 +185,7 @@ func (c *Connection) StartTransmiter() {
 
 		if size != fileTag.Size {
 			fmt.Println("[CONNECT][WARNING] File size not match, want: ", fileTag.Size, " fact: ", size, ", start removing file...")
-			err := os.Remove(path)
+			err := os.Remove(filePath)
 			if err != nil {
 				fmt.Println("[CONNECT][ERROR] Remove file error: ", err)
 			} else {
@@ -187,9 +198,10 @@ func (c *Connection) StartTransmiter() {
 		newFile.ClassName = fileTag.ClassName
 		newFile.FileName = fileTag.FileName
 		newFile.ID, err = primitive.ObjectIDFromHex(fileTag.ID)
+		newFile.FileTag = fileTag.FileTags
 		if err != nil {
 			fmt.Println("[CONNECT][WARNING] File ID Decode error: ", err, ", start removing file...")
-			err := os.Remove(path)
+			err := os.Remove(filePath)
 			if err != nil {
 				fmt.Println("[CONNECT][ERROR] Remove file error: ", err)
 			} else {
