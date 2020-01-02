@@ -58,7 +58,12 @@ func GetFileByTags(skip int, limit int, Tag []string, ClassName string) *[]File 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	filter := bson.M{"filetag": Tag, "classname": ClassName}
+	var filter interface{}
+	if ClassName != "" {
+		filter = bson.M{"filetag": Tag, "classname": ClassName}
+	} else {
+		filter = bson.M{"filetag": Tag}
+	}
 	option := options.Find().SetSort(bson.M{"updatetime": 1}).SetSkip(int64(skip)).SetLimit(int64(limit))
 
 	var result []File
