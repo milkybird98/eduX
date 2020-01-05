@@ -17,7 +17,7 @@ type RegisterRouter struct {
 
 type RegisterData struct {
 	UID string `json:"uid"`
-	Pwd []byte `json:"pwd"`
+	Pwd string `json:"pwd"`
 }
 
 var registerReplyStatus string
