@@ -42,7 +42,7 @@ func (mh *MsgHandle) SendMsgToTaskQueue(request eduiface.IRequest) {
 	workerID := mh.NextIndex()
 	fmt.Println("[MSGHAND] Add ConnID=", request.GetConnection().GetConnID(), " request msgID=", request.GetMsgID(), "to workerID=", workerID)
 	//将请求消息发送给任务队列
-	mh.TaskQueue[workerID] <- request
+	mh.TaskQueue[request.GetConnection().GetConnID()%mh.WorkerPoolSize] <- request
 }
 
 //马上以非阻塞方式处理消息
