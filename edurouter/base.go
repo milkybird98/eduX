@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"crypto/md5"
 	"eduX/eduiface"
-	"eduX/utils"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -23,14 +23,14 @@ var checksumFlag bool
 type ReqMsg struct {
 	UID      string `json:"uid"`
 	Data     []byte `json:"data"`
-	CheckSum []byte `json:"checksum"`
+	CheckSum string `json:"checksum"`
 }
 
 // ResMsg 发送数据结构体
 type ResMsg struct {
 	Status   string `json:"status"`
 	Data     []byte `json:"data"`
-	CheckSum []byte `json:"checksum"`
+	CheckSum string `json:"checksum"`
 }
 
 //CheckMsgFormat 检查接收数据格式是否正确,并将数据解码
@@ -77,13 +77,7 @@ func CheckMsgFormat(request eduiface.IRequest) (*ReqMsg, string, bool) {
 	if len(regMsgCheckSumData) == 0 {
 		return nil, "checksum_cannot_be_empty", false
 	}
-
-	// 对校验和做base64解码
-	var err error
-	reqMsgInJSON.CheckSum, err = base64.StdEncoding.DecodeString(regMsgCheckSumData)
-	if err != nil {
-		return nil, "data_base64_format_error", false
-	}
+	reqMsgInJSON.CheckSum = regMsgCheckSumData
 
 	// 根据获取数据计算校验和
 	md5Ctx := md5.New()
@@ -96,7 +90,7 @@ func CheckMsgFormat(request eduiface.IRequest) (*ReqMsg, string, bool) {
 	//fmt.Println([]byte(reqMsgInJSON.CheckSum))
 
 	// 如果校验和不一致则报错返回
-	if utils.SliceEqual([]byte(reqMsgInJSON.CheckSum), md5Ctx.Sum(nil)) != true {
+	if string(reqMsgInJSON.CheckSum) != hex.EncodeToString(md5Ctx.Sum(nil)) {
 		return nil, "check_sum_error", false
 	}
 
@@ -155,11 +149,13 @@ func CombineReplyMsg(status string, dataInJSON interface{}) ([]byte, error) {
 		replyMsg.Data = data
 	}
 
+	fmt.Println(string(replyMsg.Data))
+
 	// 计算MD5校验和并赋值
 	md5Ctx := md5.New()
 	md5Ctx.Write([]byte(replyMsg.Status))
 	md5Ctx.Write(replyMsg.Data)
-	replyMsg.CheckSum = md5Ctx.Sum(nil)
+	replyMsg.CheckSum = hex.EncodeToString(md5Ctx.Sum(nil))
 
 	// 将返回数据序列化
 	jsonMsg, err := json.Marshal(replyMsg)
@@ -195,7 +191,7 @@ func CombineSendMsg(UID string, dataInJSON interface{}) ([]byte, error) {
 	md5Ctx := md5.New()
 	md5Ctx.Write([]byte(sendMsg.UID))
 	md5Ctx.Write(sendMsg.Data)
-	sendMsg.CheckSum = md5Ctx.Sum(nil)
+	sendMsg.CheckSum = hex.EncodeToString(md5Ctx.Sum(nil))
 
 	// 将发送数据序列化
 	jsonMsg, err := json.Marshal(sendMsg)
