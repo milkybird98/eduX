@@ -56,20 +56,22 @@ func (router *FileCountRouter) PreHandle(request eduiface.IRequest) {
 	}
 
 	// 权限检查
-	c := request.GetConnection()
+	/*
+		c := request.GetConnection()
 
-	// 试图从session中获取身份数据
-	userPlace, err := GetSessionPlace(c)
-	if err != nil {
-		filecountReplyStatus = err.Error()
-		return
-	}
+		// 试图从session中获取身份数据
+		userPlace, err := GetSessionPlace(c)
+		if err != nil {
+			filecountReplyStatus = err.Error()
+			return
+		}
 
-	// 如果身份不为管理员则权限错误
-	if userPlace != "manager" {
-		filecountReplyStatus = "permission_error"
-		return
-	}
+		// 如果身份不为管理员则权限错误
+		if userPlace != "manager" {
+			filecountReplyStatus = "permission_error"
+			return
+		}
+	*/
 
 	// 试图从Data段中获取日期数据
 	timeData := gjson.GetBytes(reqMsgInJSON.Data, "time")
@@ -77,7 +79,7 @@ func (router *FileCountRouter) PreHandle(request eduiface.IRequest) {
 	var isTimeRequired bool
 	// 解码时间数据
 	if timeData.Exists() && timeData.String() != "" {
-		targetTime, err = time.Parse(time.RFC3339, timeData.String())
+		targetTime, err := time.Parse(time.RFC3339, timeData.String())
 		// 如果成功解码出时间则限定统计时间
 		if err != nil || targetTime.IsZero() {
 			isTimeRequired = false

@@ -19,7 +19,7 @@ type QuestionCountRouter struct {
 // QuestionCountData 定义请求问题统计数据的参数
 type QuestionCountData struct {
 	ClassName string    `json:"classname"`
-	Date      time.Time `json:"time"`
+	Date      time.Time `json:"time,omitempty"`
 	IsSolved  bool      `json:"issolved"`
 }
 
@@ -57,20 +57,23 @@ func (router *QuestionCountRouter) PreHandle(request eduiface.IRequest) {
 	}
 
 	// 权限检查
-	c := request.GetConnection()
+	/*
+		c := request.GetConnection()
 
-	// 获取当前用户身份
-	userPlace, err := GetSessionPlace(c)
-	if err != nil {
-		questioncountReplyStatus = err.Error()
-		return
-	}
 
-	// 如果当前用户不是管理员则权限错误
-	if userPlace != "manager" {
-		questioncountReplyStatus = "permission_error"
-		return
-	}
+			// 获取当前用户身份
+			userPlace, err := GetSessionPlace(c)
+			if err != nil {
+				questioncountReplyStatus = err.Error()
+				return
+			}
+
+			// 如果当前用户不是管理员则权限错误
+				if userPlace != "manager" {
+					questioncountReplyStatus = "permission_error"
+					return
+				}
+	*/
 
 	// 获取查询的时间参数
 	timeData := gjson.GetBytes(reqMsgInJSON.Data, "time")
@@ -78,7 +81,7 @@ func (router *QuestionCountRouter) PreHandle(request eduiface.IRequest) {
 	var isTimeRequired bool
 	// 解码时间数据
 	if timeData.Exists() && timeData.String() != "" {
-		targetTime, err = time.Parse(time.RFC3339, timeData.String())
+		targetTime, err := time.Parse(time.RFC3339, timeData.String())
 		// 如果成功解码出时间则限定统计时间
 		if err != nil || targetTime.IsZero() {
 			isTimeRequired = false
