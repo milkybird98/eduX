@@ -28,7 +28,7 @@ type PersonInfoGetReplyData struct {
 	ClassName string `json:"class"`
 	Gender    int    `json:"gender,omitempty"`
 	Birth     string `json:"birthday,omitempty"`
-	Political string `json:"polit,omitempty"`
+	Political int    `json:"polit,omitempty"`
 	Contact   string `json:"contact"`
 	Email     string `json:"email,omitempty"`
 	Location  string `json:"locat,omitempty"`

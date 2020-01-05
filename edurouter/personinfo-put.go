@@ -22,12 +22,12 @@ type PersonInfoPutData struct {
 	Name          string `json:"name"`
 	Gender        int    `json:"gender,omitempty"`
 	Birth         string `json:"birthday,omitempty"`
-	Political     string `json:"polit,omitempty"`
+	Political     int    `json:"polit,omitempty"`
 	Contact       string `json:"contact"`
 	IsContactPub  bool   `json:"isconpub"`
 	Email         string `json:"email,omitempty"`
 	IsEmailPub    bool   `json:"isemapub,omitempty"`
-	Location      string `json:"locat,omitempty"`
+	Location      string `json:"local,omitempty"`
 	IsLocationPub bool   `json:"islocpub,omitempty"`
 }
 
@@ -122,12 +122,12 @@ func (router *PersonInfoPutRouter) PreHandle(request eduiface.IRequest) {
 	newUserInfo.Name = userName
 	newUserInfo.Gender = int(newPersonInfoData.Get("gender").Int())
 	newUserInfo.Birth = newPersonInfoData.Get("birthday").String()
-	newUserInfo.Political = newPersonInfoData.Get("polit").String()
+	newUserInfo.Political = int(newPersonInfoData.Get("polit").Int())
 	newUserInfo.Contact = newPersonInfoData.Get("contact").String()
 	newUserInfo.IsContactPub = newPersonInfoData.Get("isconpub").Bool()
 	newUserInfo.Email = newPersonInfoData.Get("email").String()
 	newUserInfo.IsEmailPub = newPersonInfoData.Get("isemapub").Bool()
-	newUserInfo.Location = newPersonInfoData.Get("locat").String()
+	newUserInfo.Location = newPersonInfoData.Get("local").String()
 	newUserInfo.IsLocationPub = newPersonInfoData.Get("islocpub").Bool()
 
 	// 更新数据库

@@ -18,7 +18,7 @@ type User struct {
 	Class         string
 	Gender        int
 	Birth         string
-	Political     string
+	Political     int
 	Contact       string
 	IsContactPub  bool
 	Email         string
@@ -124,7 +124,7 @@ func UpdateUserByID(newUserData *User) bool {
 	if newUserData.Birth != "" {
 		originData.Birth = newUserData.Birth
 	}
-	if newUserData.Political != "" {
+	if newUserData.Political != 0 {
 		originData.Political = newUserData.Political
 	}
 	if newUserData.Contact != "" {

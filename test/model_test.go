@@ -177,7 +177,7 @@ func TestUserModel(t *testing.T) {
 		"ds1233",
 		1,
 		"1982-12-22",
-		"群众",
+		1,
 		"123456789",
 		false,
 		"",

@@ -164,7 +164,7 @@ func ClientTestSA(t *testing.T) {
 		person.Name = "新名字"
 		person.Gender = 2
 		person.Birth = ""
-		person.Political = "群众"
+		person.Political = 1
 		person.Contact = "123456789"
 		person.IsContactPub = true
 		person.Email = "asd@asd.com"
