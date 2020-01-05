@@ -96,7 +96,7 @@ func (c *Connection) StartTransmiter() {
 
 	fileTag, err := utils.GetFileTranCache(string(serectSlice))
 	if err != nil {
-		fmt.Println("[CONNECT][ERROR] file not in transmit list ", serectSlice, " client IP addr ", c.RemoteAddr())
+		fmt.Println("[CONNECT][ERROR] file not in transmit list ", string(serectSlice), " client IP addr ", c.RemoteAddr())
 		return
 	}
 
@@ -109,11 +109,12 @@ func (c *Connection) StartTransmiter() {
 	*/
 
 	data := "ready"
-	if _, err := c.Conn.Write([]byte(data)); err != nil {
+	var n int
+	if n, err = c.Conn.Write([]byte(data)); err != nil {
 		fmt.Println("[CONNECT][ERROR] Send Data error: ", err)
 		return
 	}
-
+	fmt.Println(n)
 	fmt.Println("[CONNECT] file transmite operation ready")
 
 	workPath, err := os.Getwd()
@@ -169,22 +170,25 @@ func (c *Connection) StartTransmiter() {
 		}
 		defer file.Close()
 
-		fmt.Println(fileTag.Size)
+		var receBytes int64 = 0
 
-		size, err := io.CopyN(file, c.GetTCPConnection(), fileTag.Size)
-		if err != nil {
-			fmt.Println("[CONNECT][WARNING] File transmite error: ", err, ", start removing file...")
-			err := os.Remove(filePath)
-			if err != nil {
-				fmt.Println("[CONNECT][ERROR] Remove file error: ", err)
-			} else {
-				fmt.Println("[CONNECT] Remove file suceess")
+		for receBytes < fileTag.Size {
+			size, err := io.CopyN(file, c.GetTCPConnection(), fileTag.Size)
+			if err != nil && err.Error() != "EOF" {
+				fmt.Println("[CONNECT][WARNING] File transmite error: ", err, ", start removing file...")
+				err := os.Remove(filePath)
+				if err != nil {
+					fmt.Println("[CONNECT][ERROR] Remove file error: ", err)
+				} else {
+					fmt.Println("[CONNECT] Remove file suceess")
+				}
+				return
 			}
-			return
+			receBytes += int64(size)
 		}
 
-		if size != fileTag.Size {
-			fmt.Println("[CONNECT][WARNING] File size not match, want: ", fileTag.Size, " fact: ", size, ", start removing file...")
+		if receBytes != fileTag.Size {
+			fmt.Println("[CONNECT][WARNING] File size not match, want: ", fileTag.Size, " fact: ", receBytes, ", start removing file...")
 			err := os.Remove(filePath)
 			if err != nil {
 				fmt.Println("[CONNECT][ERROR] Remove file error: ", err)
@@ -197,6 +201,7 @@ func (c *Connection) StartTransmiter() {
 		var newFile edumodel.File
 		newFile.ClassName = fileTag.ClassName
 		newFile.FileName = fileTag.FileName
+		newFile.Des = fileTag.Des
 		newFile.ID, err = primitive.ObjectIDFromHex(fileTag.ID)
 		newFile.FileTag = fileTag.FileTags
 		if err != nil {

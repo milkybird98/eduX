@@ -18,6 +18,7 @@ type File struct {
 	FileName   string             `bson:"filename"`
 	FileTag    []string           `bson:"filetag"`
 	ClassName  string             `bson:"classname"`
+	Des        string             `bson:"des"`
 	Size       uint64             `bson:"size"`
 	UpdaterUID string             `bson:"updateruid"`
 	UpdateTime time.Time          `bson:"updatetime"`

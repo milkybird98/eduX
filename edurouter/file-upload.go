@@ -22,6 +22,7 @@ type FileAddRouter struct {
 type FileAddData struct {
 	FileName  string   `json:"filename"`
 	ClassName string   `json:"classname"`
+	Des       string   `json:"des"`
 	FileTag   []string `json:"filetag"`
 	Size      int64    `json:"size"`
 }
@@ -129,6 +130,7 @@ func (router *FileAddRouter) PreHandle(request eduiface.IRequest) {
 	newFileTag.ID = fileAddReplyData.SerectID
 	newFileTag.FileTags = tagInString
 	newFileTag.Size = sizeData.Int()
+	newFileTag.Des = newFileData.Get("des").String()
 	// 获取当前连接客户端地址
 	newFileTag.ClientAddress = c.GetTCPConnection().RemoteAddr()
 	newFileTag.ClassName = classNameData.String()

@@ -12,6 +12,7 @@ type FileTransmitTag struct {
 	FileName      string
 	ID            string
 	FileTags      []string
+	Des           string
 	Size          int64
 	ClientAddress net.Addr
 	ClassName     string
