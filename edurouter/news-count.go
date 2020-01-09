@@ -83,6 +83,10 @@ func (router *NewsCountRouter) PreHandle(request eduiface.IRequest) {
 
 	newscountReplyData.Number = -1
 
+	if newsType == 4 {
+		audiUID = "all"
+	}
+
 	newscountReplyData.Number = edumodel.GetNewsNumber(audiUID, sendUID, int(newsType))
 
 	// 如果查询成功在返回success,否则返回错误码

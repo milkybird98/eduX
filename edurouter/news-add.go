@@ -92,6 +92,8 @@ func (router *NewsAddRouter) PreHandle(request eduiface.IRequest) {
 		if err != nil || targetTime.IsZero() {
 			targetTime = time.Now()
 		}
+	} else {
+		targetTime = time.Now()
 	}
 
 	// 权限检查
@@ -168,13 +170,8 @@ func (router *NewsAddRouter) PreHandle(request eduiface.IRequest) {
 			// 将听众设为所有人
 			newNews.AudientUID = []string{"all"}
 		} else if placeString == "teacher" { // 如果当前用户是管理员
-			class := edumodel.GetClassByUID(reqMsgInJSON.UID, "teacher")
-			// 将听众设为所在班级的全部学生
-			if class == nil {
-				newsaddReplyStatus = "not_join_class"
-				return
-			}
-			newNews.AudientUID = []string{class.ClassName}
+			newsaddReplyStatus = "audient_cannot_be_empty"
+			return
 		}
 	}
 	newNews.TargetTime = targetTime

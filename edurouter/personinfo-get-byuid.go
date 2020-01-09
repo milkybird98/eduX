@@ -93,7 +93,7 @@ func (router *PersonInfoGetRouter) PreHandle(request eduiface.IRequest) {
 	if reqMsgInJSON.UID != personUID {
 		if placeString == "teacher" || placeString == "student" {
 			ok := edumodel.CheckUserInClass(userData.Class, reqMsgInJSON.UID, placeString)
-			if !ok {
+			if !ok && personUID[0] != 'A' {
 				persongetReplyStatus = "permission_error"
 				return
 			}

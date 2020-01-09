@@ -69,8 +69,9 @@ func (router *NewsGetByAudientUIDRouter) PreHandle(request eduiface.IRequest) {
 	}
 	newsType := newsTypeData.Int()
 
-	//权限检查
+	audientUID := gjson.GetBytes(reqMsgInJSON.Data, "audient").String()
 
+	//权限检查
 	c := request.GetConnection()
 	// 试图从session中获取身份数据
 	placeString, err := GetSessionPlace(c)
@@ -93,8 +94,10 @@ func (router *NewsGetByAudientUIDRouter) PreHandle(request eduiface.IRequest) {
 			filter = user.Class
 		} else if newsType == 4 {
 			filter = "all"
-		} else {
+		} else if audientUID == "" {
 			filter = reqMsgInJSON.UID
+		} else {
+			filter = audientUID
 		}
 
 		fmt.Println(filter)
