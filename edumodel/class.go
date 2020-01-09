@@ -13,10 +13,11 @@ import (
 var classCollection *mongo.Collection
 
 type Class struct {
-	ClassName   string    `bson:"classname"`
-	TeacherList []string  `bson:"teacherlist"`
-	StudentList []string  `bson:"studentlist"`
-	CreateDate  time.Time `bson:"createdate"`
+	ClassName   string    `bson:"classname" json:"classname"`
+	AlterName   string    `bson:"altername" json:"altername"`
+	TeacherList []string  `bson:"teacherlist" json:"teacherlist"`
+	StudentList []string  `bson:"studentlist" json:"studentlist"`
+	CreateDate  time.Time `bson:"createdate" json:"createdate"`
 }
 
 func checkClassCollection() {
@@ -53,7 +54,7 @@ func GetClassByOrder(skip int, limit int) *[]Class {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	filter := bson.M{"": ""}
+	filter := bson.M{}
 	option := options.Find().SetSkip(int64(skip)).SetLimit(int64(limit))
 
 	var result []Class
@@ -125,6 +126,24 @@ func GetClassByUID(uid string, place string) *Class {
 	return &result
 }
 
+func GetClassNuber() int {
+	checkClassCollection()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	filter := bson.M{}
+
+	count, err := classCollection.CountDocuments(ctx, filter)
+
+	if err != nil {
+		fmt.Println("[MODEL]", err)
+		return -1
+	}
+
+	return int(count)
+}
+
 func CheckUserInClass(className string, uid string, place string) bool {
 	checkClassCollection()
 
@@ -154,6 +173,29 @@ func CheckUserInClass(className string, uid string, place string) bool {
 	} else {
 		return true
 	}
+}
+
+func UpdateClassAlterName(className string, alterName string) bool {
+	checkClassCollection()
+
+	if className == "" || alterName == "" {
+		return false
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	filter := bson.M{"classname": className}
+	update := bson.D{
+		{"$set", bson.M{"altername": alterName}}}
+
+	_, err := classCollection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		fmt.Println("[MODEL]", err)
+		return false
+	}
+
+	return true
 }
 
 func UpdateClassStudentByUID(className string, studentList []string) bool {

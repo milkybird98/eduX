@@ -18,7 +18,7 @@ type FileGetByTagsRouter struct {
 
 // FileGetByTagsData 定义根据标签获取文件请求的参数
 type FileGetByTagsData struct {
-	Tags  []string `json:"tags"`
+	Tags  []string `json:"filetag"`
 	Skip  int64    `json:"skip"`
 	Limit int64    `json:"limit"`
 }
@@ -57,7 +57,7 @@ func (router *FileGetByTagsRouter) PreHandle(request eduiface.IRequest) {
 	}
 
 	// 从Data段获取文件标签数据
-	tagsData := gjson.GetBytes(reqMsgInJSON.Data, "tags")
+	tagsData := gjson.GetBytes(reqMsgInJSON.Data, "filetag")
 	// 如果文件标签不存在则返回错误码
 	if !tagsData.Exists() || !tagsData.IsArray() || len(tagsData.Array()) == 0 {
 		filegetbytagsReplyStatus = "tags_cannot_be_empty"
@@ -124,7 +124,7 @@ func (router *FileGetByTagsRouter) PreHandle(request eduiface.IRequest) {
 // Handle 用于将请求的处理结果发回客户端
 func (router *FileGetByTagsRouter) Handle(request eduiface.IRequest) {
 	// 打印请求处理Log
-	fmt.Println("[ROUTER] ", time.Now().Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", FileGetByTagsRouter: ", filegetbytagsReplyStatus)
+	fmt.Println("[ROUTERS] ", time.Now().Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", FileGetByTagsRouter: ", filegetbytagsReplyStatus)
 
 	var jsonMsg []byte
 	var err error

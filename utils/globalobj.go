@@ -3,9 +3,9 @@ package utils
 import (
 	"eduX/eduiface"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
-	"time"
 )
 
 /*
@@ -45,7 +45,6 @@ type GlobalObj struct {
 	/*
 		Time
 	*/
-	TimeLocal  *time.Location
 	TimeFormat string
 
 	/*
@@ -74,8 +73,9 @@ func PathExists(path string) (bool, error) {
 //读取用户的配置文件
 func (g *GlobalObj) Reload() {
 
+	fmt.Println("[CONDIG] Reload config from eduX.json.")
 	if confFileExists, _ := PathExists(g.ConfFilePath); confFileExists != true {
-		//fmt.Println("Config File ", g.ConfFilePath , " is not exist!!")
+		fmt.Println("[CONDIG] Config File ", g.ConfFilePath, " is not exist.")
 		return
 	}
 
@@ -98,20 +98,19 @@ func init() {
 	//初始化GlobalObject变量，设置一些默认值
 	GlobalObject = &GlobalObj{
 		Name:             "eduXServerApp",
-		Version:          "V0.1",
+		Version:          "V1.0",
 		TcpPort:          23333,
 		Host:             "0.0.0.0",
-		MaxConn:          12000,
+		MaxConn:          1024,
 		MaxPacketSize:    4096,
 		ConfFilePath:     "conf/eduX.json",
 		WorkerPoolSize:   10,
 		MaxWorkerTaskLen: 1024,
 		MaxMsgChanLen:    1024,
-		TimeLocal:        time.FixedZone("CST", 8*3600),
 		TimeFormat:       "2006/01/02 15:04:05",
 		DataBaseUrl:      "mongodb://localhost:27017",
 		DataBaseName:     "eduPlatform",
-		CacheTableSize:   4096,
+		CacheTableSize:   2048,
 	}
 
 	InitCache()

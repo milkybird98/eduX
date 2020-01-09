@@ -38,7 +38,7 @@ func (router *LoginRouter) PreHandle(request eduiface.IRequest) {
 	// 检查当前连接是否已登录
 	userData := edumodel.GetUserByUID(reqMsgInJSON.UID)
 	if userData == nil {
-		loginReplyStatus = "login_fail"
+		loginReplyStatus = "login_fail_41"
 		return
 	}
 
@@ -63,7 +63,7 @@ func (router *LoginRouter) PreHandle(request eduiface.IRequest) {
 	authData := edumodel.GetUserAuthByUID(reqMsgInJSON.UID)
 	// 如果授权数据不存在则返回错误码
 	if authData == nil {
-		loginReplyStatus = "login_fail"
+		loginReplyStatus = "login_fail_66"
 		return
 	}
 
@@ -85,7 +85,7 @@ func (router *LoginRouter) PreHandle(request eduiface.IRequest) {
 // Handle 用于将请求的处理结果发回客户端
 func (router *LoginRouter) Handle(request eduiface.IRequest) {
 	// 打印请求处理Log
-	fmt.Println("[ROUTER] ", time.Now().Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", LoginRouter: ", loginReplyStatus)
+	fmt.Println("[ROUTERS] ", time.Now().Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", LoginRouter: ", loginReplyStatus)
 	// 生成返回数据
 	jsonMsg, err := CombineReplyMsg(loginReplyStatus, nil)
 	// 如果生成失败则报错返回

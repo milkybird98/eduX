@@ -18,10 +18,12 @@ type NewsAddRouter struct {
 
 // NewsAddData 定义了添加新消息的参数
 type NewsAddData struct {
-	IsAnnounce bool     `json:"isannounce"` // 是否是公告
-	Title      string   `json:"title"`      // 消息标题
-	Text       string   `json:"text"`       // 消息正文
-	AudientUID []string `json:"audients"`   // 消息接收者
+	IsAnnounce bool      `json:"type"`     // 是否是公告
+	Title      string    `json:"title"`    // 消息标题
+	Text       string    `json:"text"`     // 消息正文
+	AudientUID []string  `json:"audients"` // 消息接收者
+	TargetTime time.Time `json:"targettime,omitempty"`
+	NewsType   int64     `json:"type"`
 }
 
 // 返回状态码
@@ -72,13 +74,24 @@ func (router *NewsAddRouter) PreHandle(request eduiface.IRequest) {
 	audientData := newNewsData.Get("audients")
 
 	// 从Data段获取公告标志位,判断是否是公告
-	isannounceData := newNewsData.Get("isannounce")
-	var isannounce bool
+	newsTypeData := newNewsData.Get("type")
 	// 如果不存在,则认为默认是非公告
-	if !isannounceData.Exists() || isannounceData.String() == "" {
-		isannounce = false
-	} else {
-		isannounce = isannounceData.Bool()
+	if !newsTypeData.Exists() || newsTypeData.Int() < 1 || newsTypeData.Int() > 4 {
+		newsaddReplyStatus = "type_cannot_be_empty"
+		return
+	}
+
+	// 试图从Data段中获取日期数据
+	timeData := gjson.GetBytes(reqMsgInJSON.Data, "time")
+	var targetTime time.Time
+	var err error
+	// 解码时间数据
+	if timeData.Exists() && timeData.String() != "" {
+		targetTime, err = time.Parse(time.RFC3339, timeData.String())
+		// 如果成功解码出时间则限定统计时间
+		if err != nil || targetTime.IsZero() {
+			targetTime = time.Now()
+		}
 	}
 
 	// 权限检查
@@ -97,12 +110,15 @@ func (router *NewsAddRouter) PreHandle(request eduiface.IRequest) {
 		return
 	}
 
-	// 尝试获取班级数据
-	class := edumodel.GetClassByUID(reqMsgInJSON.UID, placeString)
-	// 如果班级不存在则报错
-	if class == nil {
-		newsaddReplyStatus = "not_in_class"
-		return
+	var class *edumodel.Class
+	if placeString == "teacher" {
+		// 尝试获取班级数据
+		class = edumodel.GetClassByUID(reqMsgInJSON.UID, placeString)
+		// 如果班级不存在则报错
+		if class == nil {
+			newsaddReplyStatus = "not_in_class"
+			return
+		}
 	}
 
 	// 拼接数据
@@ -112,7 +128,7 @@ func (router *NewsAddRouter) PreHandle(request eduiface.IRequest) {
 	newNews.SendTime = time.Now()
 	newNews.Title = titleData.String()
 	newNews.Text = textData.String()
-	newNews.IsAnnounce = isannounce
+	newNews.NewsType = newsTypeData.Int()
 
 	// 如果听众数据存在
 	if audientData.Exists() && audientData.IsArray() && len(audientData.Array()) > 0 {
@@ -150,7 +166,7 @@ func (router *NewsAddRouter) PreHandle(request eduiface.IRequest) {
 	} else { //若干不存在听众数据
 		if placeString == "manager" { //如果当前用户是管理员
 			// 将听众设为所有人
-			newNews.AudientUID[0] = "all"
+			newNews.AudientUID = []string{"all"}
 		} else if placeString == "teacher" { // 如果当前用户是管理员
 			class := edumodel.GetClassByUID(reqMsgInJSON.UID, "teacher")
 			// 将听众设为所在班级的全部学生
@@ -158,9 +174,10 @@ func (router *NewsAddRouter) PreHandle(request eduiface.IRequest) {
 				newsaddReplyStatus = "not_join_class"
 				return
 			}
-			newNews.AudientUID = class.StudentList
+			newNews.AudientUID = []string{class.ClassName}
 		}
 	}
+	newNews.TargetTime = targetTime
 
 	// 更新数据库
 	ok = edumodel.AddNews(&newNews)
@@ -174,7 +191,7 @@ func (router *NewsAddRouter) PreHandle(request eduiface.IRequest) {
 // Handle 用于将请求的处理结果发回客户端
 func (router *NewsAddRouter) Handle(request eduiface.IRequest) {
 	// 打印请求处理Log
-	fmt.Println("[ROUTER] ", time.Now().Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", NewsAddRouter: ", newsaddReplyStatus)
+	fmt.Println("[ROUTERS] ", time.Now().Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", NewsAddRouter: ", newsaddReplyStatus)
 	// 生成返回数据
 	jsonMsg, err := CombineReplyMsg(newsaddReplyStatus, nil)
 	// 如果生成失败则报错返回

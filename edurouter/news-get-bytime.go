@@ -18,9 +18,9 @@ type NewsGetByTimeOrderRouter struct {
 
 // NewsGetByTimeOrderData 定义按照时间顺序请求消息时的参数
 type NewsGetByTimeOrderData struct {
-	Skip       int64 `json:"skip"`
-	Limit      int64 `json:"limit"`
-	IsAnnounce bool  `json:"isannounce"`
+	Skip     int64 `json:"skip"`
+	Limit    int64 `json:"limit"`
+	NewsType int64 `json:"type"`
 }
 
 // NewGetByTimeOrderReplyData 定义根据时间顺序请求消息时的返回参数
@@ -59,15 +59,14 @@ func (router *NewsGetByTimeOrderRouter) PreHandle(request eduiface.IRequest) {
 	// 获取skip和limit值
 	Skip, Limit := GetSkipAndLimit(reqMsgInJSON.Data)
 
-	var IsAnnounce bool
-	// 从Data段获取公告限定标志位
-	isAnnounceData := gjson.GetBytes(reqMsgInJSON.Data, "isannounce")
-	// 如果标志位不存在则默认认为是非公告
-	if isAnnounceData.Exists() {
-		IsAnnounce = isAnnounceData.Bool()
-	} else {
-		IsAnnounce = false
+	// 从Data段获取公告标志位,判断是否是公告
+	newsTypeData := gjson.GetBytes(reqMsgInJSON.Data, "type")
+	// 如果不存在,则认为默认是非公告
+	if !newsTypeData.Exists() || newsTypeData.Int() < 1 || newsTypeData.Int() > 4 {
+		newgetbytimeorderReplyStatus = "type_cannot_be_empty"
+		return
 	}
+	newsType := newsTypeData.Int()
 
 	//权限检查
 
@@ -87,7 +86,7 @@ func (router *NewsGetByTimeOrderRouter) PreHandle(request eduiface.IRequest) {
 	}
 
 	// 查询数据库
-	newsList := edumodel.GetNewsByTimeOrder(int(Skip), int(Limit), IsAnnounce)
+	newsList := edumodel.GetNewsByTimeOrder(int(Skip), int(Limit), newsType)
 	// 如果数据存在则返回success和数据,否则返回错误码
 	if newsList != nil {
 		newgetbytimeorderReplyStatus = "success"
@@ -101,7 +100,7 @@ func (router *NewsGetByTimeOrderRouter) PreHandle(request eduiface.IRequest) {
 // Handle 用于将请求的处理结果发回客户端
 func (router *NewsGetByTimeOrderRouter) Handle(request eduiface.IRequest) {
 	// 打印请求处理Log
-	fmt.Println("[ROUTER] Time: ", time.Now().Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", NewsGetByTimeOrderRouter: ", newgetbytimeorderReplyStatus)
+	fmt.Println("[ROUTERS] Time: ", time.Now().Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", NewsGetByTimeOrderRouter: ", newgetbytimeorderReplyStatus)
 
 	var jsonMsg []byte
 	var err error

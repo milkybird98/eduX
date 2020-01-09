@@ -19,6 +19,7 @@ type ClassAddRouter struct {
 // ClassAddData 定义添加课程请求的参数
 type ClassAddData struct {
 	ClassName  string `json:"class"`
+	AlterName  string `json:"alter"`
 	TeacherUID string `json:"teacher"`
 }
 
@@ -112,6 +113,7 @@ func (router *ClassAddRouter) PreHandle(request eduiface.IRequest) {
 	// 构建新的班级数据
 	var newClass edumodel.Class
 	newClass.ClassName = className
+	newClass.AlterName = newClassData.Get("alter").String()
 	newClass.TeacherList = []string{teacherUID}
 	newClass.StudentList = []string{}
 	newClass.CreateDate = time.Now()
@@ -128,7 +130,7 @@ func (router *ClassAddRouter) PreHandle(request eduiface.IRequest) {
 // Handle 用于将请求的处理结果发回客户端
 func (router *ClassAddRouter) Handle(request eduiface.IRequest) {
 	// 打印请求处理Log
-	fmt.Println("[ROUTER] ", time.Now().Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", ClassAddRouter: ", classaddReplyStatus)
+	fmt.Println("[ROUTERS] ", time.Now().Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", ClassAddRouter: ", classaddReplyStatus)
 	// 生成返回数据
 	jsonMsg, err := CombineReplyMsg(classaddReplyStatus, nil)
 	// 如果生成失败则报错返回

@@ -18,17 +18,15 @@ type PersonInfoPutRouter struct {
 
 // PersonInfoPutData 定义人员信息更新参数
 type PersonInfoPutData struct {
-	UID           string `json:"uid"`
-	Name          string `json:"name"`
-	Gender        int    `json:"gender,omitempty"`
-	Birth         string `json:"birthday,omitempty"`
-	Political     int    `json:"polit,omitempty"`
-	Contact       string `json:"contact"`
-	IsContactPub  bool   `json:"isconpub"`
-	Email         string `json:"email,omitempty"`
-	IsEmailPub    bool   `json:"isemapub,omitempty"`
-	Location      string `json:"local,omitempty"`
-	IsLocationPub bool   `json:"islocpub,omitempty"`
+	UID          string `json:"uid"`
+	Name         string `json:"name"`
+	Gender       int    `json:"gender,omitempty"`
+	Birth        string `json:"birthday,omitempty"`
+	Political    int    `json:"polit,omitempty"`
+	Contact      string `json:"contact"`
+	IsContactPub bool   `json:"public"`
+	Email        string `json:"email,omitempty"`
+	Localion     string `json:"local,omitempty"`
 }
 
 // 返回状态码
@@ -62,22 +60,6 @@ func (router *PersonInfoPutRouter) PreHandle(request eduiface.IRequest) {
 	// 若不存在则返回错误码
 	if UID == "" {
 		personputReplyStatus = "uid_cannot_be_empty"
-		return
-	}
-
-	// 试图获取人员数据
-	userName := newPersonInfoData.Get("name").String()
-	// 若不存在则返回错误码
-	if userName == "" {
-		personputReplyStatus = "name_cannot_be_empty"
-		return
-	}
-
-	// 试图获取人员数据
-	userContact := newPersonInfoData.Get("contact").String()
-	// 若不存在则返回错误码
-	if userContact == "" {
-		personputReplyStatus = "contact_cannot_be_empty"
 		return
 	}
 
@@ -119,16 +101,17 @@ func (router *PersonInfoPutRouter) PreHandle(request eduiface.IRequest) {
 	// 拼接更新数据
 	var newUserInfo edumodel.User
 	newUserInfo.UID = UID
-	newUserInfo.Name = userName
+	newUserInfo.Name = newPersonInfoData.Get("name").String()
 	newUserInfo.Gender = int(newPersonInfoData.Get("gender").Int())
 	newUserInfo.Birth = newPersonInfoData.Get("birthday").String()
 	newUserInfo.Political = int(newPersonInfoData.Get("polit").Int())
 	newUserInfo.Contact = newPersonInfoData.Get("contact").String()
-	newUserInfo.IsContactPub = newPersonInfoData.Get("isconpub").Bool()
+	newUserInfo.IsContactPub = newPersonInfoData.Get("public").Bool()
 	newUserInfo.Email = newPersonInfoData.Get("email").String()
-	newUserInfo.IsEmailPub = newPersonInfoData.Get("isemapub").Bool()
-	newUserInfo.Location = newPersonInfoData.Get("local").String()
-	newUserInfo.IsLocationPub = newPersonInfoData.Get("islocpub").Bool()
+	newUserInfo.IsEmailPub = newPersonInfoData.Get("public").Bool()
+	newUserInfo.Localion = newPersonInfoData.Get("local").String()
+	newUserInfo.IsLocalionPub = newPersonInfoData.Get("public").Bool()
+	newUserInfo.Job = newPersonInfoData.Get("job").String()
 
 	// 更新数据库
 	res := edumodel.UpdateUserByID(&newUserInfo)
@@ -143,7 +126,7 @@ func (router *PersonInfoPutRouter) PreHandle(request eduiface.IRequest) {
 // Handle 用于将请求的处理结果发回客户端
 func (router *PersonInfoPutRouter) Handle(request eduiface.IRequest) {
 	// 打印请求处理Log
-	fmt.Println("[ROUTER] ", time.Now().Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", PersonInfoPutRouter: ", personputReplyStatus)
+	fmt.Println("[ROUTERS] ", time.Now().Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", PersonInfoPutRouter: ", personputReplyStatus)
 	// 生成返回数据
 	jsonMsg, err := CombineReplyMsg(personputReplyStatus, nil)
 	// 如果生成失败则报错返回

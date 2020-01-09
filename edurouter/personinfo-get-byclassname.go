@@ -36,6 +36,7 @@ var persongetbyclassReplyData PersonInfoGetByClassReplyData
 func (router *PersonInfoGetByClassRouter) PreHandle(request eduiface.IRequest) {
 	var reqMsgInJSON *ReqMsg
 	var ok bool
+	persongetbyclassReplyData.UserList = []PersonInfoGetReplyData{}
 	// 试图解码原始数据,并检查校验和
 	reqMsgInJSON, persongetbyclassReplyStatus, ok = CheckMsgFormat(request)
 	if ok != true {
@@ -91,25 +92,28 @@ func (router *PersonInfoGetByClassRouter) PreHandle(request eduiface.IRequest) {
 	for _, person := range *userManyData {
 		var personData PersonInfoGetReplyData
 		personData.UID = person.UID
+		personData.Place = person.Place
 		personData.Name = person.Name
 		personData.ClassName = person.Class
 		personData.Gender = person.Gender
 		personData.Birth = person.Birth
 		personData.Political = person.Political
-		if person.IsContactPub {
+		personData.IsPublic = person.IsContactPub
+		personData.Job = person.Job
+		if reqMsgInJSON.UID != person.UID {
+			if personData.IsPublic {
+				personData.Contact = person.Contact
+				personData.Localion = person.Localion
+				personData.Email = person.Email
+			} else {
+				personData.Contact = "未公开"
+				personData.Email = "未公开"
+				personData.Localion = "未公开"
+			}
+		} else {
 			personData.Contact = person.Contact
-		} else {
-			personData.Contact = "未公开"
-		}
-		if person.IsEmailPub {
+			personData.Localion = person.Localion
 			personData.Email = person.Email
-		} else {
-			personData.Email = "未公开"
-		}
-		if person.IsLocationPub {
-			personData.Location = person.Location
-		} else {
-			personData.Location = "未公开"
 		}
 
 		// 添加到返回数据中
@@ -123,7 +127,7 @@ func (router *PersonInfoGetByClassRouter) PreHandle(request eduiface.IRequest) {
 // Handle 用于将请求的处理结果发回客户端
 func (router *PersonInfoGetByClassRouter) Handle(request eduiface.IRequest) {
 	// 打印请求处理Log
-	fmt.Println("[ROUTER] ", time.Now().Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", PersonInfoGetByClassRouter: ", persongetbyclassReplyStatus)
+	fmt.Println("[ROUTERS] ", time.Now().Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", PersonInfoGetByClassRouter: ", persongetbyclassReplyStatus)
 	var jsonMsg []byte
 	var err error
 

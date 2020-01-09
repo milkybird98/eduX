@@ -15,12 +15,13 @@ var newsCollection *mongo.Collection
 
 type News struct {
 	ID         primitive.ObjectID `bson:"_id,omitempty"`
-	IsAnnounce bool               `bson:"isan"`
-	Title      string             `bson:"title"`
-	Text       string             `bson:"text"`
-	SenderUID  string             `bson:"senuid"`
-	SendTime   time.Time          `bson:"sendtime"`
-	AudientUID []string           `bson:"audiuid"`
+	NewsType   int64              `bson:"type"       json:"type"`
+	Title      string             `bson:"title"      json:"title"`
+	Text       string             `bson:"text"       json:"text"`
+	SenderUID  string             `bson:"senduid"    json:"senduid"`
+	SendTime   time.Time          `bson:"sendtime"   json:"sendtime"`
+	AudientUID []string           `bson:"audiuid"    json:"audiuid"`
+	TargetTime time.Time          `bson:"targettime" json:"targettime"`
 }
 
 func checkNewsCollection() {
@@ -77,7 +78,7 @@ func GetNewsByInnerID(idInString string) *News {
 	return &news
 }
 
-func GetNewsByTimeOrder(skip int, limit int, isAnnounce bool) *[]News {
+func GetNewsByTimeOrder(skip int, limit int, newsType int64) *[]News {
 	checkNewsCollection()
 
 	if skip < 0 || limit <= 0 {
@@ -87,8 +88,8 @@ func GetNewsByTimeOrder(skip int, limit int, isAnnounce bool) *[]News {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	filter := bson.M{"isannounce": isAnnounce}
-	option := options.Find().SetSort(bson.M{"sendtime": 1}).SetSkip(int64(skip)).SetLimit(int64(limit))
+	filter := bson.M{"type": newsType}
+	option := options.Find().SetSort(bson.M{"sendtime": -1}).SetSkip(int64(skip)).SetLimit(int64(limit))
 
 	var result []News
 	cur, err := newsCollection.Find(ctx, filter, option)
@@ -109,7 +110,7 @@ func GetNewsByTimeOrder(skip int, limit int, isAnnounce bool) *[]News {
 	return &result
 }
 
-func GetNewsBySenderUID(skip int, limit int, isAnnounce bool, uid string) *[]News {
+func GetNewsBySenderUID(skip int, limit int, newsType int64, uid string) *[]News {
 	checkNewsCollection()
 
 	if skip < 0 || limit <= 0 {
@@ -120,10 +121,10 @@ func GetNewsBySenderUID(skip int, limit int, isAnnounce bool, uid string) *[]New
 	defer cancel()
 
 	filter := bson.M{
-		"isannounce": isAnnounce,
-		"senderuid":  uid,
+		"type":    newsType,
+		"senduid": uid,
 	}
-	option := options.Find().SetSort(bson.M{"sendtime": 1}).SetSkip(int64(skip)).SetLimit(int64(limit))
+	option := options.Find().SetSort(bson.M{"sendtime": -1}).SetSkip(int64(skip)).SetLimit(int64(limit))
 
 	var result []News
 	cur, err := newsCollection.Find(ctx, filter, option)
@@ -144,7 +145,7 @@ func GetNewsBySenderUID(skip int, limit int, isAnnounce bool, uid string) *[]New
 	return &result
 }
 
-func GetNewsByAudientUID(skip int, limit int, isAnnounce bool, uid string) *[]News {
+func GetNewsByAudientUID(skip int, limit int, newsType int64, uid string, isAdmin bool) *[]News {
 	checkNewsCollection()
 
 	if skip < 0 || limit <= 0 {
@@ -154,11 +155,24 @@ func GetNewsByAudientUID(skip int, limit int, isAnnounce bool, uid string) *[]Ne
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	filter := bson.M{
-		"isannounce": isAnnounce,
-		"audientuid": []string{"all", uid},
+	var filter interface{}
+
+	if isAdmin {
+		filter = bson.M{
+			"type":    newsType,
+			"audiuid": []string{uid},
+		}
+	} else {
+		filter = bson.M{
+			"type":       newsType,
+			"audiuid":    []string{uid},
+			"targettime": bson.M{"$lt": time.Now()},
+		}
 	}
-	option := options.Find().SetSort(bson.M{"sendtime": 1}).SetSkip(int64(skip)).SetLimit(int64(limit))
+
+	fmt.Println(filter)
+
+	option := options.Find().SetSort(bson.M{"sendtime": -1}).SetSkip(int64(skip)).SetLimit(int64(limit))
 
 	var result []News
 	cur, err := newsCollection.Find(ctx, filter, option)
@@ -177,6 +191,84 @@ func GetNewsByAudientUID(skip int, limit int, isAnnounce bool, uid string) *[]Ne
 	}
 
 	return &result
+}
+
+func GetNewsNumberBySendUID(sendUID string) int {
+	checkNewsCollection()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	filter := bson.M{"senduid": sendUID}
+
+	count, err := newsCollection.CountDocuments(ctx, filter)
+	if err != nil {
+		fmt.Println("[MODEL]", err)
+		return -1
+	}
+
+	return int(count)
+}
+
+func GetNewsNumberByAudientUID(audiUID string) int {
+	checkNewsCollection()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	filter := bson.M{"audiuid": audiUID}
+
+	count, err := newsCollection.CountDocuments(ctx, filter)
+	if err != nil {
+		fmt.Println("[MODEL]", err)
+		return -1
+	}
+
+	return int(count)
+}
+
+func GetNewsNumber(audiUID string, sendUID string, newsType int) int {
+	checkNewsCollection()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	filter := bson.D{}
+
+	if audiUID != "" {
+		filter = append(filter, bson.E{"senduid", audiUID})
+	}
+	if sendUID != "" {
+		filter = append(filter, bson.E{"senduid", sendUID})
+	}
+	if newsType >= 1 && newsType <= 4 {
+		filter = append(filter, bson.E{"type", newsType})
+	}
+
+	count, err := newsCollection.CountDocuments(ctx, filter)
+	if err != nil {
+		fmt.Println("[MODEL]", err)
+		return -1
+	}
+
+	return int(count)
+}
+
+func GetNewsNumberByNewsType(newsType string) int {
+	checkNewsCollection()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	filter := bson.M{"type": newsType}
+
+	count, err := newsCollection.CountDocuments(ctx, filter)
+	if err != nil {
+		fmt.Println("[MODEL]", err)
+		return -1
+	}
+
+	return int(count)
 }
 
 func DeleteNewsByInnerID(idInString string) bool {

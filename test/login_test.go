@@ -54,7 +54,6 @@ func ClientTestLI(t *testing.T) {
 	}
 
 	var serect string
-
 	{
 		fmt.Println("[test] login test")
 		db := edunet.NewDataPack()

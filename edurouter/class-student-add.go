@@ -18,7 +18,7 @@ type ClassStudentAddRouter struct {
 
 // ClassStudentAddData 向班级中添加学生消息数据结构,如果学生添加自己,则StudentListInUID为null
 type ClassStudentAddData struct {
-	StudentListInUID []string `json:"students"`
+	StudentListInUID []string `json:"studentsuid"`
 	ClassName        string   `json:"class"`
 }
 
@@ -149,7 +149,7 @@ func (router *ClassStudentAddRouter) PreHandle(request eduiface.IRequest) {
 // Handle 用于将请求的处理结果发回客户端
 func (router *ClassStudentAddRouter) Handle(request eduiface.IRequest) {
 	// 打印请求处理Log
-	fmt.Println("[ROUTER] ", time.Now().Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", ClassStudentAddRouter: ", classstudentaddReplyStatus)
+	fmt.Println("[ROUTERS] ", time.Now().Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", ClassStudentAddRouter: ", classstudentaddReplyStatus)
 	// 生成返回数据
 	jsonMsg, err := CombineReplyMsg(classstudentaddReplyStatus, nil)
 	// 如果生成失败则报错返回

@@ -11,50 +11,49 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-// QuestionGetByClassNameRouter 处理根据班级名称获取问题的请求
-type QuestionGetByClassNameRouter struct {
+// QuestionGetByTimeNameRouter 处理根据班级名称获取问题的请求
+type QuestionGetByTimeNameRouter struct {
 	edunet.BaseRouter
 }
 
-// QuestionGetByClassNameData 定义根据问题获取班级名称时的请求参数
-type QuestionGetByClassNameData struct {
-	ClassName   string `json:"class"`
-	Skip        int64  `json:"skip"`
-	Limit       int64  `json:"limit"`
-	DeferSolved bool   `json:"defer"`
-	IsSolved    bool   `json:"issolved"`
+// QuestionGetByTimeNameData 定义根据问题获取班级名称时的请求参数
+type QuestionGetByTimeNameData struct {
+	Skip        int64 `json:"skip"`
+	Limit       int64 `json:"limit"`
+	DeferSolved bool  `json:"defer"`
+	IsSolved    bool  `json:"issolved"`
 }
 
-// QuestionGetByClassReplyData 定义根据班级名称查询问题数据的返回参数
-type QuestionGetByClassReplyData struct {
+// QuestionGetByTimeReplyData 定义根据班级名称查询问题数据的返回参数
+type QuestionGetByTimeReplyData struct {
 	QuestionList *[]edumodel.Question `json:"questions"`
 }
 
 // 返回状态码
-var questiongetbyclassnameReplyStatus string
+var questiongetbytimenameReplyStatus string
 
 // 返回数据
-var questiongetbyclassnameReplyData QuestionGetByClassReplyData
+var questiongetbytimenameReplyData QuestionGetByTimeReplyData
 
 // PreHandle 用于进行原始数据校验,权限验证,身份验证,数据获取和数据库操作
-func (router *QuestionGetByClassNameRouter) PreHandle(request eduiface.IRequest) {
+func (router *QuestionGetByTimeNameRouter) PreHandle(request eduiface.IRequest) {
 	var reqMsgInJSON *ReqMsg
 	var ok bool
 	// 试图解码原始数据,并检查校验和
-	reqMsgInJSON, questiongetbyclassnameReplyStatus, ok = CheckMsgFormat(request)
+	reqMsgInJSON, questiongetbytimenameReplyStatus, ok = CheckMsgFormat(request)
 	if ok != true {
 		return
 	}
 
 	// 检查当前连接是否已登录
-	questiongetbyclassnameReplyStatus, ok = CheckConnectionLogin(request, reqMsgInJSON.UID)
+	questiongetbytimenameReplyStatus, ok = CheckConnectionLogin(request, reqMsgInJSON.UID)
 	if ok != true {
 		return
 	}
 
 	// 验证请求数据Data段格式是否正确
 	if !gjson.Valid(string(reqMsgInJSON.Data)) {
-		questiongetbyclassnameReplyStatus = "data_format_error"
+		questiongetbytimenameReplyStatus = "data_format_error"
 		return
 	}
 
@@ -62,7 +61,7 @@ func (router *QuestionGetByClassNameRouter) PreHandle(request eduiface.IRequest)
 	classNameData := gjson.GetBytes(reqMsgInJSON.Data, "class")
 	// 如果班级名称不存在则返回错误码
 	if !classNameData.Exists() || classNameData.String() == "" {
-		questiongetbyclassnameReplyStatus = "classname_cannot_be_empty"
+		questiongetbytimenameReplyStatus = "classname_cannot_be_empty"
 		return
 	}
 	// 将班级名称数据转换为字符串
@@ -97,7 +96,7 @@ func (router *QuestionGetByClassNameRouter) PreHandle(request eduiface.IRequest)
 	placeString, err := GetSessionPlace(c)
 	// 若不存在则返回
 	if err != nil {
-		questiongetbyclassnameReplyStatus = err.Error()
+		questiongetbytimenameReplyStatus = err.Error()
 		return
 	}
 
@@ -105,7 +104,7 @@ func (router *QuestionGetByClassNameRouter) PreHandle(request eduiface.IRequest)
 	class := edumodel.GetClassByName(className)
 	// 若班级不存在则报错返回
 	if class == nil {
-		questiongetbyclassnameReplyStatus = "class_not_found"
+		questiongetbytimenameReplyStatus = "class_not_found"
 		return
 	}
 
@@ -115,39 +114,39 @@ func (router *QuestionGetByClassNameRouter) PreHandle(request eduiface.IRequest)
 		ok := edumodel.CheckUserInClass(className, reqMsgInJSON.UID, placeString)
 		// 若不在则权限错误
 		if !ok {
-			questiongetbyclassnameReplyStatus = "permission_error"
+			questiongetbytimenameReplyStatus = "permission_error"
 			return
 		}
 	}
 
 	// 查询数据库,获取问题列表
-	questionList := edumodel.GetQuestionByClassName(int(Skip), int(Limit), DetectSolved, IsSolved, className)
+	questionList := edumodel.GetQuestionByTimeOrder(Skip, Limit, DetectSolved, IsSolved)
 	// 查询成功则返回问题数据,并设定状态为success,否则返回错误码
 	if questionList != nil {
-		questiongetbyclassnameReplyStatus = "success"
-		questiongetbyclassnameReplyData.QuestionList = questionList
+		questiongetbytimenameReplyStatus = "success"
+		questiongetbytimenameReplyData.QuestionList = questionList
 	} else {
-		questiongetbyclassnameReplyStatus = "model_fail"
+		questiongetbytimenameReplyStatus = "model_fail"
 	}
 }
 
 // Handle 用于将请求的处理结果发回客户端
-func (router *QuestionGetByClassNameRouter) Handle(request eduiface.IRequest) {
+func (router *QuestionGetByTimeNameRouter) Handle(request eduiface.IRequest) {
 	// 打印请求处理Log
-	fmt.Println("[ROUTERS] ", time.Now().Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", QuestionGetByClassNameRouter: ", questiongetbyclassnameReplyStatus)
+	fmt.Println("[ROUTERS] ", time.Now().Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", QuestionGetByTimeNameRouter: ", questiongetbytimenameReplyStatus)
 
 	var jsonMsg []byte
 	var err error
 
 	// 生成返回数据
-	if questiongetbyclassnameReplyStatus == "success" {
-		jsonMsg, err = CombineReplyMsg(questiongetbyclassnameReplyStatus, questiongetbyclassnameReplyData)
+	if questiongetbytimenameReplyStatus == "success" {
+		jsonMsg, err = CombineReplyMsg(questiongetbytimenameReplyStatus, questiongetbytimenameReplyData)
 	} else {
-		jsonMsg, err = CombineReplyMsg(questiongetbyclassnameReplyStatus, nil)
+		jsonMsg, err = CombineReplyMsg(questiongetbytimenameReplyStatus, nil)
 	}
 	// 如果生成失败则报错返回
 	if err != nil {
-		fmt.Println("QuestionGetByClassNameRouter : ", err)
+		fmt.Println("QuestionGetByTimeNameRouter : ", err)
 		return
 	}
 

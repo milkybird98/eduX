@@ -12,19 +12,20 @@ import (
 var userCollection *mongo.Collection
 
 type User struct {
-	Name          string
-	UID           string
-	Place         string
-	Class         string
-	Gender        int
-	Birth         string
-	Political     int
-	Contact       string
-	IsContactPub  bool
-	Email         string
-	IsEmailPub    bool
-	Location      string
-	IsLocationPub bool
+	Name          string `bson:"name" json:"name"`
+	UID           string `bson:"uid" json:"uid"`
+	Place         string `bson:"place" json:"place"`
+	Class         string `bson:"class" json:"class"`
+	Gender        int    `bson:"gender" json:"gender"`
+	Birth         string `bson:"birth" json:"birth"`
+	Political     int    `bson:"political" json:"political"`
+	Contact       string `bson:"contact" json:"contact"`
+	IsContactPub  bool   `bson:"iscontactpub" json:"iscontactpub"`
+	Email         string `bson:"email" json:"email"`
+	IsEmailPub    bool   `bson:"isemailpub" json:"isemailpub"`
+	Localion      string `bson:"localion" json:"localion"`
+	IsLocalionPub bool   `bson:"islocalionpub" json:"islocalionpub"`
+	Job           string `bson:"job" json:"job"`
 }
 
 func checkUserCollection() {
@@ -106,6 +107,23 @@ func GetUserByClass(className string) *[]*User {
 	return &result
 }
 
+func GetUserNumber() int {
+	checkClassCollection()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	filter := bson.M{}
+
+	count, err := userCollection.CountDocuments(ctx, filter)
+	if err != nil {
+		fmt.Println("[MODEL]", err)
+		return -1
+	}
+
+	return int(count)
+}
+
 func UpdateUserByID(newUserData *User) bool {
 	checkUserCollection()
 
@@ -139,11 +157,14 @@ func UpdateUserByID(newUserData *User) bool {
 	if newUserData.IsEmailPub != originData.IsEmailPub {
 		originData.IsEmailPub = newUserData.IsEmailPub
 	}
-	if newUserData.Location != "" {
-		originData.Location = newUserData.Location
+	if newUserData.Localion != "" {
+		originData.Localion = newUserData.Localion
 	}
-	if newUserData.IsLocationPub != originData.IsLocationPub {
-		originData.IsLocationPub = newUserData.IsLocationPub
+	if newUserData.IsLocalionPub != originData.IsLocalionPub {
+		originData.IsLocalionPub = newUserData.IsLocalionPub
+	}
+	if newUserData.Job != originData.Job {
+		originData.Job = newUserData.Job
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -161,8 +182,9 @@ func UpdateUserByID(newUserData *User) bool {
 			"iscontactpub":  originData.IsContactPub,
 			"email":         originData.Email,
 			"isemailpub":    originData.IsEmailPub,
-			"location":      originData.Location,
-			"islocationpub": originData.IsLocationPub,
+			"localion":      originData.Localion,
+			"islocalionpub": originData.IsLocalionPub,
+			"job":           originData.Job,
 		}},
 	}
 
@@ -185,7 +207,7 @@ func AddUserToClassByUID(uidList []string, ClassName string) bool {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	filter := bson.M{"uid": uidList, "class": ""}
+	filter := bson.M{"uid": bson.M{"$in": uidList}, "class": ""}
 	update := bson.D{
 		{"$set", bson.M{
 			"class": ClassName,
@@ -211,7 +233,7 @@ func DeleteUserFromClassByUID(uidList []string, ClassName string) bool {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	filter := bson.M{"uid": uidList, "class": ClassName}
+	filter := bson.M{"uid": bson.M{"$in": uidList}, "class": ClassName}
 	update := bson.D{
 		{"$set", bson.M{
 			"class": "",

@@ -20,7 +20,7 @@ type FileDownloadRouter struct {
 
 // FileDownloadData 定义文件下载请求中Data段参数
 type FileDownloadData struct {
-	UUID string `json:"uuid"`
+	UUID string `json:"id"`
 }
 
 // FileDownloadReplyData 定义文件下载请求的回复数据Data段参数
@@ -62,7 +62,7 @@ func (router *FileDownloadRouter) PreHandle(request eduiface.IRequest) {
 	newFileData := gjson.ParseBytes(reqMsgInJSON.Data)
 
 	// 尝试获取uuid数据
-	UUIDData := newFileData.Get("uuid")
+	UUIDData := newFileData.Get("id")
 	// 若文件对应uuid数据不存在,则返回错误码
 	if !UUIDData.Exists() || UUIDData.String() == "" {
 		filedownloadReplyStatus = "UUID_cannot_be_empty"
@@ -122,7 +122,7 @@ func (router *FileDownloadRouter) PreHandle(request eduiface.IRequest) {
 // Handle 用于将请求的处理结果发回客户端
 func (router *FileDownloadRouter) Handle(request eduiface.IRequest) {
 	// 打印请求处理Log
-	fmt.Println("[ROUTER] ", time.Now().Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", FileDownloadRouter: ", filedownloadReplyStatus)
+	fmt.Println("[ROUTERS] ", time.Now().Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", FileDownloadRouter: ", filedownloadReplyStatus)
 	var jsonMsg []byte
 	var err error
 	// 生成返回数据

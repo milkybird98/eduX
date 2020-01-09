@@ -14,17 +14,21 @@ import (
 var quesCollection *mongo.Collection
 
 type Question struct {
-	ID         primitive.ObjectID `bson:"_id,omitempty"`
-	Title      string
-	Text       string
-	SenderUID  string
-	AnswerUID  string `bson:"answeruid,omitempty"`
-	ClassName  string
-	SendTime   time.Time
-	AnswerTime time.Time `bson:"answertime,omitempty"`
-	IsSolved   bool
-	Answer     string `bson:"answer,omitempty"`
-	IsDeleted  bool   `bson:"isdeleted"`
+	ID        primitive.ObjectID `bson:"_id,omitempty" json:"_id"`
+	Title     string             `bson:"title" json:"title"`
+	Text      string             `bson:"text" json:"text"`
+	SenderUID string             `bson:"senduid" json:"senduid"`
+	ClassName string             `bson:"class" json:"class"`
+	SendTime  time.Time          `bson:"sendtime" json:"sendtime"`
+	IsSolved  bool               `bson:"issolved" json:"issolved"`
+	IsDeleted bool               `bson:"isdeleted" json:"isdeleted"`
+	Answer    []QuestionAnser    `bson:"answer,omitempty" json:"answer"`
+}
+
+type QuestionAnser struct {
+	AnswerUID  string    `bson:"answeruid,omitempty" json:"answeruid"`
+	AnswerTime time.Time `bson:"answertime,omitempty" json:"answertime"`
+	AnswerText string    `bson:"text,omitempty" json:"text"`
 }
 
 func checkQuesCollection() {
@@ -52,7 +56,7 @@ func AddQuestion(newQuestion *Question) bool {
 	return true
 }
 
-func GetQuestionByTimeOrder(skip int, limit int, isSolved bool) *[]Question {
+func GetQuestionByTimeOrder(skip, limit int64, detectSolved bool, isSolved bool) *[]Question {
 	checkQuesCollection()
 
 	if skip < 0 || limit <= 0 {
@@ -62,8 +66,13 @@ func GetQuestionByTimeOrder(skip int, limit int, isSolved bool) *[]Question {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	filter := bson.M{"issolved": isSolved}
-	option := options.Find().SetSort(bson.M{"sendtime": 1}).SetSkip(int64(skip)).SetLimit(int64(limit))
+	var filter interface{}
+	if detectSolved {
+		filter = bson.M{"issolved": isSolved}
+	} else {
+		filter = bson.M{}
+	}
+	option := options.Find().SetSort(bson.M{"sendtime": -1}).SetSkip(skip).SetLimit(limit)
 
 	var result []Question
 	cur, err := quesCollection.Find(ctx, filter, option)
@@ -99,17 +108,17 @@ func GetQuestionBySenderUID(skip int, limit int, detectSolved bool, isSolved boo
 	if detectSolved {
 		filter = bson.M{
 			"issolved":  isSolved,
-			"senderuid": uid,
+			"senduid":   uid,
 			"isdeleted": false,
 		}
 	} else {
 		filter = bson.M{
-			"senderuid": uid,
+			"senduid":   uid,
 			"isdeleted": false,
 		}
 	}
 
-	option := options.Find().SetSort(bson.M{"sendtime": 1}).SetSkip(int64(skip)).SetLimit(int64(limit))
+	option := options.Find().SetSort(bson.M{"sendtime": -1}).SetSkip(int64(skip)).SetLimit(int64(limit))
 
 	var result []Question
 	cur, err := quesCollection.Find(ctx, filter, option)
@@ -145,7 +154,7 @@ func GetQuestionByQueserUID(skip int, limit int, isSolved bool, uid string) *[]Q
 		"queseruid": uid,
 		"isdeleted": false,
 	}
-	option := options.Find().SetSort(bson.M{"sendtime": 1}).SetSkip(int64(skip)).SetLimit(int64(limit))
+	option := options.Find().SetSort(bson.M{"sendtime": -1}).SetSkip(int64(skip)).SetLimit(int64(limit))
 
 	var result []Question
 	cur, err := quesCollection.Find(ctx, filter, option)
@@ -181,17 +190,17 @@ func GetQuestionByClassName(skip int, limit int, detectSolved bool, isSolved boo
 	if detectSolved {
 		filter = bson.M{
 			"issolved":  isSolved,
-			"classname": className,
+			"class":     className,
 			"isdeleted": false,
 		}
 	} else {
 		filter = bson.M{
-			"classname": className,
+			"class":     className,
 			"isdeleted": false,
 		}
 	}
 
-	option := options.Find().SetSort(bson.M{"sendtime": 1}).SetSkip(int64(skip)).SetLimit(int64(limit))
+	option := options.Find().SetSort(bson.M{"sendtime": -1}).SetSkip(int64(skip)).SetLimit(int64(limit))
 
 	var result []Question
 	cur, err := quesCollection.Find(ctx, filter, option)
@@ -259,7 +268,7 @@ func AnserQuestionByInnerID(idInString string, UID string, answer string) bool {
 	defer cancel()
 
 	filter := bson.M{"_id": id, "isdeleted": false}
-	update := bson.M{"$set": bson.M{"answeruid": UID, "issolved": true, "answer": answer, "answertime": time.Now()}}
+	update := bson.M{"$set": bson.M{"issolved": true}, "$push": bson.M{"answer": bson.M{"answeruid": UID, "text": answer, "answertime": time.Now()}}}
 
 	_, err = quesCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
@@ -270,17 +279,31 @@ func AnserQuestionByInnerID(idInString string, UID string, answer string) bool {
 	return true
 }
 
-func GetQuestionNumberAll(className string) int {
+func GetQuestionNumber(className, sendUID string, isSolved bool, targetDate *time.Time) int64 {
 	checkQuesCollection()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	var filter interface{}
-	if className == "" {
-		filter = bson.M{"isdeleted": false}
-	} else {
-		filter = bson.M{"classname": className, "isdeleted": false}
+	var targetDateInDay, targetNextDateInDay time.Time
+
+	if targetDate != nil {
+		targetDateInDay = time.Date(targetDate.Year(), targetDate.Month(), targetDate.Day(), 0, 0, 0, 0, time.Local)
+		targetNextDateInDay = targetDateInDay.Add(time.Hour * 24)
+	}
+
+	filter := bson.D{}
+	if className != "" {
+		filter = append(filter, bson.E{"class", className})
+	}
+	if sendUID != "" {
+		filter = append(filter, bson.E{"senduid", sendUID})
+	}
+	if isSolved {
+		filter = append(filter, bson.E{"issolved", true})
+	}
+	if targetDate != nil {
+		filter = append(filter, bson.E{"sendtime", bson.M{"$gt": targetDateInDay, "$lt": targetNextDateInDay}})
 	}
 
 	count, err := quesCollection.CountDocuments(ctx, filter)
@@ -289,93 +312,7 @@ func GetQuestionNumberAll(className string) int {
 		return -1
 	}
 
-	return int(count)
-}
-
-func GetQuestionAnsweredNumberAll(className string) int {
-	checkQuesCollection()
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	var filter interface{}
-	if className == "" {
-		filter = bson.M{"isdeleted": false, "issolved": true}
-	} else {
-		filter = bson.M{"classname": className, "isdeleted": false, "issolved": true}
-	}
-
-	count, err := quesCollection.CountDocuments(ctx, filter)
-	if err != nil {
-		fmt.Println("[MODEL]", err)
-		return -1
-	}
-
-	return int(count)
-}
-
-func GetQuestionNumberByDate(className string, targetDate time.Time) int {
-	checkQuesCollection()
-
-	if targetDate.IsZero() || targetDate.After(time.Now().Add(time.Hour*24)) {
-		fmt.Println("[MODEL] time out of range")
-		return -1
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	targetDateInDay := time.Date(targetDate.Year(), targetDate.Month(), targetDate.Day(), 0, 0, 0, 0, time.Local)
-	targetNextDateInDay := targetDateInDay.Add(time.Hour * 24)
-
-	var filter interface{}
-	if className == "" {
-		filter = bson.M{"isdeleted": false,
-			"sendtime": bson.M{"$gt": targetDateInDay, "$lt": targetNextDateInDay}}
-	} else {
-		filter = bson.M{"classname": className, "isdeleted": false,
-			"sendtime": bson.M{"$gt": targetDateInDay, "$lt": targetNextDateInDay}}
-	}
-
-	count, err := quesCollection.CountDocuments(ctx, filter)
-	if err != nil {
-		fmt.Println("[MODEL]", err)
-		return -1
-	}
-
-	return int(count)
-}
-
-func GetQuestionAnsweredNumberByDate(className string, targetDate time.Time) int {
-	checkQuesCollection()
-
-	if targetDate.IsZero() || targetDate.After(time.Now().Add(time.Hour*24)) {
-		fmt.Println("[MODEL] time out of range")
-		return -1
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	targetDateInDay := time.Date(targetDate.Year(), targetDate.Month(), targetDate.Day(), 0, 0, 0, 0, time.Local)
-	targetNextDateInDay := targetDateInDay.Add(time.Hour * 24)
-
-	var filter interface{}
-	if className == "" {
-		filter = bson.M{"isdeleted": false, "issolved": true,
-			"sendtime": bson.M{"$gt": targetDateInDay, "$lt": targetNextDateInDay}}
-	} else {
-		filter = bson.M{"classname": className, "isdeleted": false, "issolved": true,
-			"sendtime": bson.M{"$gt": targetDateInDay, "$lt": targetNextDateInDay}}
-	}
-
-	count, err := quesCollection.CountDocuments(ctx, filter)
-	if err != nil {
-		fmt.Println("[MODEL]", err)
-		return -1
-	}
-
-	return int(count)
+	return count
 }
 
 func DeleteQuestionByInnerID(idInString string) bool {

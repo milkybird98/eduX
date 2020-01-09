@@ -38,7 +38,6 @@ func CheckMsgFormat(request eduiface.IRequest) (*ReqMsg, string, bool) {
 	// 获取原始的接收数据
 	var reqMsgInJSON ReqMsg
 	reqMsgOrigin := request.GetData()
-
 	checksumFlag = false
 
 	// 验证原始数据是否是合法json格式
@@ -53,7 +52,7 @@ func CheckMsgFormat(request eduiface.IRequest) (*ReqMsg, string, bool) {
 	reqMsgInJSON.UID = parseResult.Get("uid").String()
 	// 如果uid不存在则报错返回
 	if reqMsgInJSON.UID == "" {
-		return nil, "uid_cannot_be_empty", false
+		return nil, "req_uid_cannot_be_empty", false
 	}
 
 	// 从原始数据中获取Data段
@@ -67,6 +66,7 @@ func CheckMsgFormat(request eduiface.IRequest) (*ReqMsg, string, bool) {
 		if err != nil {
 			return nil, "data_base64_format_error", false
 		}
+		fmt.Println(string(reqMsgInJSON.Data))
 	} else {
 		reqMsgInJSON.Data = nil
 	}
@@ -146,10 +146,11 @@ func CombineReplyMsg(status string, dataInJSON interface{}) ([]byte, error) {
 			return nil, err
 		}
 		// 赋值序列化后的Data段
+		fmt.Println(string(data))
 		replyMsg.Data = data
 	}
 
-	fmt.Println(string(replyMsg.Data))
+	//fmt.Println(string(replyMsg.Data))
 
 	// 计算MD5校验和并赋值
 	md5Ctx := md5.New()
@@ -163,7 +164,6 @@ func CombineReplyMsg(status string, dataInJSON interface{}) ([]byte, error) {
 		return nil, err
 	}
 
-	fmt.Println(string(jsonMsg))
 	return jsonMsg, nil
 }
 
@@ -199,7 +199,7 @@ func CombineSendMsg(UID string, dataInJSON interface{}) ([]byte, error) {
 		return nil, err
 	}
 
-	fmt.Println(string(jsonMsg))
+	//fmt.Println(string(jsonMsg))
 	return jsonMsg, nil
 }
 

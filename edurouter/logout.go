@@ -39,7 +39,7 @@ func (router *LogoutRouter) PreHandle(request eduiface.IRequest) {
 // Handle 用于将请求的处理结果发回客户端
 func (router *LogoutRouter) Handle(request eduiface.IRequest) {
 	// 打印请求处理Log
-	fmt.Println("[ROUTER] ", time.Now().Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", LogoutRouter: ", logoutReplyStatus)
+	fmt.Println("[ROUTERS] ", time.Now().Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", LogoutRouter: ", logoutReplyStatus)
 	// 生成返回数据
 	jsonMsg, err := CombineReplyMsg(logoutReplyStatus, nil)
 	// 如果生成失败则报错返回
@@ -58,6 +58,5 @@ func (router *LogoutRouter) PostHandle(request eduiface.IRequest) {
 	if logoutReplyStatus == "success" {
 		c := request.GetConnection()
 		c.SetSession("isLogined", false)
-		c.Stop()
 	}
 }

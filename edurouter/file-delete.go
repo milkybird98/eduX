@@ -89,9 +89,15 @@ func (router *FileDeleteRouter) PreHandle(request eduiface.IRequest) {
 	}
 
 	// 如果不是管理员并且不是文件的上传者,则返回错误码
-	if placeString != "manager" && UID != fileData.UpdaterUID {
-		filedeleteReplyData = "permission_error"
-		return
+	if placeString != "manager" {
+		if placeString == "student" && UID != fileData.UpdaterUID {
+			filedeleteReplyData = "permission_error"
+			return
+		}
+		if placeString == "teacher" && !edumodel.CheckUserInClass(fileData.ClassName, reqMsgInJSON.UID, "teacher") {
+			filedeleteReplyData = "permission_error"
+			return
+		}
 	}
 
 	//数据库更新
@@ -124,7 +130,7 @@ func (router *FileDeleteRouter) PreHandle(request eduiface.IRequest) {
 // Handle 用于将请求的处理结果发回客户端
 func (router *FileDeleteRouter) Handle(request eduiface.IRequest) {
 	// 打印请求处理Log
-	fmt.Println("[ROUTER] ", time.Now().Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", FileDeleteRouter: ", filedeleteReplyData)
+	fmt.Println("[ROUTERS] ", time.Now().Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", FileDeleteRouter: ", filedeleteReplyData)
 	// 生成返回数据
 	jsonMsg, err := CombineReplyMsg(filedeleteReplyData, nil)
 	// 如果生成失败则报错返回

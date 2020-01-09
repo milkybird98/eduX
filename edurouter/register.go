@@ -99,7 +99,7 @@ func (router *RegisterRouter) PreHandle(request eduiface.IRequest) {
 
 // Handle 用于将请求的处理结果发回客户端
 func (router *RegisterRouter) Handle(request eduiface.IRequest) {
-	fmt.Println("[ROUTER] ", time.Now().Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", [ROUTER] Time: ", time.Now(), " Client address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), "RegisterRouter: ", registerReplyStatus)
+	fmt.Println("[ROUTERS] Time: ", time.Now(), " Client address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), "RegisterRouter: ", registerReplyStatus)
 	jsonMsg, err := CombineReplyMsg(registerReplyStatus, nil)
 	if err != nil {
 		fmt.Println("RegisterRouter: ", err)

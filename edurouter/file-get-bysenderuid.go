@@ -117,7 +117,7 @@ func (router *FileGetBySenderUIDRouter) PreHandle(request eduiface.IRequest) {
 // Handle 用于将请求的处理结果发回客户端
 func (router *FileGetBySenderUIDRouter) Handle(request eduiface.IRequest) {
 	// 打印请求处理Log
-	fmt.Println("[ROUTER] ", time.Now().Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", FileGetBySenderUIDRouter: ", filegetbysenderuidReplyStatus)
+	fmt.Println("[ROUTERS] ", time.Now().Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", FileGetBySenderUIDRouter: ", filegetbysenderuidReplyStatus)
 
 	var jsonMsg []byte
 	var err error

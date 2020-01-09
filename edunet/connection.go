@@ -109,12 +109,11 @@ func (c *Connection) StartTransmiter() {
 	*/
 
 	data := "ready"
-	var n int
-	if n, err = c.Conn.Write([]byte(data)); err != nil {
+
+	if _, err = c.Conn.Write([]byte(data)); err != nil {
 		fmt.Println("[CONNECT][ERROR] Send Data error: ", err)
 		return
 	}
-	fmt.Println(n)
 	fmt.Println("[CONNECT] file transmite operation ready")
 
 	workPath, err := os.Getwd()
@@ -174,7 +173,7 @@ func (c *Connection) StartTransmiter() {
 
 		for receBytes < fileTag.Size {
 			size, err := io.CopyN(file, c.GetTCPConnection(), fileTag.Size)
-			if err != nil && err.Error() != "EOF" {
+			if (err != nil && err.Error() != "EOF") || (err != nil && err.Error() == "EOF" && size == 0) {
 				fmt.Println("[CONNECT][WARNING] File transmite error: ", err, ", start removing file...")
 				err := os.Remove(filePath)
 				if err != nil {

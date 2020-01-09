@@ -42,7 +42,7 @@ func (router *PwdResetRouter) PreHandle(request eduiface.IRequest) {
 
 	// 检查data段格式
 	if !gjson.Valid(string(reqMsgInJSON.Data)) {
-		personputReplyStatus = "data_format_error"
+		registerReplyStatus = "data_format_error"
 		return
 	}
 
@@ -81,6 +81,7 @@ func (router *PwdResetRouter) PreHandle(request eduiface.IRequest) {
 	serectData := resetPwdData.Get("serect")
 
 	// 二者必须有其一
+	fmt.Println(string(reqMsgInJSON.Data))
 	if (!pwdData.Exists() || pwdData.String() == "") && (!serectData.Exists() || serectData.String() == "") {
 		registerReplyStatus = "origin_password_or_serect_must_have_one"
 		return
@@ -183,8 +184,9 @@ func (router *PwdResetRouter) PreHandle(request eduiface.IRequest) {
 			// 想用户发送提醒消息
 			var newNews edumodel.News
 			newNews.SenderUID = reqMsgInJSON.UID
+			newNews.AudientUID = []string{uidInString}
 			newNews.SendTime = time.Now()
-			newNews.IsAnnounce = false
+			newNews.NewsType = 2
 			newNews.Title = "密码重置成功"
 			newNews.Text = "你好,你的密码已经重置完成,请及时修改密码,以防他人恶意登陆."
 
@@ -233,7 +235,7 @@ func (router *PwdResetRouter) PreHandle(request eduiface.IRequest) {
 // Handle 用于将请求的处理结果发回客户端
 func (router *PwdResetRouter) Handle(request eduiface.IRequest) {
 	// 打印请求处理Log
-	fmt.Println("[ROUTER] ", time.Now().Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", PwdResetRouter: ", registerReplyStatus)
+	fmt.Println("[ROUTERS] ", time.Now().Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", PwdResetRouter: ", registerReplyStatus)
 	// 生成返回数据
 	jsonMsg, err := CombineReplyMsg(registerReplyStatus, nil)
 	// 如果生成失败则报错返回

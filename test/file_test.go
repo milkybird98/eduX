@@ -121,7 +121,7 @@ func ClientTestFO(t *testing.T) {
 		Data.ClassName = "ts1001"
 		Data.FileName = "a new fes"
 		Data.FileTag = []string{"blank"}
-		Data.Size = 4
+		Data.Size = 10
 
 		msgData, _ := edurouter.CombineSendMsg("U1003", Data)
 
@@ -168,7 +168,7 @@ func ClientTestFO(t *testing.T) {
 		db := edunet.NewDataPack()
 
 		var Data edurouter.FileDownloadData
-		Data.UUID = "5e0e1c935197e45e740ef031"
+		Data.UUID = "5e12452c6670537b52c2cda9"
 
 		msgData, _ := edurouter.CombineSendMsg("U1003", Data)
 

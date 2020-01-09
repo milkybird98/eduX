@@ -19,6 +19,7 @@ type FileCountRouter struct {
 // FileCountData 定义了管理员请求文件数量时Data段的参数
 type FileCountData struct {
 	ClassName string    `json:"classname"`
+	SendUID   string    `json:"senduid"`
 	Date      time.Time `json:"time"`
 }
 
@@ -90,12 +91,13 @@ func (router *FileCountRouter) PreHandle(request eduiface.IRequest) {
 
 	// 尝试从Data段中获取班级名称
 	className := gjson.GetBytes(reqMsgInJSON.Data, "classname").String()
+	sendUID := gjson.GetBytes(reqMsgInJSON.Data, "senduid").String()
 
 	// 根据是否存在日期限定,进行数据库查询
 	if isTimeRequired {
-		filecountReplyData.Number = edumodel.GetFileNumberByDate(className, targetTime)
+		filecountReplyData.Number = edumodel.GetFileNumber(className, sendUID, &targetTime)
 	} else {
-		filecountReplyData.Number = edumodel.GetFileNumberAll(className)
+		filecountReplyData.Number = edumodel.GetFileNumber(className, sendUID, nil)
 	}
 
 	// 如果查询成功在返回success,否则返回错误码
@@ -109,7 +111,7 @@ func (router *FileCountRouter) PreHandle(request eduiface.IRequest) {
 // Handle 用于将请求的处理结果发回客户端
 func (router *FileCountRouter) Handle(request eduiface.IRequest) {
 	// 打印请求处理Log
-	fmt.Println("[ROUTER] ", time.Now().Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", FileCountRouter: ", filecountReplyStatus)
+	fmt.Println("[ROUTERS] ", time.Now().Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", FileCountRouter: ", filecountReplyStatus)
 
 	var jsonMsg []byte
 	var err error

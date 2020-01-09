@@ -16,9 +16,11 @@ type ClassJoinInGetRouter struct {
 
 // ClassJoinInGetReplyData 定义返回当前用户已加入班级时Data段的参数
 type ClassJoinInGetReplyData struct {
-	ClassName   string
-	TeacherList []string
-	StudentList []string
+	ClassName   string    `json:"class"`
+	AlterName   string    `json:"alter"`
+	TeacherList []string  `json:"teachers"`
+	StudentList []string  `json:"students"`
+	CreateTime  time.Time `json:"time"`
 }
 
 // 返回状态
@@ -62,16 +64,18 @@ func (router *ClassJoinInGetRouter) PreHandle(request eduiface.IRequest) {
 		classjoiningetReplyStatus = "not_join_class"
 	} else {
 		classjoiningetReplyStatus = "success"
+		classjoiningetReplyData.AlterName = class.AlterName
 		classjoiningetReplyData.ClassName = class.ClassName
 		classjoiningetReplyData.StudentList = class.StudentList
 		classjoiningetReplyData.TeacherList = class.TeacherList
+		classjoiningetReplyData.CreateTime = class.CreateDate
 	}
 }
 
 // Handle 用于将请求的处理结果发回客户端
 func (router *ClassJoinInGetRouter) Handle(request eduiface.IRequest) {
 	// 打印请求处理Log
-	fmt.Println("[ROUTER] ", time.Now().Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ",ClassJoinInGetRouter: ", classjoiningetReplyStatus)
+	fmt.Println("[ROUTERS] ", time.Now().Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ",ClassJoinInGetRouter: ", classjoiningetReplyStatus)
 	var jsonMsg []byte
 	var err error
 	// 生成返回数据

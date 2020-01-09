@@ -25,13 +25,16 @@ type PersonInfoGetData struct {
 type PersonInfoGetReplyData struct {
 	UID       string `json:"uid"`
 	Name      string `json:"name"`
+	Place     string `json:"place"`
 	ClassName string `json:"class"`
-	Gender    int    `json:"gender,omitempty"`
-	Birth     string `json:"birthday,omitempty"`
-	Political int    `json:"polit,omitempty"`
+	Gender    int    `json:"gender"`
+	Birth     string `json:"birthday"`
+	Political int    `json:"polit"`
 	Contact   string `json:"contact"`
-	Email     string `json:"email,omitempty"`
-	Location  string `json:"locat,omitempty"`
+	Email     string `json:"email"`
+	Localion  string `json:"local"`
+	IsPublic  bool   `json:"public"`
+	Job       string `json:"job"`
 }
 
 // 返回状态码
@@ -99,31 +102,28 @@ func (router *PersonInfoGetRouter) PreHandle(request eduiface.IRequest) {
 
 	// 保护隐私数据
 	persongetReplyData.UID = userData.UID
+	persongetReplyData.Place = userData.Place
 	persongetReplyData.Name = userData.Name
 	persongetReplyData.ClassName = userData.Class
 	persongetReplyData.Gender = userData.Gender
 	persongetReplyData.Birth = userData.Birth
 	persongetReplyData.Political = userData.Political
+	persongetReplyData.IsPublic = userData.IsContactPub
+	persongetReplyData.Job = userData.Job
 	if reqMsgInJSON.UID != personUID {
-		if userData.IsContactPub {
+		if persongetReplyData.IsPublic {
 			persongetReplyData.Contact = userData.Contact
+			persongetReplyData.Email = userData.Email
+			persongetReplyData.Localion = userData.Localion
 		} else {
 			persongetReplyData.Contact = "未公开"
-		}
-		if userData.IsEmailPub {
-			persongetReplyData.Email = userData.Email
-		} else {
 			persongetReplyData.Email = "未公开"
-		}
-		if userData.IsLocationPub {
-			persongetReplyData.Location = userData.Location
-		} else {
-			persongetReplyData.Location = "未公开"
+			persongetReplyData.Localion = "未公开"
 		}
 	} else {
 		persongetReplyData.Contact = userData.Contact
 		persongetReplyData.Email = userData.Email
-		persongetReplyData.Location = userData.Location
+		persongetReplyData.Localion = userData.Localion
 	}
 
 	// 设定返回状态码
@@ -133,7 +133,7 @@ func (router *PersonInfoGetRouter) PreHandle(request eduiface.IRequest) {
 // Handle 用于将请求的处理结果发回客户端
 func (router *PersonInfoGetRouter) Handle(request eduiface.IRequest) {
 	// 打印请求处理Log
-	fmt.Println("[ROUTER] ", time.Now().Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", PersonInfoGetRouter: ", persongetReplyStatus)
+	fmt.Println("[ROUTERS] ", time.Now().Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", PersonInfoGetRouter: ", persongetReplyStatus)
 	var jsonMsg []byte
 	var err error
 	// 生成返回数据

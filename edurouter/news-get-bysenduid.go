@@ -18,10 +18,10 @@ type NewsGetBySenderUIDRouter struct {
 
 // NewsGetBySenderUIDData 定义根据发送者UID查询消息的参数
 type NewsGetBySenderUIDData struct {
-	Sender     string `json:"sender,omitempty"`
-	Skip       int64  `json:"skip"`
-	Limit      int64  `json:"limit"`
-	IsAnnounce bool   `json:"isannounce"`
+	Sender   string `json:"sender,omitempty"`
+	Skip     int64  `json:"skip"`
+	Limit    int64  `json:"limit"`
+	NewsType int64  `json:"type"`
 }
 
 // NewsGetBySenderUIDReplyData 定义根据发送者UID参数请求消息的返回参数
@@ -60,15 +60,14 @@ func (router *NewsGetBySenderUIDRouter) PreHandle(request eduiface.IRequest) {
 	// 获取skip和limit数据
 	Skip, Limit := GetSkipAndLimit(reqMsgInJSON.Data)
 
-	var IsAnnounce bool
-	// 从Data段获取公告限定标志位
-	isAnnounceData := gjson.GetBytes(reqMsgInJSON.Data, "isannounce")
-	// 如果标志位不存在则默认认为是非公告
-	if isAnnounceData.Exists() {
-		IsAnnounce = isAnnounceData.Bool()
-	} else {
-		IsAnnounce = false
+	// 从Data段获取公告标志位,判断是否是公告
+	newsTypeData := gjson.GetBytes(reqMsgInJSON.Data, "type")
+	// 如果不存在,则认为默认是非公告
+	if !newsTypeData.Exists() || newsTypeData.Int() < 1 || newsTypeData.Int() > 4 {
+		newsgetbysenderuidReplyStatus = "type_cannot_be_empty"
+		return
 	}
+	newsType := newsTypeData.Int()
 
 	//权限检查
 
@@ -81,16 +80,10 @@ func (router *NewsGetBySenderUIDRouter) PreHandle(request eduiface.IRequest) {
 		return
 	}
 
-	// 如果用户是学生则权限错误
-	if placeString == "student" {
-		newsgetbysenderuidReplyStatus = "permission_error"
-		return
-	}
-
 	// 如果当前连接用户是教师
 	if placeString != "manager" {
 		// 查询数据库,查询自己发送的消息
-		newsList := edumodel.GetNewsBySenderUID(int(Skip), int(Limit), IsAnnounce, reqMsgInJSON.UID)
+		newsList := edumodel.GetNewsBySenderUID(int(Skip), int(Limit), newsType, reqMsgInJSON.UID)
 		// 如果数据存在则返回success和数据,否则返回错误码
 		if newsList != nil {
 			newsgetbysenderuidReplyStatus = "success"
@@ -109,7 +102,7 @@ func (router *NewsGetBySenderUIDRouter) PreHandle(request eduiface.IRequest) {
 		senderUID := senderUIDData.String()
 
 		// 根据发送者查询消息
-		newsList := edumodel.GetNewsBySenderUID(int(Skip), int(Limit), IsAnnounce, senderUID)
+		newsList := edumodel.GetNewsBySenderUID(int(Skip), int(Limit), newsType, senderUID)
 		// 如果数据存在则返回success和数据,否则返回错误码
 		if newsList != nil {
 			newsgetbysenderuidReplyStatus = "success"
@@ -123,7 +116,7 @@ func (router *NewsGetBySenderUIDRouter) PreHandle(request eduiface.IRequest) {
 // Handle 用于将请求的处理结果发回客户端
 func (router *NewsGetBySenderUIDRouter) Handle(request eduiface.IRequest) {
 	// 打印请求处理Log
-	fmt.Println("[ROUTER] ", time.Now().Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", NewsGetBySenderUIDRouter: ", newsgetbysenderuidReplyStatus)
+	fmt.Println("[ROUTERS] ", time.Now().Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", NewsGetBySenderUIDRouter: ", newsgetbysenderuidReplyStatus)
 
 	var jsonMsg []byte
 	var err error

@@ -19,13 +19,14 @@ type QuestionCountRouter struct {
 // QuestionCountData 定义请求问题统计数据的参数
 type QuestionCountData struct {
 	ClassName string    `json:"classname"`
+	SendUID   string    `json:"senduid"`
 	Date      time.Time `json:"time,omitempty"`
 	IsSolved  bool      `json:"issolved"`
 }
 
 // QuestionCountReplyData 定义问题统计数据返回的参数
 type QuestionCountReplyData struct {
-	Number int `json:"num"`
+	Number int64 `json:"num"`
 }
 
 // 返回状态码
@@ -92,22 +93,18 @@ func (router *QuestionCountRouter) PreHandle(request eduiface.IRequest) {
 
 	// 获取班级名
 	className := gjson.GetBytes(reqMsgInJSON.Data, "classname").String()
+	sendUID := gjson.GetBytes(reqMsgInJSON.Data, "senduid").String()
+
 	// 获取是否限定已解决问题标志位
 	IsSolved := gjson.GetBytes(reqMsgInJSON.Data, "issolved").Bool()
 
 	// 查询数据库
+
 	if isTimeRequired {
-		if IsSolved {
-			questioncountReplyData.Number = edumodel.GetQuestionAnsweredNumberByDate(className, targetTime)
-		} else {
-			questioncountReplyData.Number = edumodel.GetQuestionNumberByDate(className, targetTime)
-		}
+		questioncountReplyData.Number = edumodel.GetQuestionNumber(className, sendUID, IsSolved, &targetTime)
 	} else {
-		if IsSolved {
-			questioncountReplyData.Number = edumodel.GetQuestionAnsweredNumberAll(className)
-		} else {
-			questioncountReplyData.Number = edumodel.GetQuestionNumberAll(className)
-		}
+		questioncountReplyData.Number = edumodel.GetQuestionNumber(className, sendUID, IsSolved, nil)
+
 	}
 
 	// 如果获取到有效数据则返回success,否则提示数据库错误
@@ -121,7 +118,7 @@ func (router *QuestionCountRouter) PreHandle(request eduiface.IRequest) {
 // Handle 用于将请求的处理结果发回客户端
 func (router *QuestionCountRouter) Handle(request eduiface.IRequest) {
 	// 打印请求处理Log
-	fmt.Println("[ROUTER] ", time.Now().Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", QuestionCountRouter: ", questioncountReplyStatus)
+	fmt.Println("[ROUTERS] ", time.Now().Format(utils.GlobalObject.TimeFormat), ", Client Address: ", request.GetConnection().GetTCPConnection().RemoteAddr(), ", QuestionCountRouter: ", questioncountReplyStatus)
 
 	var jsonMsg []byte
 	var err error
