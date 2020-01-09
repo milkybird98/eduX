@@ -160,17 +160,15 @@ func GetNewsByAudientUID(skip int, limit int, newsType int64, uid string, isAdmi
 	if isAdmin {
 		filter = bson.M{
 			"type":    newsType,
-			"audiuid": []string{uid},
+			"audiuid": bson.M{"$in": []string{uid}},
 		}
 	} else {
 		filter = bson.M{
 			"type":       newsType,
-			"audiuid":    []string{uid},
+			"audiuid":    bson.M{"$in": []string{uid}},
 			"targettime": bson.M{"$lt": time.Now()},
 		}
 	}
-
-	fmt.Println(filter)
 
 	option := options.Find().SetSort(bson.M{"sendtime": -1}).SetSkip(int64(skip)).SetLimit(int64(limit))
 
@@ -236,7 +234,7 @@ func GetNewsNumber(audiUID string, sendUID string, newsType int) int {
 	filter := bson.D{}
 
 	if audiUID != "" {
-		filter = append(filter, bson.E{"senduid", audiUID})
+		filter = append(filter, bson.E{"audiuid", audiUID})
 	}
 	if sendUID != "" {
 		filter = append(filter, bson.E{"senduid", sendUID})
