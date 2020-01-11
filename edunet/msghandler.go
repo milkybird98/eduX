@@ -39,7 +39,6 @@ func (mh *MsgHandle) SendMsgToTaskQueue(request eduiface.IRequest) {
 	//轮询的平均分配法则
 
 	//得到需要处理此条连接的workerID
-	workerID := mh.NextIndex()
 	fmt.Println("[MSGHAND] Add ConnID=", request.GetConnection().GetConnID(), " request msgID=", request.GetMsgID(), "to workerID=", workerID)
 	//将请求消息发送给任务队列
 	mh.TaskQueue[request.GetConnection().GetConnID()%mh.WorkerPoolSize] <- request
@@ -49,7 +48,7 @@ func (mh *MsgHandle) SendMsgToTaskQueue(request eduiface.IRequest) {
 func (mh *MsgHandle) DoMsgHandler(request eduiface.IRequest) {
 	handler, ok := mh.Apis[request.GetMsgID()]
 	if !ok {
-		fmt.Println("[MSGHAND][WARNING] api msgId = ", request.GetMsgID(), " is not FOUND!")
+		fmt.Println("[MSGHAND][WARNING] api msgId = ", request.GetMsgID(), " is NOT found!")
 		return
 	}
 
@@ -74,13 +73,28 @@ func (mh *MsgHandle) AddRouter(msgId uint32, router eduiface.IRouter) {
 func (mh *MsgHandle) StartOneWorker(workerID int, taskQueue chan eduiface.IRequest) {
 	fmt.Println("[MSGHAND][IMPORTANT] Worker ID = ", workerID, " is started.")
 	//不断的等待队列中的消息
+
+	var request eduiface.IRequest
+
+	defer func() {
+		if err := recover(); err != nil {
+			go PrintErrorMsg(workerID)
+			taskQueue <- request
+			go mh.StartOneWorker(workerID, mh.TaskQueue[workerID])
+		}
+	}()
+
 	for {
 		select {
 		//有消息则取出队列的Request，并执行绑定的业务方法
-		case request := <-taskQueue:
+		case request = <-taskQueue:
 			mh.DoMsgHandler(request)
 		}
 	}
+}
+
+func PrintErrorMsg(workerID int) {
+	fmt.Println("[MSGHAND][ERROR] worker panic error, worker ID: ", workerID, ",respawn worker now")
 }
 
 //启动worker工作池
