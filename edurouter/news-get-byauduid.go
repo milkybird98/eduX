@@ -63,7 +63,7 @@ func (router *NewsGetByAudientUIDRouter) PreHandle(request eduiface.IRequest) {
 	// 从Data段获取公告标志位,判断是否是公告
 	newsTypeData := gjson.GetBytes(reqMsgInJSON.Data, "type")
 	// 如果不存在,则认为默认是非公告
-	if !newsTypeData.Exists() || newsTypeData.Int() < 1 || newsTypeData.Int() > 4 {
+	if !newsTypeData.Exists() || newsTypeData.Int() < 1 || newsTypeData.Int() > 5 {
 		newgetbyaudientuidReplyStatus = "type_cannot_be_empty"
 		return
 	}
@@ -90,7 +90,7 @@ func (router *NewsGetByAudientUIDRouter) PreHandle(request eduiface.IRequest) {
 			return
 		}
 		var filter string
-		if newsType == 3 {
+		if newsType == 3 || newsType == 5 {
 			filter = user.Class
 		} else if newsType == 4 {
 			filter = "all"

@@ -78,9 +78,10 @@ func (router *FileCountRouter) PreHandle(request eduiface.IRequest) {
 	timeData := gjson.GetBytes(reqMsgInJSON.Data, "time")
 	var targetTime time.Time
 	var isTimeRequired bool
+	var err error
 	// 解码时间数据
 	if timeData.Exists() && timeData.String() != "" {
-		targetTime, err := time.Parse(time.RFC3339, timeData.String())
+		targetTime, err = time.Parse(time.RFC3339, timeData.String())
 		// 如果成功解码出时间则限定统计时间
 		if err != nil || targetTime.IsZero() {
 			isTimeRequired = false

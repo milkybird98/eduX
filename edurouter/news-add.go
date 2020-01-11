@@ -23,7 +23,7 @@ type NewsAddData struct {
 	Text       string    `json:"text"`     // 消息正文
 	AudientUID []string  `json:"audients"` // 消息接收者
 	TargetTime time.Time `json:"targettime,omitempty"`
-	NewsType   int64     `json:"type"`
+	NewsType   int64     `json:""`
 }
 
 // 返回状态码
@@ -152,11 +152,15 @@ func (router *NewsAddRouter) PreHandle(request eduiface.IRequest) {
 			for _, audient := range audientData.Array() {
 				// 检查添加用户是否在教师管理的班级中,若不在则返回错误码
 				if audient.String() != "" {
-					if edumodel.CheckUserInClass(class.ClassName, audient.String(), "student") {
+					if newNews.NewsType == 3 {
 						newNews.AudientUID = append(newNews.AudientUID, audient.String())
 					} else {
-						newsaddReplyStatus = "permission_error_cannot_send_news_to_another_class"
-						return
+						if edumodel.CheckUserInClass(class.ClassName, audient.String(), "student") {
+							newNews.AudientUID = append(newNews.AudientUID, audient.String())
+						} else {
+							newsaddReplyStatus = "permission_error_cannot_send_news_to_another_class"
+							return
+						}
 					}
 				} else {
 					// 若存在无效数据则返回错误码
@@ -167,11 +171,20 @@ func (router *NewsAddRouter) PreHandle(request eduiface.IRequest) {
 		}
 	} else { //若干不存在听众数据
 		if placeString == "manager" { //如果当前用户是管理员
-			// 将听众设为所有人
-			newNews.AudientUID = []string{"all"}
+			if newNews.NewsType == 4 {
+				// 将听众设为所有人
+				newNews.AudientUID = []string{"all"}
+			} else {
+				newsaddReplyStatus = "audient_cannot_be_empty"
+				return
+			}
 		} else if placeString == "teacher" { // 如果当前用户是管理员
-			newsaddReplyStatus = "audient_cannot_be_empty"
-			return
+			if newNews.NewsType == 3 {
+				newNews.AudientUID = []string{class.ClassName}
+			} else {
+				newsaddReplyStatus = "audient_cannot_be_empty"
+				return
+			}
 		}
 	}
 	newNews.TargetTime = targetTime

@@ -27,6 +27,7 @@ type PersonInfoPutData struct {
 	IsContactPub bool   `json:"public"`
 	Email        string `json:"email,omitempty"`
 	Localion     string `json:"local,omitempty"`
+	Job          string `json:"job,omitempty"`
 }
 
 // 返回状态码

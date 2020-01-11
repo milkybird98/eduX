@@ -8,7 +8,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
-	"fmt"
 
 	"github.com/tidwall/gjson"
 )
@@ -66,7 +65,7 @@ func CheckMsgFormat(request eduiface.IRequest) (*ReqMsg, string, bool) {
 		if err != nil {
 			return nil, "data_base64_format_error", false
 		}
-		fmt.Println(string(reqMsgInJSON.Data))
+		//fmt.Println(string(reqMsgInJSON.Data))
 	} else {
 		reqMsgInJSON.Data = nil
 	}
@@ -81,13 +80,9 @@ func CheckMsgFormat(request eduiface.IRequest) (*ReqMsg, string, bool) {
 
 	// 根据获取数据计算校验和
 	md5Ctx := md5.New()
-	//fmt.Println(reqMsgInJSON.UID)
-	md5Ctx.Write([]byte(reqMsgInJSON.UID))
-	//fmt.Println(string(reqMsgInJSON.Data))
-	md5Ctx.Write([]byte(reqMsgInJSON.Data))
 
-	//fmt.Println([]byte(md5Ctx.Sum(nil)))
-	//fmt.Println([]byte(reqMsgInJSON.CheckSum))
+	md5Ctx.Write([]byte(reqMsgInJSON.UID))
+	md5Ctx.Write([]byte(reqMsgInJSON.Data))
 
 	// 如果校验和不一致则报错返回
 	if string(reqMsgInJSON.CheckSum) != hex.EncodeToString(md5Ctx.Sum(nil)) {
@@ -134,6 +129,10 @@ func CombineReplyMsg(status string, dataInJSON interface{}) ([]byte, error) {
 	var replyMsg ResMsg
 	var err error
 	// 赋值返回状态
+	if status == "" {
+		panic(err.Error())
+	}
+
 	replyMsg.Status = status
 
 	// 如果返回数据有Data段,则试图序列化Data段
@@ -146,11 +145,9 @@ func CombineReplyMsg(status string, dataInJSON interface{}) ([]byte, error) {
 			return nil, err
 		}
 		// 赋值序列化后的Data段
-		fmt.Println(string(data))
+		//fmt.Println(string(data))
 		replyMsg.Data = data
 	}
-
-	//fmt.Println(string(replyMsg.Data))
 
 	// 计算MD5校验和并赋值
 	md5Ctx := md5.New()
@@ -199,7 +196,6 @@ func CombineSendMsg(UID string, dataInJSON interface{}) ([]byte, error) {
 		return nil, err
 	}
 
-	//fmt.Println(string(jsonMsg))
 	return jsonMsg, nil
 }
 
