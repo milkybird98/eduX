@@ -7,6 +7,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 var userCollection *mongo.Collection
@@ -124,6 +125,35 @@ func GetUserNumber() int {
 	return int(count)
 }
 
+func GetUserSimpleAll() *[]*User {
+	checkClassCollection()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	filter := bson.M{}
+	option := options.Find().SetProjection(bson.M{"name": 1, "uid": 1})
+
+	var result []*User
+	cur, err := userCollection.Find(ctx, filter, option)
+	if err != nil {
+		fmt.Println("[MODEL]", err)
+		return nil
+	}
+	defer cur.Close(ctx)
+
+	for cur.Next(ctx) {
+		var user User
+		if err := cur.Decode(&user); err != nil {
+			fmt.Println("[MODEL]", err)
+			return nil
+		}
+		result = append(result, &user)
+	}
+
+	return &result
+}
+
 func UpdateUserByID(newUserData *User) bool {
 	checkUserCollection()
 
@@ -176,7 +206,7 @@ func UpdateUserByID(newUserData *User) bool {
 			"name":          originData.Name,
 			"class":         originData.Class,
 			"gender":        originData.Gender,
-			"bitrh":         originData.Birth,
+			"birth":         originData.Birth,
 			"political":     originData.Political,
 			"contact":       originData.Contact,
 			"iscontactpub":  originData.IsContactPub,
@@ -187,6 +217,8 @@ func UpdateUserByID(newUserData *User) bool {
 			"job":           originData.Job,
 		}},
 	}
+
+	fmt.Println(update)
 
 	_, err := userCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
