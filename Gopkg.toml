@@ -26,10 +26,6 @@
 
 
 [[constraint]]
-  name = "github.com/google/uuid"
-  version = "1.1.1"
-
-[[constraint]]
   name = "go.mongodb.org/mongo-driver"
   version = "1.2.0"
 
