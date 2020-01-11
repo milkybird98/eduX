@@ -168,7 +168,7 @@ func ClientTestSA(t *testing.T) {
 		person.Contact = "123456789"
 		person.IsContactPub = true
 		person.Email = "asd@asd.com"
-		person.IsEmailPub = false
+		person.Job = "无"
 
 		msgData, _ := edurouter.CombineSendMsg("M1001", person)
 

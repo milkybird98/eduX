@@ -96,6 +96,7 @@ func TestClassModel(t *testing.T) {
 	fmt.Println("add class")
 	class := &edumodel.Class{
 		"ts1001",
+		"测试1001",
 		teacherList,
 		studentList,
 		time.Now(),
@@ -184,6 +185,7 @@ func TestUserModel(t *testing.T) {
 		false,
 		"Hubei",
 		true,
+		"无",
 	}
 	edumodel.AddUser(user)
 
