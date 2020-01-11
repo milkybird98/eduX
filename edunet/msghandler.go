@@ -40,7 +40,7 @@ func (mh *MsgHandle) SendMsgToTaskQueue(request eduiface.IRequest) {
 
 	workerID := request.GetConnection().GetConnID() % mh.WorkerPoolSize
 	//得到需要处理此条连接的workerID
-	fmt.Println("[MSGHAND] Add ConnID=", request.GetConnection().GetConnID(), " request msgID=", request.GetMsgID(), "to workerID=", workerID)
+	//fmt.Println("[MSGHAND] Add ConnID=", request.GetConnection().GetConnID(), " request msgID=", request.GetMsgID(), "to workerID=", workerID)
 	//将请求消息发送给任务队列
 	mh.TaskQueue[workerID] <- request
 }
@@ -79,7 +79,7 @@ func (mh *MsgHandle) StartOneWorker(workerID int, taskQueue chan eduiface.IReque
 
 	defer func() {
 		if err := recover(); err != nil {
-			go PrintErrorMsg(workerID)
+			//go PrintErrorMsg(workerID)
 			taskQueue <- request
 			go mh.StartOneWorker(workerID, mh.TaskQueue[workerID])
 		}
