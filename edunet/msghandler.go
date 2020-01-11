@@ -38,10 +38,11 @@ func (mh *MsgHandle) SendMsgToTaskQueue(request eduiface.IRequest) {
 	//根据ConnID来分配当前的连接应该由哪个worker负责处理
 	//轮询的平均分配法则
 
+	workerID := request.GetConnection().GetConnID() % mh.WorkerPoolSize
 	//得到需要处理此条连接的workerID
 	fmt.Println("[MSGHAND] Add ConnID=", request.GetConnection().GetConnID(), " request msgID=", request.GetMsgID(), "to workerID=", workerID)
 	//将请求消息发送给任务队列
-	mh.TaskQueue[request.GetConnection().GetConnID()%mh.WorkerPoolSize] <- request
+	mh.TaskQueue[workerID] <- request
 }
 
 //马上以非阻塞方式处理消息
