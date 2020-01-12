@@ -252,8 +252,6 @@ func UpdateUserByID(newUserData *User) bool {
 		}},
 	}
 
-	fmt.Println(update)
-
 	_, err := userCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
 		fmt.Println("[MODEL]", err)
