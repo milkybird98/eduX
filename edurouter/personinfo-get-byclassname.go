@@ -116,6 +116,15 @@ func (router *PersonInfoGetByClassRouter) PreHandle(request eduiface.IRequest) {
 			personData.Email = person.Email
 		}
 
+		personData.Com1A = person.Com1A
+		personData.Com1B = person.Com1B
+		personData.Com2A = person.Com2A
+		personData.Com2B = person.Com2B
+		personData.Com3A = person.Com3A
+		personData.Com3B = person.Com3B
+		personData.Com4A = person.Com4A
+		personData.Com4B = person.Com4B
+
 		// 添加到返回数据中
 		persongetbyclassReplyData.UserList = append(persongetbyclassReplyData.UserList, personData)
 	}

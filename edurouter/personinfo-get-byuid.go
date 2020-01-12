@@ -35,6 +35,14 @@ type PersonInfoGetReplyData struct {
 	Localion  string `json:"local"`
 	IsPublic  bool   `json:"public"`
 	Job       string `json:"job"`
+	Com1A     string `json:"com1a"`
+	Com1B     string `json:"com1b"`
+	Com2A     string `json:"com2a"`
+	Com2B     string `json:"com2b"`
+	Com3A     string `json:"com3a"`
+	Com3B     string `json:"com3b"`
+	Com4A     string `json:"com4a"`
+	Com4B     string `json:"com4b"`
 }
 
 // 返回状态码
@@ -125,6 +133,15 @@ func (router *PersonInfoGetRouter) PreHandle(request eduiface.IRequest) {
 		persongetReplyData.Email = userData.Email
 		persongetReplyData.Localion = userData.Localion
 	}
+
+	persongetReplyData.Com1A = userData.Com1A
+	persongetReplyData.Com1B = userData.Com1B
+	persongetReplyData.Com2A = userData.Com2A
+	persongetReplyData.Com2B = userData.Com2B
+	persongetReplyData.Com3A = userData.Com3A
+	persongetReplyData.Com3B = userData.Com3B
+	persongetReplyData.Com4A = userData.Com4A
+	persongetReplyData.Com4B = userData.Com4B
 
 	// 设定返回状态码
 	persongetReplyStatus = "success"

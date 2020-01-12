@@ -28,6 +28,14 @@ type PersonInfoPutData struct {
 	Email        string `json:"email,omitempty"`
 	Localion     string `json:"local,omitempty"`
 	Job          string `json:"job,omitempty"`
+	Com1A        string `json:"com1a"`
+	Com1B        string `json:"com1b"`
+	Com2A        string `json:"com2a"`
+	Com2B        string `json:"com2b"`
+	Com3A        string `json:"com3a"`
+	Com3B        string `json:"com3b"`
+	Com4A        string `json:"com4a"`
+	Com4B        string `json:"com4b"`
 }
 
 // 返回状态码
@@ -113,6 +121,14 @@ func (router *PersonInfoPutRouter) PreHandle(request eduiface.IRequest) {
 	newUserInfo.Localion = newPersonInfoData.Get("local").String()
 	newUserInfo.IsLocalionPub = newPersonInfoData.Get("public").Bool()
 	newUserInfo.Job = newPersonInfoData.Get("job").String()
+	newUserInfo.Com1A = newPersonInfoData.Get("com1a").String()
+	newUserInfo.Com1B = newPersonInfoData.Get("com1b").String()
+	newUserInfo.Com2A = newPersonInfoData.Get("com2a").String()
+	newUserInfo.Com2B = newPersonInfoData.Get("com2b").String()
+	newUserInfo.Com3A = newPersonInfoData.Get("com3a").String()
+	newUserInfo.Com3B = newPersonInfoData.Get("com3b").String()
+	newUserInfo.Com4A = newPersonInfoData.Get("com4a").String()
+	newUserInfo.Com4B = newPersonInfoData.Get("com4b").String()
 
 	// 更新数据库
 	res := edumodel.UpdateUserByID(&newUserInfo)

@@ -27,6 +27,14 @@ type User struct {
 	Localion      string `bson:"localion" json:"localion"`
 	IsLocalionPub bool   `bson:"islocalionpub" json:"islocalionpub"`
 	Job           string `bson:"job" json:"job"`
+	Com1A         string `bson:"com1a" json:"com1a"`
+	Com1B         string `bson:"com1b" json:"com1b"`
+	Com2A         string `bson:"com2a" json:"com2a"`
+	Com2B         string `bson:"com2b" json:"com2b"`
+	Com3A         string `bson:"com3a" json:"com3a"`
+	Com3B         string `bson:"com3b" json:"com3b"`
+	Com4A         string `bson:"com4a" json:"com4a"`
+	Com4B         string `bson:"com4b" json:"com4b"`
 }
 
 func checkUserCollection() {
@@ -196,6 +204,24 @@ func UpdateUserByID(newUserData *User) bool {
 	if newUserData.Job != originData.Job {
 		originData.Job = newUserData.Job
 	}
+	if newUserData.Com1A != originData.Com1A {
+		originData.Com1A = newUserData.Com1A
+	}
+	if newUserData.Com1B != originData.Com1B {
+		originData.Com1B = newUserData.Com1B
+	}
+	if newUserData.Com2A != originData.Com2A {
+		originData.Com2A = newUserData.Com2A
+	}
+	if newUserData.Com2B != originData.Com2B {
+		originData.Com2B = newUserData.Com2B
+	}
+	if newUserData.Com3A != originData.Com3A {
+		originData.Com3A = newUserData.Com3A
+	}
+	if newUserData.Com3B != originData.Com3B {
+		originData.Com3B = newUserData.Com3B
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -215,6 +241,14 @@ func UpdateUserByID(newUserData *User) bool {
 			"localion":      originData.Localion,
 			"islocalionpub": originData.IsLocalionPub,
 			"job":           originData.Job,
+			"com1a":         originData.Com1A,
+			"com1b":         originData.Com1B,
+			"com2a":         originData.Com2A,
+			"com2b":         originData.Com2B,
+			"com3a":         originData.Com3A,
+			"com3b":         originData.Com3B,
+			"com4a":         originData.Com4A,
+			"com4b":         originData.Com4B,
 		}},
 	}
 
