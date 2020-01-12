@@ -120,6 +120,15 @@ func (router *PersonInfoPutRouter) PreHandle(request eduiface.IRequest) {
 	newUserInfo.IsEmailPub = newPersonInfoData.Get("public").Bool()
 	newUserInfo.Localion = newPersonInfoData.Get("local").String()
 	newUserInfo.IsLocalionPub = newPersonInfoData.Get("public").Bool()
+
+	if reqMsgInJSON.UID != UID {
+		if newUserInfo.IsContactPub == false {
+			newUserInfo.Contact = ""
+			newUserInfo.Email = ""
+			newUserInfo.Localion = ""
+		}
+	}
+
 	newUserInfo.Job = newPersonInfoData.Get("job").String()
 	newUserInfo.Com1A = newPersonInfoData.Get("com1a").String()
 	newUserInfo.Com1B = newPersonInfoData.Get("com1b").String()
