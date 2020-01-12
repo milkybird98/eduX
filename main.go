@@ -48,7 +48,7 @@ func main() {
 	s.AddRouter(43, &edurouter.PersonInfoGetRouter{})
 	s.AddRouter(44, &edurouter.PersonInfoPutRouter{})
 	s.AddRouter(45, &edurouter.PersonCountRouter{})
-	s.AddRouter(46	, &edurouter.PersonInfoGetAllRouter{})
+	s.AddRouter(46, &edurouter.PersonInfoGetAllRouter{})
 
 	s.AddRouter(51, &edurouter.PwdGetQuestionRouter{})
 	s.AddRouter(52, &edurouter.PwdForgetRouter{})

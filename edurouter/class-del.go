@@ -50,7 +50,7 @@ func (router *ClassDelRouter) PreHandle(request eduiface.IRequest) {
 	delClassData := gjson.GetBytes(reqMsgInJSON.Data, "class")
 	// 如果数据不存在则返回
 	if !delClassData.Exists() || delClassData.String() == "" {
-		classdelReplyStatus = "data_format_error"
+		classdelReplyStatus = "class_cannot_be_empty"
 		return
 	}
 
@@ -82,6 +82,20 @@ func (router *ClassDelRouter) PreHandle(request eduiface.IRequest) {
 	if class == nil {
 		classdelReplyStatus = "class_not_found"
 		return
+	}
+
+	if class.StudentList != nil && len(class.StudentList) > 0 {
+		if !edumodel.DeleteUserFromClassByUID(class.StudentList, class.ClassName) {
+			classdelReplyStatus = "model_fail_89"
+			return
+		}
+	}
+
+	if class.TeacherList != nil && len(class.TeacherList) > 0 {
+		if !edumodel.DeleteUserFromClassByUID(class.TeacherList, class.ClassName) {
+			classdelReplyStatus = "model_fail_96"
+			return
+		}
 	}
 
 	// 删除班级
