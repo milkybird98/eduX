@@ -222,6 +222,12 @@ func UpdateUserByID(newUserData *User) bool {
 	if newUserData.Com3B != originData.Com3B {
 		originData.Com3B = newUserData.Com3B
 	}
+	if newUserData.Com4A != originData.Com4A {
+		originData.Com4A = newUserData.Com4A
+	}
+	if newUserData.Com4B != originData.Com4B {
+		originData.Com4B = newUserData.Com4B
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()

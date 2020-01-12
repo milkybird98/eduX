@@ -239,7 +239,7 @@ func GetNewsNumber(audiUID string, sendUID string, newsType int) int {
 	if sendUID != "" {
 		filter = append(filter, bson.E{"senduid", sendUID})
 	}
-	if newsType >= 1 && newsType <= 4 {
+	if newsType >= 1 && newsType <= 5 {
 		filter = append(filter, bson.E{"type", newsType})
 	}
 

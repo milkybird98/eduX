@@ -3,6 +3,7 @@ package edumodel
 import (
 	"context"
 	"fmt"
+	"sort"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -22,13 +23,27 @@ type Question struct {
 	SendTime  time.Time          `bson:"sendtime" json:"sendtime"`
 	IsSolved  bool               `bson:"issolved" json:"issolved"`
 	IsDeleted bool               `bson:"isdeleted" json:"isdeleted"`
-	Answer    []QuestionAnser    `bson:"answer,omitempty" json:"answer"`
+	Answer    Answerlist         `bson:"answer,omitempty" json:"answer"`
 }
 
 type QuestionAnser struct {
 	AnswerUID  string    `bson:"answeruid,omitempty" json:"answeruid"`
 	AnswerTime time.Time `bson:"answertime,omitempty" json:"answertime"`
 	AnswerText string    `bson:"text,omitempty" json:"text"`
+}
+
+type Answerlist []QuestionAnser
+
+func (a Answerlist) Len() int {
+	return len(a)
+}
+
+func (a Answerlist) Swap(i, j int) {
+	a[i], a[j] = a[j], a[i]
+}
+
+func (a Answerlist) Less(i, j int) bool {
+	return a[i].AnswerTime.After(a[j].AnswerTime)
 }
 
 func checkQuesCollection() {
@@ -87,6 +102,7 @@ func GetQuestionByTimeOrder(skip, limit int64, detectSolved bool, isSolved bool)
 			fmt.Println("[MODEL]", err)
 			return nil
 		}
+		sort.Sort(question.Answer)
 		result = append(result, question)
 	}
 
@@ -133,6 +149,7 @@ func GetQuestionBySenderUID(skip int, limit int, detectSolved bool, isSolved boo
 			fmt.Println("[MODEL]", err)
 			return nil
 		}
+		sort.Sort(question.Answer)
 		result = append(result, question)
 	}
 
@@ -169,6 +186,7 @@ func GetQuestionByQueserUID(skip int, limit int, isSolved bool, uid string) *[]Q
 			fmt.Println("[MODEL]", err)
 			return nil
 		}
+		sort.Sort(question.Answer)
 		result = append(result, question)
 	}
 
@@ -215,6 +233,7 @@ func GetQuestionByClassName(skip int, limit int, detectSolved bool, isSolved boo
 			fmt.Println("[MODEL]", err)
 			return nil
 		}
+		sort.Sort(question.Answer)
 		result = append(result, question)
 	}
 
@@ -247,6 +266,7 @@ func GetQuestionByInnerID(idInString string) *Question {
 		return nil
 	}
 
+	sort.Reverse(question.Answer)
 	return &question
 }
 
