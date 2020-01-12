@@ -76,7 +76,7 @@ func (router *NewsAddRouter) PreHandle(request eduiface.IRequest) {
 	// 从Data段获取公告标志位,判断是否是公告
 	newsTypeData := newNewsData.Get("type")
 	// 如果不存在,则认为默认是非公告
-	if !newsTypeData.Exists() || newsTypeData.Int() < 1 || newsTypeData.Int() > 4 {
+	if !newsTypeData.Exists() || newsTypeData.Int() < 1 || newsTypeData.Int() > 5 {
 		newsaddReplyStatus = "type_cannot_be_empty"
 		return
 	}
@@ -152,7 +152,7 @@ func (router *NewsAddRouter) PreHandle(request eduiface.IRequest) {
 			for _, audient := range audientData.Array() {
 				// 检查添加用户是否在教师管理的班级中,若不在则返回错误码
 				if audient.String() != "" {
-					if newNews.NewsType == 3 {
+					if newNews.NewsType == 3 || newNews.NewsType == 5 {
 						newNews.AudientUID = append(newNews.AudientUID, audient.String())
 					} else {
 						if edumodel.CheckUserInClass(class.ClassName, audient.String(), "student") {
@@ -179,7 +179,7 @@ func (router *NewsAddRouter) PreHandle(request eduiface.IRequest) {
 				return
 			}
 		} else if placeString == "teacher" { // 如果当前用户是管理员
-			if newNews.NewsType == 3 {
+			if newNews.NewsType == 3 || newNews.NewsType == 5 {
 				newNews.AudientUID = []string{class.ClassName}
 			} else {
 				newsaddReplyStatus = "audient_cannot_be_empty"
