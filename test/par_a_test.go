@@ -13,13 +13,13 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-func TestParallel(t *testing.T) {
+func TestParallelA(t *testing.T) {
 	wg := sync.WaitGroup{}
 
-	wg.Add(100)
+	wg.Add(1000)
 
 	for i := 0; i < 1000; i++ {
-		time.Sleep(time.Millisecond * 5)
+		time.Sleep(time.Millisecond * 1)
 		go login(&wg, t)
 	}
 
@@ -31,17 +31,15 @@ func TestParallel(t *testing.T) {
 var sum int
 
 func login(wg *sync.WaitGroup, t *testing.T) {
-	conn, err := net.Dial("tcp", "127.0.0.1:23333")
+	conn, err := net.Dial("tcp", "192.168.1.138:23333")
 	if err != nil {
 		fmt.Println("client start err, exit!")
 		return
 	}
 
-	for j := 0; j < 500; j++ {
+	for j := 0; j < 50; j++ {
 		for i := 0; i < 2; i++ {
 			{
-				//fmt.Println("[TEST]test login")
-
 				db := edunet.NewDataPack()
 
 				var loginData edurouter.LoginData
