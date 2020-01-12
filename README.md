@@ -85,7 +85,7 @@ You can add your own model anywhere, no need to put it there.
 
 In normal, the file server port would be event sever's port plus one, which handles the file transmiting operation, and co-work with file routers. If you don't need a file router, you can remove ```line 15``` and ```line 66``` in main.go.
 
-## Servre Test 
+## Server Test 
 
 There are some test under ```./test/```, and the par_*_test.go
 is stress test, or "performence test", you can run ir for fun, while the model_test.go would make your datebase a piece of MESS, it's not fun at all.
