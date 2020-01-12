@@ -87,6 +87,9 @@ func (router *PersonAddRouter) PreHandle(request eduiface.IRequest) {
 	newUser.UID = reqDataInJSON.UID
 	newUser.Name = reqDataInJSON.Name
 	newUser.Place = reqDataInJSON.Place
+	newUser.IsContactPub = true
+	newUser.IsEmailPub = true
+	newUser.IsLocalionPub = true
 
 	newUserAuth.UID = reqDataInJSON.UID
 	// 密码加密入库
