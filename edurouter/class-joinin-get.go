@@ -7,11 +7,18 @@ import (
 	"eduX/utils"
 	"fmt"
 	"time"
+
+	"github.com/tidwall/gjson"
 )
 
 // ClassJoinInGetRouter 用于获取当前用户已加入的班级
 type ClassJoinInGetRouter struct {
 	edunet.BaseRouter
+}
+
+// ClassJoinInGetReplyData 定义发当前用户已加入班级时Data段的参数
+type ClassJoinInGetData struct {
+	UID string `json:"useruid"`
 }
 
 // ClassJoinInGetReplyData 定义返回当前用户已加入班级时Data段的参数
@@ -45,19 +52,21 @@ func (router *ClassJoinInGetRouter) PreHandle(request eduiface.IRequest) {
 		return
 	}
 
-	// 权限检查
-	c := request.GetConnection()
+	var user *edumodel.User
+	uid := gjson.GetBytes(reqMsgInJSON.Data, "useruid").String()
 
-	// 试图从session中获取身份数据
-	placeString, err := GetSessionPlace(c)
-	// 若不存在则返回
-	if err != nil {
-		classjoiningetReplyStatus = err.Error()
+	if uid == "" {
+		uid = reqMsgInJSON.UID
+	}
+
+	user = edumodel.GetUserByUID(uid)
+	if user == nil {
+		classjoiningetReplyStatus = "user_not_found"
 		return
 	}
 
 	// 从数据库中获取当前用户已加入班级数据
-	class := edumodel.GetClassByUID(reqMsgInJSON.UID, placeString)
+	class := edumodel.GetClassByUID(user.UID, user.Place)
 
 	// 如果班级存在则将班级数据返回
 	if class == nil {
