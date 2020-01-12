@@ -82,7 +82,7 @@ func (router *NewsAddRouter) PreHandle(request eduiface.IRequest) {
 	}
 
 	// 试图从Data段中获取日期数据
-	timeData := gjson.GetBytes(reqMsgInJSON.Data, "time")
+	timeData := gjson.GetBytes(reqMsgInJSON.Data, "targettime")
 	var targetTime time.Time
 	var err error
 	// 解码时间数据
