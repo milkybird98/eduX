@@ -99,7 +99,7 @@ func (router *ClassDelRouter) PreHandle(request eduiface.IRequest) {
 	}
 
 	// 删除班级
-	ok = edumodel.DeleteClassByName(delClassName)
+	ok = edumodel.DeleteClassByName(delClassName) && edumodel.DeleteUserByUID(class.TeacherList[0])
 	if ok == true {
 		classdelReplyStatus = "success"
 	} else {
