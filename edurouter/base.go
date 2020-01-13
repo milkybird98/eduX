@@ -8,7 +8,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
-	"fmt"
 
 	"github.com/tidwall/gjson"
 )
@@ -66,7 +65,6 @@ func CheckMsgFormat(request eduiface.IRequest) (*ReqMsg, string, bool) {
 		if err != nil {
 			return nil, "data_base64_format_error", false
 		}
-		fmt.Println(string(reqMsgInJSON.Data))
 	} else {
 		reqMsgInJSON.Data = nil
 	}
@@ -146,7 +144,6 @@ func CombineReplyMsg(status string, dataInJSON interface{}) ([]byte, error) {
 			return nil, err
 		}
 		// 赋值序列化后的Data段
-		fmt.Println(string(data))
 		replyMsg.Data = data
 	}
 
