@@ -162,7 +162,7 @@ func GetUserSimpleAll() *[]*User {
 	return &result
 }
 
-func UpdateUserByID(newUserData *User) bool {
+func UpdateUserByID(newUserData *User, notmod bool) bool {
 	checkUserCollection()
 
 	if newUserData == nil {
@@ -204,29 +204,31 @@ func UpdateUserByID(newUserData *User) bool {
 	if newUserData.Job != originData.Job {
 		originData.Job = newUserData.Job
 	}
-	if newUserData.Com1A != originData.Com1A {
-		originData.Com1A = newUserData.Com1A
-	}
-	if newUserData.Com1B != originData.Com1B {
-		originData.Com1B = newUserData.Com1B
-	}
-	if newUserData.Com2A != originData.Com2A {
-		originData.Com2A = newUserData.Com2A
-	}
-	if newUserData.Com2B != originData.Com2B {
-		originData.Com2B = newUserData.Com2B
-	}
-	if newUserData.Com3A != originData.Com3A {
-		originData.Com3A = newUserData.Com3A
-	}
-	if newUserData.Com3B != originData.Com3B {
-		originData.Com3B = newUserData.Com3B
-	}
-	if newUserData.Com4A != originData.Com4A {
-		originData.Com4A = newUserData.Com4A
-	}
-	if newUserData.Com4B != originData.Com4B {
-		originData.Com4B = newUserData.Com4B
+	if !notmod {
+		if newUserData.Com1A != originData.Com1A {
+			originData.Com1A = newUserData.Com1A
+		}
+		if newUserData.Com1B != originData.Com1B {
+			originData.Com1B = newUserData.Com1B
+		}
+		if newUserData.Com2A != originData.Com2A {
+			originData.Com2A = newUserData.Com2A
+		}
+		if newUserData.Com2B != originData.Com2B {
+			originData.Com2B = newUserData.Com2B
+		}
+		if newUserData.Com3A != originData.Com3A {
+			originData.Com3A = newUserData.Com3A
+		}
+		if newUserData.Com3B != originData.Com3B {
+			originData.Com3B = newUserData.Com3B
+		}
+		if newUserData.Com4A != originData.Com4A {
+			originData.Com4A = newUserData.Com4A
+		}
+		if newUserData.Com4B != originData.Com4B {
+			originData.Com4B = newUserData.Com4B
+		}
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -257,6 +259,8 @@ func UpdateUserByID(newUserData *User) bool {
 			"com4b":         originData.Com4B,
 		}},
 	}
+
+	fmt.Println(update)
 
 	_, err := userCollection.UpdateOne(ctx, filter, update)
 	if err != nil {

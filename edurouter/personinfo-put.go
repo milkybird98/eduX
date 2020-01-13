@@ -28,6 +28,7 @@ type PersonInfoPutData struct {
 	Email        string `json:"email,omitempty"`
 	Localion     string `json:"local,omitempty"`
 	Job          string `json:"job,omitempty"`
+	Notmod       string `json:"notmod"`
 	Com1A        string `json:"com1a"`
 	Com1B        string `json:"com1b"`
 	Com2A        string `json:"com2a"`
@@ -130,6 +131,7 @@ func (router *PersonInfoPutRouter) PreHandle(request eduiface.IRequest) {
 	}
 
 	newUserInfo.Job = newPersonInfoData.Get("job").String()
+
 	newUserInfo.Com1A = newPersonInfoData.Get("com1a").String()
 	newUserInfo.Com1B = newPersonInfoData.Get("com1b").String()
 	newUserInfo.Com2A = newPersonInfoData.Get("com2a").String()
@@ -140,7 +142,7 @@ func (router *PersonInfoPutRouter) PreHandle(request eduiface.IRequest) {
 	newUserInfo.Com4B = newPersonInfoData.Get("com4b").String()
 
 	// 更新数据库
-	res := edumodel.UpdateUserByID(&newUserInfo)
+	res := edumodel.UpdateUserByID(&newUserInfo, newPersonInfoData.Get("notmod").Bool())
 	// 若成功则返回success,否则返回错误码
 	if res {
 		personputReplyStatus = "success"
