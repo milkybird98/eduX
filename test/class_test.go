@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net"
+	"sync"
 	"testing"
 	"time"
 
@@ -16,6 +17,9 @@ import (
 func TestServerClassOpertaion(t *testing.T) {
 	edumodel.ConnectMongo()
 	edumodel.ConnectDatabase(nil)
+
+	wg := sync.WaitGroup{}
+	wg.Add(1)
 
 	//创建一个server句柄
 	s := edunet.NewServer()
@@ -28,12 +32,15 @@ func TestServerClassOpertaion(t *testing.T) {
 	s.AddRouter(5, &edurouter.ClassStudentAddRouter{})
 	s.AddRouter(6, &edurouter.ClassStudentDelRouter{})
 
-	go ClientTestCO(t)
+	go ClientTestCO(t, &wg)
 
-	s.Serve()
+	go s.Serve()
+
+	wg.Wait()
+	return
 }
 
-func ClientTestCO(t *testing.T) {
+func ClientTestCO(t *testing.T, wg *sync.WaitGroup) {
 
 	fmt.Println("Client Test ... start")
 	//3秒之后发起测试请求，给服务端开启服务的机会
@@ -104,8 +111,8 @@ func ClientTestCO(t *testing.T) {
 		db := edunet.NewDataPack()
 
 		var Class edurouter.ClassAddData
-		Class.ClassName = "ts1003"
-		Class.TeacherUID = ""
+		Class.ClassName = "ts1100"
+		Class.TeacherUID = "T1001"
 
 		msgData, _ := edurouter.CombineSendMsg("M1001", Class)
 
@@ -144,7 +151,7 @@ func ClientTestCO(t *testing.T) {
 		db := edunet.NewDataPack()
 
 		var Class edurouter.ClassAddData
-		Class.ClassName = "ts1003"
+		Class.ClassName = "ts1001"
 		Class.TeacherUID = "T1001"
 
 		msgData, _ := edurouter.CombineSendMsg("M1001", Class)
@@ -495,4 +502,6 @@ func ClientTestCO(t *testing.T) {
 			fmt.Println("[TEST]class student del pass")
 		}
 	}
+
+	wg.Done()
 }

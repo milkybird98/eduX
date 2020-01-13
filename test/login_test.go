@@ -59,7 +59,7 @@ func ClientTestLI(t *testing.T) {
 		db := edunet.NewDataPack()
 
 		var Data edurouter.LoginData
-		Data.Pwd = base64.StdEncoding.EncodeToString([]byte("12312312"))
+		Data.Pwd = base64.StdEncoding.EncodeToString([]byte("MTExMTEx"))
 
 		PwdInByte := []byte(Data.Pwd)
 		PwdInByte[2] += 2
@@ -70,7 +70,7 @@ func ClientTestLI(t *testing.T) {
 		Data.Pwd = string(PwdInByte)
 		Data.Pwd = ("1234567") + Data.Pwd
 
-		msgData, _ := edurouter.CombineSendMsg("U1003", Data)
+		msgData, _ := edurouter.CombineSendMsg("A100110001", Data)
 
 		msg := edunet.NewMsgPackage(0, msgData)
 

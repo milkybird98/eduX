@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net"
+	"sync"
 	"testing"
 	"time"
 
@@ -21,6 +22,9 @@ func TestServerPersonOperation(t *testing.T) {
 		t.FailNow()
 	}
 
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+
 	//创建一个server句柄
 	s := edunet.NewServer()
 
@@ -31,13 +35,16 @@ func TestServerPersonOperation(t *testing.T) {
 	s.AddRouter(4, &edurouter.PersonInfoPutRouter{})
 
 	//	客户端测试
-	go ClientTestSA(t)
+	go ClientTestSA(t, &wg)
 
 	//2 开启服务
-	s.Serve()
+	go s.Serve()
+
+	wg.Wait()
+	return
 }
 
-func ClientTestSA(t *testing.T) {
+func ClientTestSA(t *testing.T, wg *sync.WaitGroup) {
 
 	fmt.Println("Client Test ... start")
 	//3秒之后发起测试请求，给服务端开启服务的机会
@@ -310,4 +317,5 @@ func ClientTestSA(t *testing.T) {
 		}
 	}
 
+	wg.Done()
 }

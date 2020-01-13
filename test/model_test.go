@@ -169,25 +169,36 @@ func TestUserModel(t *testing.T) {
 	if !ok {
 		return
 	}
+	fmt.Println("pass")
 
 	fmt.Println("add first user")
 	user := &edumodel.User{
 		"test",
 		"U1000",
-		"stu",
-		"ds1233",
-		1,
-		"1982-12-22",
-		1,
-		"123456789",
-		false,
+		"student",
 		"",
-		false,
-		"Hubei",
+		0,
+		"",
+		0,
+		"",
 		true,
-		"无",
+		"",
+		true,
+		"",
+		true,
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
 	}
-	edumodel.AddUser(user)
+	if edumodel.AddUser(user) {
+		fmt.Println("pass")
+	}
 
 	fmt.Println("get user by id")
 	user = edumodel.GetUserByUID("U1000")
@@ -195,13 +206,38 @@ func TestUserModel(t *testing.T) {
 
 	fmt.Println("update user by id")
 
-	edumodel.UpdateUserByID(user)
+	user = &edumodel.User{
+		"test",
+		"U1000",
+		"student",
+		"ts1001",
+		1,
+		"",
+		1,
+		"13211111111",
+		true,
+		"as@gs-a.com",
+		true,
+		"湖北 hust",
+		true,
+		"体育",
+		"nice",
+		"棒",
+		"好",
+		"妙",
+		"优",
+		"秀",
+		"极",
+		"佳",
+	}
+
+	edumodel.UpdateUserByID(user, false)
 	user = edumodel.GetUserByUID("U1000")
 	fmt.Println(user)
 
 	fmt.Println("delete user by id")
 	res := edumodel.DeleteUserByUID("U1000")
 	if res {
-		fmt.Println("success")
+		fmt.Println("pass")
 	}
 }
