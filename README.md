@@ -1,8 +1,7 @@
 # Head teacher teaching management system Server End
 > a HUST software course design project
 
-A system acclerates daily course management and educating communication. The server framework is developed from [Zinx](https://github.com/aceld/zinx)
-
+A system acclerates daily course management and educating communication.
 ### Getting Started
 
 Before run the server, the MongoDB should be prepared.
