@@ -148,7 +148,7 @@ func (router *PersonInfoGetByClassRouter) Handle(request eduiface.IRequest) {
 	}
 	// 如果生成失败则报错返回
 	if err != nil {
-		fmt.Println(", PersonInfoGetByClassRouter: ", err)
+		fmt.Println("PersonInfoGetByClassRouter: ", err)
 		return
 	}
 

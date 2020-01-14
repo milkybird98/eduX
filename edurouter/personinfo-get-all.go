@@ -103,7 +103,7 @@ func (router *PersonInfoGetAllRouter) Handle(request eduiface.IRequest) {
 	}
 	// 如果生成失败则报错返回
 	if err != nil {
-		fmt.Println(", PersonInfoGetAllRouter: ", err)
+		fmt.Println("PersonInfoGetAllRouter: ", err)
 		return
 	}
 

@@ -328,8 +328,6 @@ func GetQuestionNumber(className, sendUID string, isSolved bool, targetDate *tim
 
 	filter = append(filter, bson.E{"isdeleted", false})
 
-	fmt.Println(filter)
-
 	count, err := quesCollection.CountDocuments(ctx, filter)
 	if err != nil {
 		fmt.Println("[MODEL]", err)
